@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: ai_blockchain_analytics
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: ai_blockchain_analytics
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      REDIS_CLIENT: predis
+      REDIS_HOST: 127.0.0.1
+      APP_ENV: testing
+      APP_KEY: base64:0000000000000000000000000000000000000000000=
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, pdo_pgsql, bcmath, sockets
+          coverage: none
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run Migrations
+        run: php artisan migrate --force
+
+      - name: Pint (code style)
+        run: vendor/bin/pint --test -v
+
+      - name: Psalm (static analysis)
+        run: vendor/bin/psalm --no-cache --shepherd --output-format=github
+
+      - name: PHPUnit
+        run: vendor/bin/phpunit --testdox --colors=always 
