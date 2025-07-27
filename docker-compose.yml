@@ -7,11 +7,12 @@ services:
       dockerfile: Dockerfile
     container_name: aegis_app
     working_dir: /var/www
+    env_file: .env
     volumes:
       - ./:/var/www
       - ~/.composer:/tmp/composer:cached
     ports:
-      - "8000:8000" # Octane
+      - "8002:8000" # Octane
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
@@ -27,7 +28,8 @@ services:
       - postgres
       - redis
     command: |
-      sh -c "composer install --no-interaction --prefer-dist && \
+      sh -c "git config --global --add safe.directory /var/www && \
+             composer install --no-interaction --prefer-dist && \
              php artisan migrate --force && \
              php artisan octane:start --server=roadrunner --host=0.0.0.0 --port=8000"
 
@@ -35,6 +37,7 @@ services:
     build: .
     container_name: aegis_horizon
     working_dir: /var/www
+    env_file: .env
     volumes:
       - ./:/var/www
     depends_on:
@@ -46,6 +49,7 @@ services:
     image: node:18-alpine
     container_name: aegis_vite
     working_dir: /var/www
+    env_file: .env
     volumes:
       - ./:/var/www
     ports:
