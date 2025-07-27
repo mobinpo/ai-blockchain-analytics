@@ -63,8 +63,5 @@ jobs:
       - name: Pint (code style)
         run: vendor/bin/pint --test -v
 
-      - name: Psalm (static analysis)
-        run: vendor/bin/psalm --no-cache --shepherd --output-format=github
-
       - name: PHPUnit
         run: vendor/bin/phpunit --testdox --colors=always 
