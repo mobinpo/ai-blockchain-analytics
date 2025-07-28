@@ -18,13 +18,7 @@ class BlockchainService
      */
     public function getBalance(string $address): string
     {
-        $balance = '';
-        $this->web3->eth()->getBalance($address, function ($err, $result) use (&$balance) {
-            if ($err !== null) {
-                throw new \RuntimeException($err->getMessage());
-            }
-            $balance = $result;
-        });
-        return $balance;
+        $wei = $this->web3->eth()->getBalance($address);
+        return $wei->toWei();
     }
 } 
