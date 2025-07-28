@@ -3,14 +3,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: aegis_app
+      target: development
+    container_name: ai_blockchain_app
     working_dir: /var/www
     env_file: .env
     volumes:
-      - ./:/var/www
-      - ~/.composer:/tmp/composer:cached
+      - ./:/var/www:delegated
+      - composer_cache:/tmp/composer:cached
+      - node_modules:/var/www/node_modules
     ports:
-      - "8002:8000" # Octane
+      - "8000:8000" # Octane
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
@@ -22,70 +24,109 @@ services:
       DB_PASSWORD: password
       REDIS_CLIENT: predis
       REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "artisan", "config:show", "app.name"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     command: |
-      sh -c "git config --global --add safe.directory /var/www && \
-             composer install --no-interaction --prefer-dist && \
+      sh -c "composer install --no-interaction --prefer-dist && \
+             php artisan key:generate --force && \
              php artisan migrate --force && \
              php artisan octane:start --server=roadrunner --host=0.0.0.0 --port=8000"
 
   horizon:
-    build: .
-    container_name: aegis_horizon
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: ai_blockchain_horizon
     working_dir: /var/www
     env_file: .env
     volumes:
-      - ./:/var/www
+      - ./:/var/www:delegated
+      - composer_cache:/tmp/composer:cached
     environment:
-      DB_HOST: postgres
-      REDIS_HOST: redis
+      APP_ENV: local
       DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
       DB_DATABASE: ai_blockchain_analytics
       DB_USERNAME: postgres
       DB_PASSWORD: password
       REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
-      - redis
-      - postgres
-    command: php artisan horizon
+      app:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: |
+      sh -c "composer install --no-interaction --prefer-dist && \
+             php artisan horizon"
 
   vite:
     image: node:18-alpine
-    container_name: aegis_vite
+    container_name: ai_blockchain_vite
     working_dir: /var/www
-    env_file: .env
     volumes:
-      - ./:/var/www
+      - ./:/var/www:delegated
+      - node_modules:/var/www/node_modules
     ports:
       - "5173:5173"
-    command: sh -c "npm install && npm run dev -- --host"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     depends_on:
       - app
 
   postgres:
     image: postgres:16-alpine
-    container_name: aegis_postgres
+    container_name: ai_blockchain_postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ai_blockchain_analytics
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: aegis_redis
+    container_name: ai_blockchain_redis
     restart: unless-stopped
     volumes:
       - redis_data:/data
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ai_blockchain_mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
 volumes:
-  db_data:
-  redis_data: 
+  postgres_data:
+  redis_data:
+  composer_cache:
+  node_modules: 

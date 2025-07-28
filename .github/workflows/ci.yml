@@ -7,67 +7,145 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  test:
+  # Build and cache Docker image
+  build:
+    name: Build Docker Image
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: ai_blockchain_analytics
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=5
-      redis:
-        image: redis:7-alpine
-        ports: ["6379:6379"]
-
-    env:
-      DB_CONNECTION: pgsql
-      DB_HOST: 127.0.0.1
-      DB_PORT: 5432
-      DB_DATABASE: ai_blockchain_analytics
-      DB_USERNAME: postgres
-      DB_PASSWORD: password
-      REDIS_CLIENT: predis
-      REDIS_HOST: 127.0.0.1
-      APP_ENV: testing
-      APP_KEY: base64:0000000000000000000000000000000000000000000=
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and cache Docker image
+        uses: docker/build-push-action@v5
         with:
-          php-version: '8.2'
-          extensions: mbstring, intl, pdo_pgsql, bcmath, sockets
-          coverage: none
+          context: .
+          target: ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          outputs: type=docker,dest=/tmp/ci-image.tar
 
-      - name: Cache composer dependencies
-        uses: actions/cache@v4
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v4
         with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
+          name: ci-image
+          path: /tmp/ci-image.tar
+          retention-days: 1
 
-      - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist
+  # Code style check with Pint
+  pint:
+    name: Code Style (Pint)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: ci-image
+          path: /tmp
 
-      - name: Run Migrations
-        run: php artisan migrate --force
+      - name: Load Docker image
+        run: docker load --input /tmp/ci-image.tar
 
-      - name: Pint (code style)
-        run: vendor/bin/pint --test -v
+      - name: Run Laravel Pint
+        run: |
+          docker run --rm \
+            $(docker images --format "table {{.Repository}}:{{.Tag}}" | grep -v REPOSITORY | head -1) \
+            vendor/bin/pint --test --verbose
+
+  # Static analysis with Psalm
+  psalm:
+    name: Static Analysis (Psalm)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: ci-image
+          path: /tmp
+
+      - name: Load Docker image
+        run: docker load --input /tmp/ci-image.tar
 
       - name: Download Psalm
-        run: curl -Ls https://github.com/vimeo/psalm/releases/latest/download/psalm.phar -o psalm.phar
+        run: |
+          docker run --rm \
+            -v $(pwd):/tmp/download \
+            $(docker images --format "table {{.Repository}}:{{.Tag}}" | grep -v REPOSITORY | head -1) \
+            sh -c "curl -Ls https://github.com/vimeo/psalm/releases/latest/download/psalm.phar -o /tmp/download/psalm.phar && chmod +x /tmp/download/psalm.phar"
 
-      - name: Psalm (static analysis)
-        run: php psalm.phar --no-cache --output-format=github
+      - name: Run Psalm
+        run: |
+          docker run --rm \
+            -v $(pwd)/psalm.phar:/var/www/psalm.phar \
+            $(docker images --format "table {{.Repository}}:{{.Tag}}" | grep -v REPOSITORY | head -1) \
+            php psalm.phar --no-cache --output-format=github
 
-      - name: PHPUnit
-        run: vendor/bin/phpunit --testdox --colors=always 
+  # PHPUnit tests
+  phpunit:
+    name: PHPUnit Tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: ci-image
+          path: /tmp
+
+      - name: Load Docker image
+        run: docker load --input /tmp/ci-image.tar
+
+      - name: Start services and run tests
+        run: |
+          # Start the CI stack
+          docker compose -f docker-compose.ci.yml up -d postgres redis
+          
+          # Wait for services to be ready
+          docker compose -f docker-compose.ci.yml exec -T postgres sh -c 'until pg_isready -U postgres; do sleep 1; done'
+          docker compose -f docker-compose.ci.yml exec -T redis sh -c 'until redis-cli ping; do sleep 1; done'
+          
+          # Run migrations and tests
+          docker compose -f docker-compose.ci.yml run --rm app sh -c "
+            php artisan key:generate --force &&
+            php artisan migrate --force &&
+            vendor/bin/phpunit --testdox --colors=always --coverage-text
+          "
+
+      - name: Cleanup
+        if: always()
+        run: docker compose -f docker-compose.ci.yml down -v
+
+  # Feature tests (if you have browser tests)
+  feature:
+    name: Feature Tests
+    runs-on: ubuntu-latest
+    needs: build
+    if: false # Enable this when you have feature tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: ci-image
+          path: /tmp
+
+      - name: Load Docker image
+        run: docker load --input /tmp/ci-image.tar
+
+      - name: Run Feature Tests
+        run: |
+          docker compose -f docker-compose.ci.yml up -d
+          docker compose -f docker-compose.ci.yml exec -T app vendor/bin/phpunit --group=feature
+
+      - name: Cleanup
+        if: always()
+        run: docker compose -f docker-compose.ci.yml down -v 
