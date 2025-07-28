@@ -63,5 +63,11 @@ jobs:
       - name: Pint (code style)
         run: vendor/bin/pint --test -v
 
+      - name: Download Psalm
+        run: curl -Ls https://github.com/vimeo/psalm/releases/latest/download/psalm.phar -o psalm.phar
+
+      - name: Psalm (static analysis)
+        run: php psalm.phar --no-cache --output-format=github
+
       - name: PHPUnit
         run: vendor/bin/phpunit --testdox --colors=always 
