@@ -52,6 +52,11 @@ return [
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'plans' => [
+            'starter' => env('STRIPE_PLAN_STARTER', 'price_starter_monthly'),
+            'professional' => env('STRIPE_PLAN_PROFESSIONAL', 'price_professional_monthly'),
+            'enterprise' => env('STRIPE_PLAN_ENTERPRISE', 'price_enterprise_monthly'),
+        ],
     ],
 
 ];

@@ -1,27 +1,41 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "mobin/ai-blockchain-analytics",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "AI-powered blockchain analytics platform built with Laravel 12 + Octane",
+    "keywords": ["laravel", "octane", "blockchain", "analytics", "ai", "vue", "inertia"],
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Mobin",
+            "email": "mobin@example.com"
+        }
+    ],
+    "homepage": "https://github.com/mobin/ai-blockchain-analytics",
+    "support": {
+        "issues": "https://github.com/mobin/ai-blockchain-analytics/issues",
+        "source": "https://github.com/mobin/ai-blockchain-analytics"
+    },
     "require": {
         "php": "^8.2",
         "google/cloud-language": "^1.0",
         "inertiajs/inertia-laravel": "^2.0",
+        "laravel/cashier": "^15.0",
         "laravel/framework": "^12.0",
         "laravel/horizon": "^5.33",
         "laravel/octane": "^2.12",
-        "laravel/cashier": "^15.0",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "openai-php/client": "^0.14.0",
         "predis/predis": "^3.1",
         "spiral/roadrunner-cli": "^2.6.0",
         "spiral/roadrunner-http": "^3.3.0",
+        "tightenco/ziggy": "^2.0",
         "web3-php/web3": "dev-master"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "laravel/breeze": "^2.3",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.41",

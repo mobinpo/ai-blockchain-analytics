@@ -12,7 +12,7 @@ services:
       - composer_cache:/tmp/composer:cached
       - node_modules:/var/www/node_modules
     ports:
-      - "8000:8000" # Octane
+      - "8002:8000" # Octane
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
@@ -36,7 +36,8 @@ services:
       timeout: 10s
       retries: 3
     command: |
-      sh -c "composer install --no-interaction --prefer-dist && \
+      sh -c "git config --global --add safe.directory /var/www && \
+             composer install --no-interaction --prefer-dist && \
              php artisan key:generate --force && \
              php artisan migrate --force && \
              php artisan octane:start --server=roadrunner --host=0.0.0.0 --port=8000"
@@ -69,7 +70,8 @@ services:
       redis:
         condition: service_healthy
     command: |
-      sh -c "composer install --no-interaction --prefer-dist && \
+      sh -c "git config --global --add safe.directory /var/www && \
+             composer install --no-interaction --prefer-dist && \
              php artisan horizon"
 
   vite:
@@ -81,7 +83,7 @@ services:
       - node_modules:/var/www/node_modules
     ports:
       - "5173:5173"
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    command: sh -c "npm install --legacy-peer-deps && npm run dev -- --host 0.0.0.0"
     depends_on:
       - app
 
