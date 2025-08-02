@@ -52,10 +52,33 @@ return [
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
-        'plans' => [
-            'starter' => env('STRIPE_PLAN_STARTER', 'price_starter_monthly'),
-            'professional' => env('STRIPE_PLAN_PROFESSIONAL', 'price_professional_monthly'),
-            'enterprise' => env('STRIPE_PLAN_ENTERPRISE', 'price_enterprise_monthly'),
+        'prices' => [
+            'starter_monthly' => env('STRIPE_PRICE_STARTER_MONTHLY'),
+            'starter_yearly' => env('STRIPE_PRICE_STARTER_YEARLY'),
+            'professional_monthly' => env('STRIPE_PRICE_PROFESSIONAL_MONTHLY'),
+            'professional_yearly' => env('STRIPE_PRICE_PROFESSIONAL_YEARLY'),
+            'enterprise_monthly' => env('STRIPE_PRICE_ENTERPRISE_MONTHLY'),
+            'enterprise_yearly' => env('STRIPE_PRICE_ENTERPRISE_YEARLY'),
+        ],
+        'features' => [
+            'starter' => [
+                'analysis_limit' => env('STARTER_ANALYSIS_LIMIT', 10),
+                'ai_insights' => false,
+                'priority_support' => false,
+                'advanced_analytics' => false,
+            ],
+            'professional' => [
+                'analysis_limit' => env('PROFESSIONAL_ANALYSIS_LIMIT', 100),
+                'ai_insights' => true,
+                'priority_support' => false,
+                'advanced_analytics' => true,
+            ],
+            'enterprise' => [
+                'analysis_limit' => env('ENTERPRISE_ANALYSIS_LIMIT', 1000),
+                'ai_insights' => true,
+                'priority_support' => true,
+                'advanced_analytics' => true,
+            ],
         ],
     ],
 

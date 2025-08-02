@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use App\Models\SubscriptionPlan;
 use Illuminate\Console\Command;
 use Stripe\StripeClient;
 
-class SetupStripeProducts extends Command
+final class SetupStripeProducts extends Command
 {
     protected $signature = 'stripe:setup-products';
     protected $description = 'Create Stripe products and prices for subscription plans';

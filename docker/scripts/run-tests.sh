@@ -1,41 +1,42 @@
 #!/bin/bash
 
-# Test runner script for Docker environment
+# CI test runner script
+
+set -e
 
 echo "🧪 Running AI Blockchain Analytics test suite..."
 
-# Build CI image
-echo "📦 Building CI Docker image..."
-docker build --target ci -t ai-blockchain-analytics:ci .
+# Start CI services
+echo "🚀 Starting CI services..."
+docker-compose -f docker-compose.ci.yml up -d postgres redis
 
-# Start test services
-echo "🚀 Starting test services..."
-docker compose -f docker-compose.ci.yml up -d postgres redis
+# Wait for services to be ready
+echo "⏳ Waiting for database to be ready..."
+timeout 60 bash -c 'until docker-compose -f docker-compose.ci.yml exec -T postgres pg_isready -U postgres -d testing; do sleep 2; done'
 
-# Wait for services
-echo "⏳ Waiting for services to be ready..."
-sleep 5
+echo "⏳ Waiting for Redis to be ready..."
+timeout 30 bash -c 'until docker-compose -f docker-compose.ci.yml exec -T redis redis-cli ping | grep -q PONG; do sleep 1; done'
 
-# Run all tests
-echo "🔍 Running code style check (Pint)..."
-docker compose -f docker-compose.ci.yml run --rm app vendor/bin/pint --test
+# Build CI image if needed
+echo "🔨 Building CI image..."
+docker-compose -f docker-compose.ci.yml build app
 
-echo "🔬 Running static analysis (Psalm)..."
-docker compose -f docker-compose.ci.yml run --rm app sh -c "
-  curl -Ls https://github.com/vimeo/psalm/releases/latest/download/psalm.phar -o psalm.phar && 
-  chmod +x psalm.phar && 
-  php psalm.phar --no-cache
-"
+echo "🗄️ Running database migrations..."
+docker-compose -f docker-compose.ci.yml run --rm app php artisan migrate --force --seed
+
+echo "🎨 Running code style checks (Pint)..."
+docker-compose -f docker-compose.ci.yml run --rm app vendor/bin/pint --test --verbose
+
+echo "🔍 Running static analysis (Psalm)..."
+docker-compose -f docker-compose.ci.yml run --rm app vendor/bin/psalm --no-cache --show-info=false
+
+echo "🏗️ Building frontend assets..."
+docker-compose -f docker-compose.ci.yml run --rm app npm run build
 
 echo "🧪 Running PHPUnit tests..."
-docker compose -f docker-compose.ci.yml run --rm app sh -c "
-  php artisan key:generate --force &&
-  php artisan migrate --force &&
-  vendor/bin/phpunit --testdox --colors=always
-"
+docker-compose -f docker-compose.ci.yml run --rm app vendor/bin/phpunit --testdox --colors=always
 
-# Cleanup
 echo "🧹 Cleaning up..."
-docker compose -f docker-compose.ci.yml down -v
+docker-compose -f docker-compose.ci.yml down -v
 
-echo "✅ Test suite completed!"
+echo "✅ All tests passed successfully!"

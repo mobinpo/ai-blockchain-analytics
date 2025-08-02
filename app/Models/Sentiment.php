@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Sentiment extends Model
+final class Sentiment extends Model
 {
     use HasFactory;
 
@@ -22,22 +24,22 @@ class Sentiment extends Model
         'magnitude' => 'decimal:2',
     ];
 
-    public function analysis()
+    public function analysis(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Analysis::class);
     }
 
-    public function scopePositive($query)
+    public function scopePositive($query): mixed
     {
         return $query->where('score', '>', 0);
     }
 
-    public function scopeNegative($query)
+    public function scopeNegative($query): mixed
     {
         return $query->where('score', '<', 0);
     }
 
-    public function scopeNeutral($query)
+    public function scopeNeutral($query): mixed
     {
         return $query->where('score', 0);
     }

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Project extends Model
+final class Project extends Model
 {
     use HasFactory;
 
@@ -15,32 +17,32 @@ class Project extends Model
         'user_id',
     ];
 
-    public function user()
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function analyses()
+    public function analyses(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Analysis::class);
     }
 
-    public function findings()
+    public function findings(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
     {
         return $this->hasManyThrough(Finding::class, Analysis::class);
     }
 
-    public function sentiments()
+    public function sentiments(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
     {
         return $this->hasManyThrough(Sentiment::class, Analysis::class);
     }
 
-    public function scopeForUser($query, $userId)
+    public function scopeForUser($query, int $userId): mixed
     {
         return $query->where('user_id', $userId);
     }
 
-    public function getLatestAnalysisAttribute()
+    public function getLatestAnalysisAttribute(): ?Analysis
     {
         return $this->analyses()->latest()->first();
     }

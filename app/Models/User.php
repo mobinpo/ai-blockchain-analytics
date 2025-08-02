@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -10,7 +12,7 @@ use Laravel\Cashier\Billable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Project;
 
-class User extends Authenticatable
+final class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, Billable;

@@ -1,0 +1,27 @@
+FROM php:8.3-cli-alpine
+
+# Install system dependencies and PHP extensions
+RUN apk add --no-cache curl unzip sqlite linux-headers $PHPIZE_DEPS \
+    && docker-php-ext-install bcmath pcntl sockets \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del $PHPIZE_DEPS
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www
+
+# Copy application files
+COPY . .
+
+# Install PHP dependencies and optimize
+RUN composer install --no-dev --optimize-autoloader --no-scripts \
+    && composer dump-autoload --optimize \
+    && chmod -R 755 storage bootstrap/cache 2>/dev/null || true
+
+EXPOSE 8000
+
+# Start Laravel development server
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]

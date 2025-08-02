@@ -2,45 +2,41 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: development
+      dockerfile: Dockerfile.simple
     container_name: ai_blockchain_app
     working_dir: /var/www
     env_file: .env
     volumes:
       - ./:/var/www:delegated
-      - composer_cache:/tmp/composer:cached
-      - node_modules:/var/www/node_modules
+      - composer_cache:/root/.composer:cached
+      - node_modules:/var/www/node_modules:cached  
+      - storage:/var/www/storage
     ports:
-      - "8002:8000" # Octane
+      - "8003:8000"
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
-      DB_CONNECTION: pgsql
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_DATABASE: ai_blockchain_analytics
-      DB_USERNAME: postgres
-      DB_PASSWORD: password
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /var/www/database/database.sqlite
       REDIS_CLIENT: predis
       REDIS_HOST: redis
+      SESSION_CONNECTION: redis
       REDIS_PORT: 6379
+      QUEUE_CONNECTION: redis
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: file
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - redis
     healthcheck:
-      test: ["CMD", "php", "artisan", "config:show", "app.name"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
       interval: 30s
       timeout: 10s
       retries: 3
-    command: |
-      sh -c "git config --global --add safe.directory /var/www && \
-             composer install --no-interaction --prefer-dist && \
-             php artisan key:generate --force && \
-             php artisan migrate --force && \
-             php artisan octane:start --server=roadrunner --host=0.0.0.0 --port=8000"
+      start_period: 40s
+    networks:
+      - ai_blockchain
 
   horizon:
     build:
@@ -52,7 +48,8 @@ services:
     env_file: .env
     volumes:
       - ./:/var/www:delegated
-      - composer_cache:/tmp/composer:cached
+      - composer_cache:/root/.composer:cached
+      - storage:/var/www/storage
     environment:
       APP_ENV: local
       DB_CONNECTION: pgsql
@@ -64,28 +61,32 @@ services:
       REDIS_CLIENT: predis
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      QUEUE_CONNECTION: redis
     depends_on:
       app:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: |
-      sh -c "git config --global --add safe.directory /var/www && \
-             composer install --no-interaction --prefer-dist && \
-             php artisan horizon"
+    command: php artisan horizon
+    networks:
+      - ai_blockchain
 
   vite:
-    image: node:18-alpine
+    image: node:20-alpine
     container_name: ai_blockchain_vite
     working_dir: /var/www
     volumes:
       - ./:/var/www:delegated
-      - node_modules:/var/www/node_modules
+      - node_modules:/var/www/node_modules:cached
     ports:
       - "5173:5173"
-    command: sh -c "npm install --legacy-peer-deps && npm run dev -- --host 0.0.0.0"
+    environment:
+      NODE_ENV: development
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     depends_on:
       - app
+    networks:
+      - ai_blockchain
 
   postgres:
     image: postgres:16-alpine
@@ -95,23 +96,29 @@ services:
       POSTGRES_DB: ai_blockchain_analytics
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ai_blockchain_analytics"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+    networks:
+      - ai_blockchain
 
   redis:
     image: redis:7-alpine
     container_name: ai_blockchain_redis
     restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
     ports:
       - "6379:6379"
     healthcheck:
@@ -119,6 +126,9 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
+      start_period: 10s
+    networks:
+      - ai_blockchain
 
   mailhog:
     image: mailhog/mailhog:latest
@@ -126,9 +136,22 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+    networks:
+      - ai_blockchain
+
+networks:
+  ai_blockchain:
+    driver: bridge
+    name: ai_blockchain_network
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local
   composer_cache:
-  node_modules: 
+    driver: local
+  node_modules:
+    driver: local
+  storage:
+    driver: local 

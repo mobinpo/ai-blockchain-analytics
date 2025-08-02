@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use Web3\Web3;
 
-class BlockchainService
+final class BlockchainService
 {
     private Web3 $web3;
 

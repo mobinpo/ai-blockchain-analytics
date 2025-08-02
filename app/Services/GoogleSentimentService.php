@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 // Using FQN to avoid static analysis issues when the Google SDK may be absent in tooling.
-class GoogleSentimentService
+final class GoogleSentimentService
 {
-    private $client;
+    private mixed $client;
 
     public function __construct()
     {

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Analysis extends Model
+final class Analysis extends Model
 {
     use HasFactory;
 
@@ -20,37 +22,37 @@ class Analysis extends Model
         'payload' => 'array',
     ];
 
-    public function project()
+    public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
 
-    public function findings()
+    public function findings(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Finding::class);
     }
 
-    public function sentiments()
+    public function sentiments(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Sentiment::class);
     }
 
-    public function scopeByEngine($query, string $engine)
+    public function scopeByEngine($query, string $engine): mixed
     {
         return $query->where('engine', $engine);
     }
 
-    public function scopeByStatus($query, string $status)
+    public function scopeByStatus($query, string $status): mixed
     {
         return $query->where('status', $status);
     }
 
-    public function scopeCompleted($query)
+    public function scopeCompleted($query): mixed
     {
         return $query->where('status', 'completed');
     }
 
-    public function scopePending($query)
+    public function scopePending($query): mixed
     {
         return $query->where('status', 'pending');
     }

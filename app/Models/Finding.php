@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Finding extends Model
+final class Finding extends Model
 {
     use HasFactory;
 
@@ -31,22 +33,22 @@ class Finding extends Model
         'info' => 'Info'
     ];
 
-    public function analysis()
+    public function analysis(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Analysis::class);
     }
 
-    public function scopeBySeverity($query, string $severity)
+    public function scopeBySeverity($query, string $severity): mixed
     {
         return $query->where('severity', $severity);
     }
 
-    public function scopeCritical($query)
+    public function scopeCritical($query): mixed
     {
         return $query->where('severity', 'critical');
     }
 
-    public function scopeHigh($query)
+    public function scopeHigh($query): mixed
     {
         return $query->where('severity', 'high');
     }

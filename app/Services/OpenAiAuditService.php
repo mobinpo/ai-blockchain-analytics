@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use OpenAI\Client as OpenAiClient;
 
-class OpenAiAuditService
+final class OpenAiAuditService
 {
     public function __construct(private readonly OpenAiClient $client)
     {
