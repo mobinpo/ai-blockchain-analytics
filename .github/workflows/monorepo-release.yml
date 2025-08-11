@@ -184,7 +184,7 @@ jobs:
 
       - name: Download frontend artifacts
         if: needs.frontend-build.result == 'success'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: frontend-build
           path: .
