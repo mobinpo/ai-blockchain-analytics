@@ -1,0 +1,214 @@
+config:
+  target: 'http://localhost:8000'
+  plugins:
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+    publish-metrics:
+      - type: cloudwatch
+        region: us-east-1
+        namespace: AI-Blockchain-Analytics/LoadTest
+      - type: datadog
+        apiKey: "{{ $env.DATADOG_API_KEY }}"
+        tags:
+          - "env:load-test"
+          - "test:concurrent-500"
+  phases:
+    # Warm-up phase
+    - duration: 30
+      arrivalRate: 10
+      name: "Warm-up"
+    # Ramp-up to 100 concurrent users
+    - duration: 60
+      arrivalRate: 50
+      rampTo: 100
+      name: "Ramp-up to 100"
+    # Ramp-up to 300 concurrent users
+    - duration: 120
+      arrivalRate: 100
+      rampTo: 200
+      name: "Ramp-up to 300"
+    # Peak load - 500 concurrent users
+    - duration: 300
+      arrivalRate: 250
+      rampTo: 500
+      name: "Peak load - 500 concurrent"
+    # Sustained load test
+    - duration: 600
+      arrivalRate: 500
+      name: "Sustained 500 concurrent"
+    # Cool down
+    - duration: 60
+      arrivalRate: 500
+      rampTo: 50
+      name: "Cool down"
+  processor: "./load-tests/processor.js"
+  variables:
+    contractAddresses:
+      - "0xA0b86a33E6441a8ba6a2ed3bBD8B9B68b2b1b6A"
+      - "0xdAC17F958D2ee523a2206206994597C13D831ec7"  # USDT
+      - "0xA0b86a33E8CC21308bA6f8E0b5a3601C41aBdEB"  # USDC
+      - "0x6B175474E89094C44Da98b954EedeAC495271d0F"  # DAI
+      - "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"  # WBTC
+      - "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"  # WETH
+      - "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984"  # UNI
+      - "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0"  # MATIC
+      - "0x514910771AF9Ca656af840dff83E8264EcF986CA"  # LINK
+      - "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE"  # SHIB
+    chains:
+      - "1"     # Ethereum
+      - "56"    # BSC
+      - "137"   # Polygon
+      - "250"   # Fantom
+      - "43114" # Avalanche
+      - "42161" # Arbitrum
+      - "10"    # Optimism
+    userAgents:
+      - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+      - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+      - "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
+    apiVersions:
+      - "v1"
+      - "v2"
+
+scenarios:
+  # Main blockchain analysis scenario (60% of traffic)
+  - name: "Blockchain Analysis"
+    weight: 60
+    flow:
+      - post:
+          url: "/api/{{ apiVersions.random }}/blockchain/analyze"
+          name: "analyze-contract"
+          headers:
+            Content-Type: "application/json"
+            Accept: "application/json"
+            User-Agent: "{{ userAgents.random }}"
+            X-Requested-With: "XMLHttpRequest"
+          json:
+            contract_address: "{{ contractAddresses.random }}"
+            chain_id: "{{ chains.random }}"
+            analysis_type: "comprehensive"
+            include_sentiment: true
+            include_verification: true
+            cache_results: false
+          capture:
+            - json: "$.analysis_id"
+              as: "analysisId"
+            - json: "$.processing_time"
+              as: "processingTime"
+      - think: 2
+      - get:
+          url: "/api/{{ apiVersions.random }}/blockchain/analysis/{{ analysisId }}"
+          name: "get-analysis-result"
+          headers:
+            Accept: "application/json"
+            User-Agent: "{{ userAgents.random }}"
+      - think: 1
+
+  # Sentiment analysis scenario (25% of traffic)
+  - name: "Sentiment Analysis"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/{{ apiVersions.random }}/sentiment/analyze"
+          name: "sentiment-analysis"
+          headers:
+            Content-Type: "application/json"
+            Accept: "application/json"
+            User-Agent: "{{ userAgents.random }}"
+          json:
+            contract_address: "{{ contractAddresses.random }}"
+            chain_id: "{{ chains.random }}"
+            timeframe: "7d"
+            sources: ["twitter", "reddit", "news"]
+          capture:
+            - json: "$.batch_id"
+              as: "batchId"
+      - think: 3
+      - get:
+          url: "/api/{{ apiVersions.random }}/sentiment/batch/{{ batchId }}/status"
+          name: "sentiment-status"
+          headers:
+            Accept: "application/json"
+      - think: 2
+      - get:
+          url: "/api/{{ apiVersions.random }}/sentiment/batch/{{ batchId }}/results"
+          name: "sentiment-results"
+          headers:
+            Accept: "application/json"
+
+  # Verification badge scenario (10% of traffic)
+  - name: "Verification System"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/{{ apiVersions.random }}/verification/generate-url"
+          name: "generate-verification"
+          headers:
+            Content-Type: "application/json"
+            Accept: "application/json"
+            User-Agent: "{{ userAgents.random }}"
+          json:
+            contract_address: "{{ contractAddresses.random }}"
+            user_id: "test-user-{{ $randomNumber }}"
+            metadata:
+              project_name: "Test Project {{ $randomNumber }}"
+              description: "Load test verification"
+          capture:
+            - json: "$.verification_url"
+              as: "verificationUrl"
+      - think: 1
+      - get:
+          url: "{{ verificationUrl }}"
+          name: "verify-contract"
+          headers:
+            Accept: "application/json"
+            User-Agent: "{{ userAgents.random }}"
+
+  # PDF generation scenario (5% of traffic)
+  - name: "PDF Generation"
+    weight: 5
+    flow:
+      - post:
+          url: "/api/{{ apiVersions.random }}/pdf/generate-report"
+          name: "generate-pdf"
+          headers:
+            Content-Type: "application/json"
+            Accept: "application/json"
+            User-Agent: "{{ userAgents.random }}"
+          json:
+            contract_address: "{{ contractAddresses.random }}"
+            chain_id: "{{ chains.random }}"
+            report_type: "comprehensive"
+            include_charts: true
+            format: "pdf"
+          capture:
+            - json: "$.job_id"
+              as: "pdfJobId"
+      - think: 5
+      - get:
+          url: "/api/{{ apiVersions.random }}/pdf/status/{{ pdfJobId }}"
+          name: "pdf-status"
+          headers:
+            Accept: "application/json"
+      - think: 10
+      - get:
+          url: "/api/{{ apiVersions.random }}/pdf/download/{{ pdfJobId }}"
+          name: "download-pdf"
+          headers:
+            Accept: "application/pdf"
+
+# Performance thresholds and SLA requirements
+expect:
+  # 95th percentile response times
+  - http.response_time.p95: 2000    # 95% under 2 seconds
+  - http.response_time.p99: 5000    # 99% under 5 seconds
+  - http.response_time.median: 500  # Median under 500ms
+  
+  # Error rate thresholds
+  - http.codes.200: 85              # At least 85% success rate
+  - http.codes.2xx: 90              # At least 90% 2xx responses
+  - http.codes.5xx: 2               # Max 2% server errors
+  
+  # Specific endpoint SLAs
+  - http.request_rate: 400          # Min 400 requests/second at peak
+  - vusers.created: 500             # All 500 users should be created

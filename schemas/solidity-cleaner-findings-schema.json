@@ -1,0 +1,409 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Solidity Cleaner AI Prompt Findings Schema",
+  "description": "Optimized schema for AI prompt engineering with cleaned Solidity contracts - compact, actionable, and LLM-friendly",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["severity", "title", "line", "recommendation"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^SC-[0-9]{4}$",
+      "description": "Solidity Cleaner finding ID (e.g., SC-0001)",
+      "examples": ["SC-0001", "SC-0042"]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"],
+      "description": "Risk severity for AI prioritization"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 60,
+      "pattern": "^[A-Z][a-zA-Z0-9\\s\\-/()]+$",
+      "description": "Concise vulnerability title optimized for AI understanding",
+      "examples": ["Re-entrancy in withdraw function", "Unchecked integer overflow", "Missing access control"]
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Re-entrancy",
+        "Integer Overflow/Underflow",
+        "Access Control",
+        "Input Validation", 
+        "Business Logic",
+        "Cryptographic Issues",
+        "Information Disclosure",
+        "Denial of Service",
+        "Front-running/MEV",
+        "Oracle Manipulation",
+        "Flash Loan Attack",
+        "Gas Optimization",
+        "Code Quality",
+        "Upgrade Pattern",
+        "Proxy Issue",
+        "Timelock Issue",
+        "Governance Issue",
+        "Cross-Chain Issue",
+        "NFT Issue",
+        "DeFi Issue",
+        "Weak Randomness",
+        "External Call Issue",
+        "State Variable Issue",
+        "Signature Issue",
+        "Authorization Issue",
+        "Data Validation",
+        "Logic Error",
+        "Implementation Bug",
+        "Design Flaw",
+        "Configuration Error"
+      ],
+      "description": "Standardized category for AI classification and filtering"
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Line number in cleaned contract code"
+    },
+    "end_line": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "End line for multi-line vulnerabilities"
+    },
+    "function": {
+      "type": "string",
+      "maxLength": 50,
+      "description": "Function name containing vulnerability"
+    },
+    "contract": {
+      "type": "string", 
+      "maxLength": 50,
+      "description": "Contract name containing vulnerability"
+    },
+    "recommendation": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 500,
+      "description": "Clear, actionable fix recommendation optimized for AI understanding",
+      "examples": [
+        "Implement checks-effects-interactions pattern by moving state changes before external calls",
+        "Use SafeMath library or Solidity 0.8+ overflow protection",
+        "Add onlyOwner modifier to restrict function access"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 400,
+      "description": "Concise technical description for AI analysis"
+    },
+    "impact": {
+      "type": "string",
+      "enum": ["FUND_LOSS", "FUND_DRAINAGE", "UNAUTHORIZED_ACCESS", "SERVICE_DISRUPTION", "DATA_EXPOSURE", "GOVERNANCE_COMPROMISE", "GAS_INEFFICIENCY", "MINIMAL"],
+      "description": "Primary impact for AI risk assessment"
+    },
+    "exploitability": {
+      "type": "string",
+      "enum": ["TRIVIAL", "EASY", "MODERATE", "DIFFICULT", "THEORETICAL"],
+      "description": "Exploitation difficulty for AI threat modeling"
+    },
+    "code_snippet": {
+      "type": "string",
+      "maxLength": 300,
+      "description": "Minimal vulnerable code excerpt from cleaned contract"
+    },
+    "fix_snippet": {
+      "type": "string",
+      "maxLength": 300,
+      "description": "Minimal secure code example"
+    },
+    "gas_impact": {
+      "type": "object",
+      "properties": {
+        "gas_cost": {
+          "type": "integer",
+          "description": "Estimated gas cost impact"
+        },
+        "optimization_potential": {
+          "type": "integer",
+          "description": "Gas savings potential"
+        },
+        "is_optimization": {
+          "type": "boolean",
+          "description": "Whether this is primarily a gas optimization"
+        }
+      }
+    },
+    "attack_vector": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Concise attack description for AI understanding"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["HIGH", "MEDIUM", "LOW"],
+      "description": "AI analysis confidence level"
+    },
+    "false_positive_risk": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH"],
+      "description": "Risk of false positive for AI validation"
+    },
+    "cvss_score": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 10.0,
+      "multipleOf": 0.1,
+      "description": "CVSS v3.1 base score"
+    },
+    "swc_id": {
+      "type": "string",
+      "pattern": "^SWC-[0-9]{3}$",
+      "description": "Smart Contract Weakness Classification ID",
+      "examples": ["SWC-107", "SWC-101", "SWC-115"]
+    },
+    "cwe_id": {
+      "type": "string",
+      "pattern": "^CWE-[0-9]+$",
+      "description": "Common Weakness Enumeration ID",
+      "examples": ["CWE-362", "CWE-190", "CWE-284"]
+    },
+    "remediation": {
+      "type": "object",
+      "properties": {
+        "effort": {
+          "type": "string",
+          "enum": ["TRIVIAL", "LOW", "MEDIUM", "HIGH", "EXTENSIVE"],
+          "description": "Development effort required"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Fix priority (1=highest, 5=lowest)"
+        },
+        "breaking_change": {
+          "type": "boolean",
+          "description": "Whether fix requires breaking changes"
+        }
+      }
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["DOCUMENTATION", "BLOG_POST", "AUDIT_REPORT", "GITHUB_ISSUE", "ACADEMIC_PAPER", "TOOL_OUTPUT"]
+          }
+        },
+        "required": ["title", "url"]
+      },
+      "maxItems": 3,
+      "description": "Concise reference list for AI context"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_-]+$",
+        "maxLength": 20
+      },
+      "maxItems": 8,
+      "uniqueItems": true,
+      "description": "Classification tags for AI filtering and grouping"
+    },
+    "ai_context": {
+      "type": "object",
+      "properties": {
+        "model_used": {
+          "type": "string",
+          "enum": ["gpt-4", "gpt-3.5-turbo", "claude-3", "claude-2", "gemini-pro", "other"],
+          "description": "AI model used for analysis"
+        },
+        "tokens_consumed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Tokens used for this finding"
+        },
+        "analysis_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Cleaner version used"
+        },
+        "prompt_template": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Prompt template identifier used"
+        }
+      },
+      "description": "AI analysis metadata for prompt optimization"
+    },
+    "source_context": {
+      "type": "object", 
+      "properties": {
+        "original_lines": {
+          "type": "integer",
+          "description": "Lines in original contract"
+        },
+        "cleaned_lines": {
+          "type": "integer", 
+          "description": "Lines in cleaned contract"
+        },
+        "compression_ratio": {
+          "type": "number",
+          "description": "Size reduction percentage"
+        },
+        "optimization_level": {
+          "type": "string",
+          "enum": ["minimal", "standard", "aggressive", "prompt"],
+          "description": "Cleaning optimization level used"
+        }
+      },
+      "description": "Source code context for finding correlation"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["DETECTED", "REVIEWING", "CONFIRMED", "FALSE_POSITIVE", "FIXED", "ACCEPTED", "DUPLICATE"],
+      "default": "DETECTED",
+      "description": "Finding lifecycle status"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Finding creation timestamp"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "id": "SC-0001",
+      "severity": "HIGH",
+      "title": "Re-entrancy in withdraw function",
+      "category": "Re-entrancy",
+      "line": 45,
+      "function": "withdraw",
+      "contract": "VulnerableBank",
+      "recommendation": "Implement checks-effects-interactions pattern by moving state changes before external calls. Add ReentrancyGuard modifier.",
+      "description": "External call executed before state update allows recursive calls to drain contract funds",
+      "impact": "FUND_DRAINAGE",
+      "exploitability": "EASY",
+      "code_snippet": "function withdraw(uint amount) public {\n    require(balances[msg.sender] >= amount);\n    msg.sender.call{value: amount}(\"\");\n    balances[msg.sender] -= amount;\n}",
+      "fix_snippet": "function withdraw(uint amount) public nonReentrant {\n    require(balances[msg.sender] >= amount);\n    balances[msg.sender] -= amount;\n    (bool success, ) = msg.sender.call{value: amount}(\"\");\n    require(success);\n}",
+      "attack_vector": "Malicious contract recursively calls withdraw during external call execution",
+      "confidence": "HIGH",
+      "false_positive_risk": "LOW",
+      "cvss_score": 8.1,
+      "swc_id": "SWC-107",
+      "cwe_id": "CWE-362",
+      "remediation": {
+        "effort": "LOW",
+        "priority": 1,
+        "breaking_change": false
+      },
+      "tags": ["reentrancy", "external-call", "critical", "defi"],
+      "ai_context": {
+        "model_used": "gpt-4",
+        "tokens_consumed": 245,
+        "analysis_version": "1.0.0",
+        "prompt_template": "security_analysis_v1"
+      },
+      "source_context": {
+        "original_lines": 156,
+        "cleaned_lines": 89,
+        "compression_ratio": 42.9,
+        "optimization_level": "prompt"
+      },
+      "status": "DETECTED"
+    },
+    {
+      "id": "SC-0002", 
+      "severity": "MEDIUM",
+      "title": "Unchecked integer overflow in calculation",
+      "category": "Integer Overflow/Underflow",
+      "line": 23,
+      "function": "calculateReward",
+      "contract": "StakingPool",
+      "recommendation": "Use SafeMath library or Solidity 0.8+ built-in overflow protection for arithmetic operations",
+      "description": "Multiplication can overflow with large inputs causing incorrect reward calculations",
+      "impact": "FUND_LOSS",
+      "exploitability": "MODERATE",
+      "code_snippet": "uint reward = amount * rewardRate * timeStaked;",
+      "fix_snippet": "uint reward = amount.mul(rewardRate).mul(timeStaked);",
+      "confidence": "HIGH",
+      "cvss_score": 5.3,
+      "swc_id": "SWC-101",
+      "cwe_id": "CWE-190",
+      "remediation": {
+        "effort": "LOW", 
+        "priority": 2,
+        "breaking_change": false
+      },
+      "tags": ["overflow", "arithmetic", "staking"],
+      "status": "DETECTED"
+    },
+    {
+      "id": "SC-0003",
+      "severity": "LOW", 
+      "title": "Gas optimization opportunity in loop",
+      "category": "Gas Optimization",
+      "line": 67,
+      "function": "distributeRewards",
+      "contract": "RewardDistributor",
+      "recommendation": "Use ++i instead of i++ in loops to save gas. Consider caching array length.",
+      "description": "Loop uses inefficient increment pattern wasting gas on each iteration",
+      "impact": "GAS_INEFFICIENCY",
+      "exploitability": "THEORETICAL",
+      "code_snippet": "for (uint i = 0; i < recipients.length; i++) {",
+      "fix_snippet": "uint len = recipients.length;\nfor (uint i = 0; i < len; ++i) {",
+      "gas_impact": {
+        "optimization_potential": 5000,
+        "is_optimization": true
+      },
+      "confidence": "HIGH",
+      "remediation": {
+        "effort": "TRIVIAL",
+        "priority": 5,
+        "breaking_change": false
+      },
+      "tags": ["gas", "optimization", "loops"],
+      "status": "DETECTED"
+    },
+    {
+      "id": "SC-0004",
+      "severity": "CRITICAL",
+      "title": "Missing access control on mint function",
+      "category": "Access Control", 
+      "line": 112,
+      "function": "mint",
+      "contract": "Token",
+      "recommendation": "Add onlyOwner or appropriate role-based access control modifier to mint function",
+      "description": "Public mint function allows anyone to create unlimited tokens",
+      "impact": "FUND_LOSS",
+      "exploitability": "TRIVIAL",
+      "code_snippet": "function mint(address to, uint amount) public {\n    _mint(to, amount);\n}",
+      "fix_snippet": "function mint(address to, uint amount) public onlyOwner {\n    _mint(to, amount);\n}",
+      "attack_vector": "Anyone can call mint to inflate token supply",
+      "confidence": "HIGH",
+      "cvss_score": 9.8,
+      "swc_id": "SWC-115",
+      "cwe_id": "CWE-284",
+      "remediation": {
+        "effort": "TRIVIAL",
+        "priority": 1,
+        "breaking_change": false
+      },
+      "tags": ["access-control", "mint", "critical", "erc20"],
+      "status": "DETECTED"
+    }
+  ]
+}

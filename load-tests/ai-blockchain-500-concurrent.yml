@@ -1,0 +1,249 @@
+# =============================================================================
+# AI Blockchain Analytics - 500 Concurrent Analyses Load Test
+# =============================================================================
+# This configuration targets the actual AI Blockchain Analytics endpoints
+# with realistic sentiment analysis and verification workflows
+
+config:
+  target: 'http://localhost:8003'
+  
+  # Optimized phases for 500 concurrent analyses
+  phases:
+    # Warmup phase - 30 seconds at low load
+    - duration: 30
+      arrivalRate: 10
+      name: "Warmup Phase"
+    
+    # Gradual ramp to 100 concurrent
+    - duration: 120
+      arrivalRate: 10
+      rampTo: 100
+      name: "Ramp to 100 Concurrent"
+    
+    # Scale to 300 concurrent
+    - duration: 180
+      arrivalRate: 100
+      rampTo: 300
+      name: "Scale to 300 Concurrent"
+    
+    # Final push to 500 concurrent
+    - duration: 120
+      arrivalRate: 300
+      rampTo: 500
+      name: "Push to 500 Concurrent"
+    
+    # Sustained load at 500 concurrent for 10 minutes
+    - duration: 600
+      arrivalRate: 500
+      name: "Sustained 500 Concurrent Load"
+    
+    # Cool down over 90 seconds
+    - duration: 90
+      arrivalRate: 500
+      rampTo: 0
+      name: "Cool Down Phase"
+
+  # HTTP configuration optimized for high concurrency
+  http:
+    timeout: 180
+    pool: 200
+    maxSockets: 1500
+    keepAlive: true
+    requestIdHeader: 'x-request-id'
+
+  # Performance thresholds for AI analysis workloads
+  ensure:
+    - http.request_rate > 300        # Min 300 req/sec
+    - http.response_time.p50 < 3000  # Median under 3s
+    - http.response_time.p95 < 12000 # 95th percentile under 12s
+    - http.response_time.p99 < 25000 # 99th percentile under 25s
+    - http.codes.200 > 70            # At least 70% success rate
+    - http.codes.500 < 5             # Less than 5% server errors
+
+  # Environment variables for test data
+  variables:
+    crypto_symbols: ["BTC", "ETH", "ADA", "SOL", "MATIC", "AVAX", "DOT", "LINK", "UNI", "AAVE"]
+    analysis_types: ["sentiment", "price_prediction", "market_analysis", "risk_assessment"]
+    priorities: ["high", "medium", "low"]
+    timeframes: ["1h", "4h", "1d", "7d", "30d"]
+
+scenarios:
+  # Primary sentiment analysis workflow (60% of traffic)
+  - name: "Sentiment Analysis Pipeline"
+    weight: 60
+    flow:
+      # Health check
+      - get:
+          url: "/"
+          expect:
+            - statusCode: [200, 404]
+      
+      # Submit sentiment analysis job
+      - post:
+          url: "/api/sentiment/analyze"
+          headers:
+            'Content-Type': 'application/json'
+            'X-Requested-With': 'XMLHttpRequest'
+          json:
+            symbol: "{{ $pick(crypto_symbols) }}"
+            analysis_type: "{{ $pick(analysis_types) }}"
+            priority: "{{ $pick(priorities) }}"
+            timeframe: "{{ $pick(timeframes) }}"
+            sources: ["twitter", "reddit", "news"]
+            options:
+              sentiment_threshold: 0.1
+              batch_size: 100
+              include_metrics: true
+          expect:
+            - statusCode: [200, 201, 202, 422, 500]
+          capture:
+            - json: "$.job_id"
+              as: "sentiment_job_id"
+      
+      # Brief pause for processing
+      - think: 2
+      
+      # Check job status
+      - get:
+          url: "/api/sentiment/status/{{ sentiment_job_id }}"
+          expect:
+            - statusCode: [200, 404, 500]
+      
+      # Brief pause between requests
+      - think: 1
+
+  # Verification workflow (25% of traffic)
+  - name: "Verification Analysis"
+    weight: 25
+    flow:
+      # Get verification status
+      - get:
+          url: "/verification"
+          expect:
+            - statusCode: [200, 302, 500]
+      
+      # Submit verification request
+      - post:
+          url: "/api/verification/submit"
+          headers:
+            'Content-Type': 'application/json'
+          json:
+            type: "crypto_analysis"
+            data:
+              symbol: "{{ $pick(crypto_symbols) }}"
+              analysis_depth: "{{ $pick(['basic', 'advanced', 'comprehensive']) }}"
+              verification_level: "{{ $pick(['standard', 'enhanced', 'premium']) }}"
+            priority: "{{ $pick(priorities) }}"
+          expect:
+            - statusCode: [200, 201, 422, 500]
+          capture:
+            - json: "$.verification_id"
+              as: "verification_id"
+      
+      - think: 1.5
+      
+      # Check verification status
+      - get:
+          url: "/api/verification/status/{{ verification_id }}"
+          expect:
+            - statusCode: [200, 404, 500]
+
+  # PDF report generation (10% of traffic)
+  - name: "PDF Report Generation"
+    weight: 10
+    flow:
+      # Request PDF generation
+      - post:
+          url: "/api/pdf/generate"
+          headers:
+            'Content-Type': 'application/json'
+          json:
+            report_type: "sentiment_analysis"
+            data:
+              symbol: "{{ $pick(crypto_symbols) }}"
+              timeframe: "{{ $pick(timeframes) }}"
+              include_charts: true
+              format: "comprehensive"
+            options:
+              charts: ["price", "sentiment", "volume"]
+              export_format: "pdf"
+          expect:
+            - statusCode: [200, 201, 202, 422, 500]
+          capture:
+            - json: "$.task_id"
+              as: "pdf_task_id"
+      
+      - think: 3
+      
+      # Check PDF generation status
+      - get:
+          url: "/api/pdf/status/{{ pdf_task_id }}"
+          expect:
+            - statusCode: [200, 404, 500]
+
+  # Dashboard data requests (5% of traffic)
+  - name: "Dashboard Data Requests"
+    weight: 5
+    flow:
+      # Get dashboard data
+      - get:
+          url: "/dashboard"
+          expect:
+            - statusCode: [200, 302, 500]
+      
+      # API call for dashboard metrics
+      - get:
+          url: "/api/dashboard/metrics"
+          qs:
+            timeframe: "{{ $pick(timeframes) }}"
+            symbols: "{{ $pick(crypto_symbols) }}"
+          expect:
+            - statusCode: [200, 500]
+      
+      # Get recent analyses
+      - get:
+          url: "/api/analyses/recent"
+          qs:
+            limit: 10
+            type: "{{ $pick(analysis_types) }}"
+          expect:
+            - statusCode: [200, 500]
+
+# Custom functions for realistic test data
+functions:
+  generateContractAddress: |
+    function() {
+      const chars = 'abcdef0123456789';
+      let result = '0x';
+      for (let i = 0; i < 40; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+  
+  generateTimestamp: |
+    function() {
+      const now = Date.now();
+      const oneWeekAgo = now - (7 * 24 * 60 * 60 * 1000);
+      return Math.floor(Math.random() * (now - oneWeekAgo) + oneWeekAgo);
+    }
+
+# Custom metrics collection
+plugins:
+  # Add custom metrics
+  - name: "@artilleryio/plugin-metrics-by-endpoint"
+    config:
+      details: true
+      
+  # Memory and CPU monitoring  
+  - name: "artillery-plugin-statsd"
+    config:
+      host: "localhost"
+      port: 8125
+      prefix: "artillery.ai_blockchain"
+
+# After test hooks
+after:
+  flow:
+    - log: "🎉 500 concurrent AI blockchain analyses load test completed!"
+    - log: "Check the generated reports for detailed performance metrics"

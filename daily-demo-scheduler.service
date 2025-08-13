@@ -1,0 +1,15 @@
+[Unit]
+Description=AI Blockchain Analytics Daily Demo Scheduler
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/mobin/PhpstormProjects/ai_blockchain_analytics
+ExecStart=/usr/bin/docker compose exec app php artisan schedule:work
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

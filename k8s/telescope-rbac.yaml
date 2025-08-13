@@ -1,0 +1,134 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: telescope-config
+  namespace: ai-blockchain-analytics
+data:
+  telescope.php: |
+    <?php
+    use Laravel\Telescope\Watchers;
+    use Laravel\Telescope\Http\Middleware\Authorize;
+    
+    return [
+        'enabled' => env('TELESCOPE_ENABLED', true),
+        'domain' => env('TELESCOPE_DOMAIN'),
+        'path' => env('TELESCOPE_PATH', 'telescope'),
+        'driver' => env('TELESCOPE_DRIVER', 'database'),
+        
+        'storage' => [
+            'database' => [
+                'connection' => env('DB_CONNECTION', 'mysql'),
+                'chunk' => 1000,
+            ],
+        ],
+        
+        'queue' => [
+            'connection' => env('TELESCOPE_QUEUE_CONNECTION', 'redis'),
+            'queue' => env('TELESCOPE_QUEUE', 'telescope'),
+        ],
+        
+        // Production restrictions
+        'middleware' => [
+            'web',
+            Authorize::class,
+        ],
+        
+        'only_paths' => [],
+        'ignore_paths' => [
+            'nova-api*',
+            'telescope*',
+            '_debugbar*',
+            'livewire*',
+        ],
+        
+        'ignore_commands' => [
+            'schedule:run',
+            'schedule:finish',
+            'package:discover',
+            'queue:work',
+        ],
+        
+        'watchers' => [
+            Watchers\CacheWatcher::class => env('TELESCOPE_CACHE_WATCHER', true),
+            Watchers\CommandWatcher::class => env('TELESCOPE_COMMAND_WATCHER', true),
+            Watchers\DumpWatcher::class => env('TELESCOPE_DUMP_WATCHER', false),
+            Watchers\EventWatcher::class => env('TELESCOPE_EVENT_WATCHER', true),
+            Watchers\ExceptionWatcher::class => env('TELESCOPE_EXCEPTION_WATCHER', true),
+            Watchers\JobWatcher::class => [
+                'enabled' => env('TELESCOPE_JOB_WATCHER', true),
+                'ignore' => [],
+            ],
+            Watchers\LogWatcher::class => env('TELESCOPE_LOG_WATCHER', true),
+            Watchers\MailWatcher::class => env('TELESCOPE_MAIL_WATCHER', true),
+            Watchers\ModelWatcher::class => [
+                'enabled' => env('TELESCOPE_MODEL_WATCHER', true),
+                'hydrations' => true,
+            ],
+            Watchers\NotificationWatcher::class => env('TELESCOPE_NOTIFICATION_WATCHER', true),
+            Watchers\QueryWatcher::class => [
+                'enabled' => env('TELESCOPE_QUERY_WATCHER', true),
+                'ignore_packages' => true,
+                'slow' => 100,
+            ],
+            Watchers\RedisWatcher::class => env('TELESCOPE_REDIS_WATCHER', true),
+            Watchers\RequestWatcher::class => [
+                'enabled' => env('TELESCOPE_REQUEST_WATCHER', true),
+                'size_limit' => env('TELESCOPE_RESPONSE_SIZE_LIMIT', 64),
+            ],
+            Watchers\GateWatcher::class => env('TELESCOPE_GATE_WATCHER', true),
+            Watchers\ScheduleWatcher::class => env('TELESCOPE_SCHEDULE_WATCHER', true),
+            Watchers\ViewWatcher::class => env('TELESCOPE_VIEW_WATCHER', false),
+        ],
+    ];
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: telescope-auth-config
+  namespace: ai-blockchain-analytics
+data:
+  telescope-authorize.php: |
+    <?php
+    namespace App\Http\Middleware;
+    
+    use Laravel\Telescope\Http\Middleware\Authorize as TelescopeAuthorize;
+    use Illuminate\Http\Request;
+    
+    class TelescopeProductionAuthorize extends TelescopeAuthorize
+    {
+        /**
+         * Determine if the user is authorized to access Telescope in production.
+         */
+        protected function gate(): \Closure
+        {
+            return function (Request $request) {
+                // Production restrictions - only allow specific IPs or authenticated admin users
+                $allowedIPs = explode(',', env('TELESCOPE_ALLOWED_IPS', ''));
+                $clientIP = $request->getClientIp();
+                
+                // Check if IP is in allowed list
+                if (!empty($allowedIPs) && in_array($clientIP, $allowedIPs)) {
+                    return true;
+                }
+                
+                // Check if user is authenticated and is admin
+                if (!$request->user()) {
+                    return false;
+                }
+                
+                // Only allow users with 'admin' role or specific permission
+                return $request->user()->hasRole('admin') || 
+                       $request->user()->can('view-telescope');
+            };
+        }
+    }
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: telescope-secrets
+  namespace: ai-blockchain-analytics
+type: Opaque
+stringData:
+  TELESCOPE_ALLOWED_IPS: "127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+  TELESCOPE_ADMIN_TOKEN: "telescope-admin-secret-token-12345"

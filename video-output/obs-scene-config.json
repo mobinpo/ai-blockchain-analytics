@@ -1,0 +1,46 @@
+{
+    "recording_settings": {
+        "resolution": "1920x1080",
+        "fps": 30,
+        "format": "mp4",
+        "encoder": "x264",
+        "quality": "high"
+    },
+    "scenes": [
+        {
+            "name": "Headlines",
+            "duration": "0-10s",
+            "sources": ["Browser Source - Headlines HTML"]
+        },
+        {
+            "name": "Platform Intro",
+            "duration": "10-30s", 
+            "sources": ["Browser Source - Health Check", "Logo Overlay"]
+        },
+        {
+            "name": "Contract Analysis",
+            "duration": "30-45s",
+            "sources": ["Browser Source - Analysis Demo", "Terminal Window"]
+        },
+        {
+            "name": "Sentiment Demo",
+            "duration": "45-60s",
+            "sources": ["Terminal Window - Sentiment Command"]
+        },
+        {
+            "name": "PDF Generation",
+            "duration": "60-75s",
+            "sources": ["Terminal Window - PDF Command"]
+        },
+        {
+            "name": "Famous Contracts",
+            "duration": "75-90s",
+            "sources": ["Terminal Window - Database Query"]
+        },
+        {
+            "name": "Call to Action",
+            "duration": "90-120s",
+            "sources": ["Contact Info Overlay", "Website URL"]
+        }
+    ]
+}

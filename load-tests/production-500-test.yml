@@ -1,0 +1,84 @@
+# =============================================================================
+# AI Blockchain Analytics - 500 Concurrent Analysis Production Load Test
+# =============================================================================
+
+config:
+  target: 'http://localhost:8000'
+  
+  # Optimized phases for 500 concurrent analyses
+  phases:
+    # Ramp up to 500 concurrent users over 4 minutes
+    - duration: 240
+      arrivalRate: 100
+      rampTo: 500
+      name: "Ramp to 500 Concurrent Analyses"
+    
+    # Sustained load at 500 concurrent for 10 minutes
+    - duration: 600
+      arrivalRate: 500
+      name: "Sustained 500 Concurrent Load"
+    
+    # Cool down over 1 minute
+    - duration: 60
+      arrivalRate: 500
+      rampTo: 0
+      name: "Cool Down"
+
+  # HTTP optimization for high concurrency
+  http:
+    timeout: 120
+    pool: 100
+    maxSockets: 1000
+    keepAlive: true
+
+  # Performance thresholds
+  ensure:
+    - http.request_rate > 400        # Min 400 req/sec
+    - http.response_time.p95 < 8000  # 95th percentile under 8s
+    - http.response_time.p99 < 15000 # 99th percentile under 15s
+    - http.codes.200 > 50            # At least 50% success (accounting for 404s)
+    - http.codes.500 < 10            # Less than 10% server errors
+
+scenarios:
+  # Main smart contract analysis scenario
+  - name: "Blockchain Analysis Workflow"
+    weight: 80
+    flow:
+      # Health check
+      - get:
+          url: "/"
+          expect:
+            - statusCode: [200, 404]
+      
+      # Simulate contract analysis API call
+      - post:
+          url: "/api/analysis/contract"
+          json:
+            contract_address: "0x{{ $randomString(40, 'abcdef0123456789') }}"
+            chain_id: "{{ $randomInt(1, 137) }}"
+            analysis_type: "{{ $randomItem(['security_audit', 'vulnerability_scan', 'gas_optimization']) }}"
+            priority: "{{ $randomItem(['high', 'medium', 'low']) }}"
+            options:
+              vulnerability_scan: true
+              gas_optimization: true
+              security_audit: true
+          expect:
+            - statusCode: [200, 201, 202, 404, 422, 500]
+      
+      # Brief pause between requests
+      - think: 1
+
+  # Quick analysis scenario
+  - name: "Quick Contract Scan"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/analysis/quick-scan"
+          json:
+            contract_address: "0x{{ $randomString(40, 'abcdef0123456789') }}"
+            chain_id: "{{ $randomInt(1, 56) }}"
+            scan_type: "basic"
+          expect:
+            - statusCode: [200, 201, 202, 404, 422, 500]
+      
+      - think: 0.5

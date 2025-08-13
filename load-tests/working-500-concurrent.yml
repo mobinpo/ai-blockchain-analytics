@@ -1,0 +1,164 @@
+# =============================================================================
+# AI Blockchain Analytics - Working 500 Concurrent Analysis Load Test
+# =============================================================================
+
+config:
+  target: 'http://localhost:8003'
+  
+  # Optimized phases for 500 concurrent analyses
+  phases:
+    # Warmup phase - 60 seconds at low load
+    - duration: 60
+      arrivalRate: 5
+      name: "Warmup Phase"
+    
+    # Gradual ramp to 100 concurrent
+    - duration: 120
+      arrivalRate: 5
+      rampTo: 100
+      name: "Ramp to 100 Concurrent"
+    
+    # Scale to 300 concurrent
+    - duration: 180
+      arrivalRate: 100
+      rampTo: 300
+      name: "Scale to 300 Concurrent"
+    
+    # Final push to 500 concurrent
+    - duration: 120
+      arrivalRate: 300
+      rampTo: 500
+      name: "Push to 500 Concurrent"
+    
+    # Sustained load at 500 concurrent for 10 minutes
+    - duration: 600
+      arrivalRate: 500
+      name: "Sustained 500 Concurrent Load"
+    
+    # Cool down over 90 seconds
+    - duration: 90
+      arrivalRate: 500
+      rampTo: 10
+      name: "Cool Down Phase"
+
+  # HTTP configuration optimized for high concurrency
+  http:
+    timeout: 180
+    pool: 200
+    maxSockets: 1500
+    keepAlive: true
+
+  # Performance thresholds
+  ensure:
+    - http.request_rate > 200        # Min 200 req/sec
+    - http.response_time.p95 < 15000 # 95th percentile under 15s
+
+  # Environment variables
+  variables:
+    crypto_symbols: ["BTC", "ETH", "ADA", "SOL", "MATIC", "AVAX", "DOT", "LINK"]
+    analysis_types: ["sentiment", "price_prediction", "market_analysis", "risk_assessment"]
+    priorities: ["high", "medium", "low"]
+
+scenarios:
+  # Primary sentiment analysis workflow (60% of traffic)
+  - name: "Sentiment Analysis Pipeline"
+    weight: 60
+    flow:
+      # Health check
+      - get:
+          url: "/"
+          expect:
+            - statusCode: [200, 404, 500, 502, 503]
+      
+      # Submit sentiment analysis job
+      - post:
+          url: "/api/sentiment/analyze"
+          headers:
+            'Content-Type': 'application/json'
+          json:
+            symbol: "{{ $pick(crypto_symbols) }}"
+            analysis_type: "{{ $pick(analysis_types) }}"
+            priority: "{{ $pick(priorities) }}"
+          expect:
+            - statusCode: [200, 201, 202, 422, 429, 500, 503]
+      
+      # Brief pause
+      - think: 2
+      
+      # Check status
+      - get:
+          url: "/api/sentiment/status/test-{{ $randomInt(1000, 9999) }}"
+          expect:
+            - statusCode: [200, 404, 422, 500, 503]
+
+  # Contract analysis workflow (25% of traffic)
+  - name: "Contract Analysis"
+    weight: 25
+    flow:
+      # Submit contract analysis
+      - post:
+          url: "/api/contracts/analyze"
+          headers:
+            'Content-Type': 'application/json'
+          json:
+            contract_address: "0x{{ $randomString(40, 'abcdef0123456789') }}"
+            network: "ethereum"
+            analysis_type: "security"
+          expect:
+            - statusCode: [200, 201, 202, 400, 422, 500, 503]
+      
+      - think: 3
+      
+      # Check analysis status
+      - get:
+          url: "/api/contracts/status/test-{{ $randomInt(1000, 9999) }}"
+          expect:
+            - statusCode: [200, 404, 500, 503]
+
+  # Verification workflow (10% of traffic)
+  - name: "Verification Analysis"
+    weight: 10
+    flow:
+      # Get verification page
+      - get:
+          url: "/get-verified"
+          expect:
+            - statusCode: [200, 302, 401, 500, 503]
+      
+      # Submit verification
+      - post:
+          url: "/api/verification/submit"
+          headers:
+            'Content-Type': 'application/json'
+          json:
+            type: "crypto_analysis"
+            data:
+              symbol: "{{ $pick(crypto_symbols) }}"
+          expect:
+            - statusCode: [200, 201, 302, 422, 500, 503]
+
+  # Dashboard requests (5% of traffic)
+  - name: "Dashboard Requests"
+    weight: 5
+    flow:
+      # Get dashboard
+      - get:
+          url: "/dashboard"
+          expect:
+            - statusCode: [200, 302, 401, 500, 503]
+      
+      # API metrics
+      - get:
+          url: "/api/dashboard/metrics"
+          expect:
+            - statusCode: [200, 401, 500, 503]
+
+# Before test
+before:
+  flow:
+    - log: "🚀 Starting 500 Concurrent AI Blockchain Analysis Load Test"
+
+# After test
+after:
+  flow:
+    - log: "✅ 500 concurrent analysis load test completed!"

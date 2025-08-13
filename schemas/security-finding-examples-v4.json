@@ -1,0 +1,672 @@
+{
+  "title": "Security Finding Schema v4.0 - Additional Examples",
+  "description": "Comprehensive examples for AI prompt engineering and training",
+  "version": "4.0.0",
+  "examples": [
+    {
+      "name": "Integer Overflow Example",
+      "description": "Classic integer overflow vulnerability in token calculation",
+      "finding": {
+        "id": "FIND-12A3B4C5-D6E7-F8G9-H0I1-J2K3L4M5N6O7",
+        "severity": "HIGH",
+        "title": "Integer overflow in _mint function allows unlimited token creation bypassing max supply",
+        "category": "SWC-101-Integer Overflow and Underflow",
+        "description": "The _mint function performs arithmetic operations without proper overflow protection, allowing an attacker to bypass the maximum supply limit by triggering an integer overflow. When totalSupply approaches the maximum uint256 value, adding additional tokens causes the value to wrap around to zero, effectively bypassing supply constraints and enabling unlimited token creation.",
+        "confidence": "HIGH",
+        "location": {
+          "line": 89,
+          "line_end": 92,
+          "function": "_mint",
+          "contract": "VulnerableToken",
+          "file": "contracts/VulnerableToken.sol",
+          "code_snippet": "function _mint(address to, uint256 amount) internal {\n    totalSupply += amount; // Overflow possible here\n    require(totalSupply <= MAX_SUPPLY, \"Max supply exceeded\");\n    balances[to] += amount;\n}",
+          "affected_variables": ["totalSupply", "amount", "MAX_SUPPLY"],
+          "control_flow": {
+            "entry_points": ["mint", "batchMint"],
+            "execution_path": [
+              {"step": 1, "function": "_mint", "line": 90, "action": "Add amount to totalSupply without overflow check"},
+              {"step": 2, "function": "_mint", "line": 91, "action": "Check if totalSupply exceeds MAX_SUPPLY"},
+              {"step": 3, "function": "_mint", "line": 92, "action": "Update recipient balance"}
+            ],
+            "conditions": ["totalSupply + amount causes overflow", "Solidity version < 0.8.0"]
+          }
+        },
+        "recommendation": {
+          "summary": "Use SafeMath library or Solidity 0.8+ built-in overflow protection to prevent integer overflow vulnerabilities",
+          "immediate_action": "PATCH_IMMEDIATELY",
+          "detailed_steps": [
+            {
+              "step": 1,
+              "action": "Upgrade Solidity compiler to version 0.8.0 or higher for built-in overflow protection",
+              "code_example": "pragma solidity ^0.8.0;",
+              "verification": "Compiler version in pragma statement is 0.8.0+"
+            },
+            {
+              "step": 2,
+              "action": "Reorder operations to check supply limit before performing addition",
+              "code_example": "require(amount <= MAX_SUPPLY - totalSupply, \"Would exceed max supply\");\ntotalSupply += amount;",
+              "verification": "Supply check occurs before arithmetic operation"
+            },
+            {
+              "step": 3,
+              "action": "Add comprehensive overflow testing for edge cases",
+              "verification": "Tests cover max values and boundary conditions"
+            }
+          ],
+          "secure_pattern": {
+            "name": "Safe Arithmetic with Pre-checks",
+            "implementation": "function _mint(address to, uint256 amount) internal {\n    require(to != address(0), \"Mint to zero address\");\n    require(amount > 0, \"Amount must be positive\");\n    require(amount <= MAX_SUPPLY - totalSupply, \"Would exceed max supply\");\n    \n    totalSupply += amount; // Safe with Solidity 0.8+\n    balances[to] += amount;\n    \n    emit Transfer(address(0), to, amount);\n}",
+            "explanation": "This pattern prevents overflow by checking constraints before arithmetic operations and using Solidity 0.8+ automatic overflow protection"
+          },
+          "testing_approach": {
+            "unit_tests": ["Test minting at maximum capacity", "Test overflow scenarios with large numbers", "Test boundary conditions"],
+            "integration_tests": ["Test with other contract interactions", "Test batch operations"],
+            "fuzzing_targets": ["_mint function with random large amounts"],
+            "formal_verification": true
+          },
+          "references": [
+            {
+              "title": "SWC-101: Integer Overflow and Underflow",
+              "url": "https://swcregistry.io/docs/SWC-101",
+              "type": "standard",
+              "relevance": "HIGH",
+              "description": "Official SWC registry entry for integer overflow vulnerabilities"
+            },
+            {
+              "title": "Solidity 0.8.0 Breaking Changes - Arithmetic Operations",
+              "url": "https://docs.soliditylang.org/en/v0.8.0/080-breaking-changes.html",
+              "type": "documentation",
+              "relevance": "HIGH",
+              "description": "Official documentation on built-in overflow protection"
+            }
+          ]
+        },
+        "risk_metrics": {
+          "cvss_v3": {
+            "score": 7.5,
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+          },
+          "exploitability": {
+            "ease": "MODERATE",
+            "prerequisites": ["Understanding of integer overflow", "Access to mint function", "Knowledge of max supply value"],
+            "attack_complexity": "LOW",
+            "cost_to_exploit": "LOW"
+          },
+          "business_impact": {
+            "financial": {
+              "direct_loss": "HIGH",
+              "loss_estimate": "Token value could be completely undermined",
+              "affected_funds": "PROTOCOL_FUNDS"
+            },
+            "operational": "SEVERE",
+            "reputation": "CRITICAL",
+            "compliance": ["Financial regulations if token represents real value"]
+          },
+          "likelihood": {
+            "probability": "HIGH",
+            "threat_actors": ["SOPHISTICATED", "OPPORTUNISTIC"],
+            "attack_motivation": ["FINANCIAL_GAIN", "DISRUPTION"],
+            "environmental_factors": ["Public contract", "High-value token", "Pre-0.8.0 Solidity"]
+          }
+        },
+        "blockchain_context": {
+          "networks": ["ETHEREUM", "BSC", "POLYGON"],
+          "evm_specifics": {
+            "solidity_version": "0.7.6",
+            "optimization_enabled": true,
+            "optimization_runs": 200
+          },
+          "gas_analysis": {
+            "vulnerability_gas_cost": 0,
+            "fix_gas_impact": 500,
+            "optimization_potential": 0,
+            "dos_risk": false
+          },
+          "defi_context": {
+            "protocol_type": ["OTHER"],
+            "tvl_impact": "COMPLETE",
+            "liquidity_risk": true,
+            "oracle_dependency": false,
+            "governance_impact": false,
+            "yield_manipulation": true
+          },
+          "token_standards": ["ERC20"]
+        },
+        "ai_metadata": {
+          "model": "gpt-4",
+          "analysis_version": "4.1.0",
+          "detection_method": "LLM_ANALYSIS",
+          "prompt_engineering": {
+            "prompt_version": "v4.0",
+            "prompt_type": "FOCUSED",
+            "context_window": 4096,
+            "temperature": 0.0,
+            "top_p": 0.95
+          },
+          "performance_metrics": {
+            "tokens_input": 1850,
+            "tokens_output": 950,
+            "processing_time_ms": 3200,
+            "cost_usd": 0.08,
+            "retry_count": 0
+          },
+          "confidence_scoring": {
+            "base_confidence": 0.92,
+            "false_positive_probability": 0.03,
+            "validation_score": 0.95,
+            "pattern_match_strength": 0.88,
+            "contextual_factors": [
+              {"factor": "Pre-0.8.0 Solidity version", "impact": 0.4, "weight": 0.3},
+              {"factor": "Unchecked arithmetic operations", "impact": 0.35, "weight": 0.4},
+              {"factor": "Supply limit bypass pattern", "impact": 0.25, "weight": 0.3}
+            ]
+          },
+          "validation": {
+            "human_reviewed": false,
+            "automated_validation": true,
+            "cross_validation": true,
+            "peer_review": false,
+            "validation_notes": "Validated against known overflow patterns"
+          }
+        },
+        "exploit_scenario": {
+          "attack_vector": "Trigger integer overflow by minting tokens when totalSupply is near uint256 maximum value",
+          "step_by_step": [
+            {
+              "step": 1,
+              "actor": "ATTACKER",
+              "action": "Deploy or identify contract using vulnerable minting logic with Solidity < 0.8.0",
+              "preconditions": ["Contract allows public minting", "totalSupply can approach max uint256"],
+              "outcome": "Target contract identified",
+              "evidence": "Contract analysis showing vulnerable pattern"
+            },
+            {
+              "step": 2,
+              "actor": "ATTACKER",
+              "action": "Calculate amount needed to cause totalSupply overflow",
+              "preconditions": ["Know current totalSupply", "Understand uint256 max value"],
+              "outcome": "Overflow amount calculated",
+              "evidence": "Mathematical calculation: amount = uint256.max - totalSupply + 1"
+            },
+            {
+              "step": 3,
+              "actor": "ATTACKER",
+              "action": "Execute mint transaction with overflow amount",
+              "preconditions": ["Have permission to mint", "Sufficient gas for transaction"],
+              "outcome": "totalSupply wraps around to small value",
+              "evidence": "totalSupply becomes much smaller than expected"
+            },
+            {
+              "step": 4,
+              "actor": "ATTACKER",
+              "action": "Continue minting tokens without supply limit enforcement",
+              "preconditions": ["Overflow successful", "Contract still functional"],
+              "outcome": "Unlimited token creation achieved",
+              "evidence": "Token supply exceeds original maximum limit"
+            }
+          ],
+          "proof_of_concept": {
+            "code": "// Solidity 0.7.6\ncontract OverflowExploit {\n    VulnerableToken target;\n    \n    constructor(address _target) {\n        target = VulnerableToken(_target);\n    }\n    \n    function exploit() external {\n        uint256 currentSupply = target.totalSupply();\n        uint256 maxSupply = target.MAX_SUPPLY();\n        \n        // Calculate overflow amount\n        uint256 overflowAmount = type(uint256).max - currentSupply + 1;\n        \n        // This will cause totalSupply to wrap around to 0\n        // bypassing the MAX_SUPPLY check\n        target.mint(address(this), overflowAmount);\n        \n        // Now we can mint unlimited tokens\n        target.mint(address(this), maxSupply);\n    }\n}",
+            "explanation": "This exploit calculates the exact amount needed to cause integer overflow, bypassing supply limits",
+            "execution_environment": "Ethereum testnet with Solidity 0.7.6",
+            "expected_result": "Attacker gains more tokens than MAX_SUPPLY should allow"
+          }
+        },
+        "remediation_tracking": {
+          "status": "OPEN",
+          "priority": 1,
+          "effort_estimate": {
+            "developer_hours": 3,
+            "testing_hours": 6,
+            "review_hours": 2
+          },
+          "timeline": {
+            "discovery_date": "2025-08-06T14:15:00Z",
+            "target_fix_date": "2025-08-07"
+          }
+        },
+        "compliance_mapping": {
+          "standards": [
+            {
+              "framework": "SWC_REGISTRY",
+              "control_id": "SWC-101",
+              "description": "Integer Overflow and Underflow",
+              "compliance_level": "NON_COMPLIANT"
+            }
+          ]
+        },
+        "tags": ["integer-overflow", "arithmetic", "supply-limit", "erc20", "solidity-version", "high-severity"],
+        "created_at": "2025-08-06T14:15:00Z",
+        "updated_at": "2025-08-06T14:15:00Z"
+      }
+    },
+    {
+      "name": "Gas Optimization Example",
+      "description": "Gas inefficiency in storage operations",
+      "finding": {
+        "id": "FIND-98F7E6D5-C4B3-A291-8E7D-6C5B4A392817",
+        "severity": "GAS_OPTIMIZATION",
+        "title": "Inefficient storage access pattern in loop wastes gas through repeated SSTORE operations",
+        "category": "GAS-001-Inefficient Storage Access",
+        "description": "The processUsers function contains a loop that performs individual storage writes for each iteration, resulting in multiple expensive SSTORE operations. Each SSTORE costs 20,000 gas for new storage slots or 5,000 gas for updates, making this pattern highly inefficient when processing multiple users. This can be optimized by batching operations or using memory arrays for intermediate calculations.",
+        "confidence": "HIGH",
+        "location": {
+          "line": 156,
+          "line_end": 162,
+          "function": "processUsers",
+          "contract": "UserManager",
+          "file": "contracts/UserManager.sol",
+          "code_snippet": "function processUsers(address[] memory users, uint256[] memory amounts) external {\n    for (uint256 i = 0; i < users.length; i++) {\n        userBalances[users[i]] += amounts[i]; // Expensive SSTORE in loop\n        userLastUpdate[users[i]] = block.timestamp; // Another SSTORE\n        emit UserProcessed(users[i], amounts[i]);\n    }\n}",
+          "affected_variables": ["userBalances", "userLastUpdate"],
+          "control_flow": {
+            "entry_points": ["processUsers"],
+            "execution_path": [
+              {"step": 1, "function": "processUsers", "line": 157, "action": "Start loop iteration"},
+              {"step": 2, "function": "processUsers", "line": 158, "action": "Update userBalances storage"},
+              {"step": 3, "function": "processUsers", "line": 159, "action": "Update userLastUpdate storage"},
+              {"step": 4, "function": "processUsers", "line": 160, "action": "Emit event"}
+            ],
+            "conditions": ["Arrays have matching lengths", "Loop completes within gas limit"]
+          }
+        },
+        "recommendation": {
+          "summary": "Optimize storage operations by implementing batch processing with single storage updates per user",
+          "immediate_action": "NO_ACTION",
+          "detailed_steps": [
+            {
+              "step": 1,
+              "action": "Implement struct-based storage to combine related data",
+              "code_example": "struct UserData {\n    uint256 balance;\n    uint256 lastUpdate;\n}\nmapping(address => UserData) public userData;",
+              "verification": "Single mapping replaces multiple mappings"
+            },
+            {
+              "step": 2,
+              "action": "Use temporary variables for calculations before final storage write",
+              "code_example": "UserData storage user = userData[users[i]];\nuser.balance += amounts[i];\nuser.lastUpdate = block.timestamp;",
+              "verification": "Only one SSTORE operation per user per field"
+            },
+            {
+              "step": 3,
+              "action": "Consider batch operations with gas limit checks",
+              "verification": "Gas usage scales efficiently with user count"
+            }
+          ],
+          "secure_pattern": {
+            "name": "Optimized Batch Processing",
+            "implementation": "struct UserData {\n    uint256 balance;\n    uint256 lastUpdate;\n}\n\nmapping(address => UserData) public userData;\n\nfunction processUsers(address[] memory users, uint256[] memory amounts) external {\n    require(users.length == amounts.length, \"Array length mismatch\");\n    \n    for (uint256 i = 0; i < users.length; i++) {\n        UserData storage user = userData[users[i]];\n        user.balance += amounts[i];\n        user.lastUpdate = block.timestamp;\n        \n        emit UserProcessed(users[i], amounts[i]);\n    }\n}",
+            "explanation": "This pattern reduces gas costs by using struct storage and minimizing SSTORE operations per user"
+          },
+          "testing_approach": {
+            "unit_tests": ["Test gas consumption with various array sizes", "Test functional correctness", "Test boundary conditions"],
+            "integration_tests": ["Test with maximum practical array sizes"],
+            "fuzzing_targets": ["Function with various array sizes and values"],
+            "formal_verification": false
+          },
+          "references": [
+            {
+              "title": "Ethereum Gas Optimization Patterns",
+              "url": "https://github.com/ethereum/solidity/issues/2810",
+              "type": "documentation",
+              "relevance": "HIGH",
+              "description": "Discussion on gas optimization techniques"
+            }
+          ]
+        },
+        "risk_metrics": {
+          "exploitability": {
+            "ease": "N/A",
+            "prerequisites": [],
+            "attack_complexity": "N/A",
+            "cost_to_exploit": "NONE"
+          },
+          "business_impact": {
+            "financial": {
+              "direct_loss": "NONE",
+              "loss_estimate": "Increased transaction costs",
+              "affected_funds": "NONE"
+            },
+            "operational": "MINIMAL",
+            "reputation": "NONE",
+            "compliance": []
+          },
+          "likelihood": {
+            "probability": "N/A",
+            "threat_actors": [],
+            "attack_motivation": [],
+            "environmental_factors": ["High gas prices make optimization valuable"]
+          }
+        },
+        "blockchain_context": {
+          "networks": ["ETHEREUM", "POLYGON", "BSC"],
+          "evm_specifics": {
+            "solidity_version": "0.8.19",
+            "optimization_enabled": true,
+            "optimization_runs": 200
+          },
+          "gas_analysis": {
+            "vulnerability_gas_cost": 0,
+            "fix_gas_impact": -15000,
+            "optimization_potential": 45000,
+            "dos_risk": false
+          },
+          "token_standards": ["N/A"]
+        },
+        "ai_metadata": {
+          "model": "gpt-4",
+          "analysis_version": "4.1.0",
+          "detection_method": "LLM_ANALYSIS",
+          "prompt_engineering": {
+            "prompt_version": "v4.0",
+            "prompt_type": "GAS_OPTIMIZATION",
+            "context_window": 4096,
+            "temperature": 0.05,
+            "top_p": 0.9
+          },
+          "performance_metrics": {
+            "tokens_input": 1200,
+            "tokens_output": 800,
+            "processing_time_ms": 2800,
+            "cost_usd": 0.05,
+            "retry_count": 0
+          },
+          "confidence_scoring": {
+            "base_confidence": 0.95,
+            "false_positive_probability": 0.01,
+            "validation_score": 0.98,
+            "pattern_match_strength": 0.92,
+            "contextual_factors": [
+              {"factor": "Clear gas inefficiency pattern", "impact": 0.5, "weight": 0.6},
+              {"factor": "Quantifiable optimization potential", "impact": 0.3, "weight": 0.4}
+            ]
+          },
+          "validation": {
+            "human_reviewed": false,
+            "automated_validation": true,
+            "cross_validation": false,
+            "peer_review": false
+          }
+        },
+        "remediation_tracking": {
+          "status": "OPEN",
+          "priority": 4,
+          "effort_estimate": {
+            "developer_hours": 2,
+            "testing_hours": 3,
+            "review_hours": 1
+          }
+        },
+        "tags": ["gas-optimization", "storage", "loop", "efficiency", "cost-reduction"],
+        "created_at": "2025-08-06T14:30:00Z",
+        "updated_at": "2025-08-06T14:30:00Z"
+      }
+    },
+    {
+      "name": "DeFi Oracle Manipulation Example", 
+      "description": "Price oracle manipulation vulnerability in DeFi protocol",
+      "finding": {
+        "id": "FIND-456A789B-C123-D456-E789-F012G345H678",
+        "severity": "CRITICAL",
+        "title": "Single oracle price feed manipulation enables arbitrage attacks draining AMM liquidity pools",
+        "category": "DEFI-001-Oracle Manipulation",
+        "description": "The AMM contract relies on a single Chainlink price oracle without validation or backup feeds, creating a critical vulnerability where attackers can manipulate reported prices through flash loans or oracle front-running. When the oracle reports incorrect prices due to market volatility or manipulation, arbitrageurs can drain liquidity pools by trading against stale prices. This vulnerability is particularly dangerous during low liquidity periods or market stress events when oracle updates may lag behind actual market prices.",
+        "confidence": "HIGH",
+        "location": {
+          "line": 234,
+          "line_end": 238,
+          "function": "getTokenPrice",
+          "contract": "LiquidityPool",
+          "file": "contracts/LiquidityPool.sol", 
+          "code_snippet": "function getTokenPrice() public view returns (uint256) {\n    (, int256 price,,,) = priceFeed.latestRoundData();\n    require(price > 0, \"Invalid price\");\n    return uint256(price);\n}",
+          "affected_variables": ["priceFeed", "price"],
+          "control_flow": {
+            "entry_points": ["swap", "addLiquidity", "removeLiquidity"],
+            "execution_path": [
+              {"step": 1, "function": "swap", "line": 189, "action": "Call getTokenPrice for swap calculation"},
+              {"step": 2, "function": "getTokenPrice", "line": 235, "action": "Fetch price from single oracle"},
+              {"step": 3, "function": "swap", "line": 192, "action": "Calculate swap amounts using oracle price"}
+            ],
+            "conditions": ["Oracle is accessible", "Price is greater than zero"]
+          }
+        },
+        "recommendation": {
+          "summary": "Implement multi-oracle price validation with TWAP and circuit breakers to prevent price manipulation attacks",
+          "immediate_action": "PAUSE_CONTRACT",
+          "detailed_steps": [
+            {
+              "step": 1,
+              "action": "Implement multiple oracle sources with consensus mechanism",
+              "code_example": "function getTokenPrice() public view returns (uint256) {\n    uint256 chainlinkPrice = getChainlinkPrice();\n    uint256 uniswapTWAP = getUniswapTWAP();\n    uint256 bandPrice = getBandPrice();\n    \n    return getMedianPrice([chainlinkPrice, uniswapTWAP, bandPrice]);\n}",
+              "verification": "Multiple oracle sources implemented and consensus logic verified"
+            },
+            {
+              "step": 2,
+              "action": "Add TWAP (Time-Weighted Average Price) calculation for price stability",
+              "verification": "TWAP implementation covers appropriate time windows"
+            },
+            {
+              "step": 3,
+              "action": "Implement circuit breakers for extreme price movements",
+              "code_example": "require(abs(newPrice - lastPrice) / lastPrice < MAX_PRICE_DEVIATION, \"Price deviation too large\");",
+              "verification": "Circuit breakers trigger on abnormal price movements"
+            },
+            {
+              "step": 4,
+              "action": "Add price staleness checks and heartbeat validation",
+              "verification": "Stale price detection prevents usage of outdated data"
+            }
+          ],
+          "secure_pattern": {
+            "name": "Multi-Oracle Price Validation with Circuit Breakers",
+            "implementation": "contract SecurePriceOracle {\n    uint256 constant MAX_PRICE_AGE = 3600; // 1 hour\n    uint256 constant MAX_DEVIATION = 500; // 5%\n    \n    struct PriceData {\n        uint256 price;\n        uint256 timestamp;\n        bool isValid;\n    }\n    \n    function getValidatedPrice() external view returns (uint256) {\n        PriceData memory chainlink = getChainlinkData();\n        PriceData memory twap = getTWAPData();\n        \n        require(chainlink.isValid && twap.isValid, \"Invalid price data\");\n        require(block.timestamp - chainlink.timestamp < MAX_PRICE_AGE, \"Price too stale\");\n        \n        uint256 deviation = abs(chainlink.price - twap.price) * 10000 / chainlink.price;\n        require(deviation < MAX_DEVIATION, \"Price deviation too large\");\n        \n        return (chainlink.price + twap.price) / 2;\n    }\n}",
+            "explanation": "This pattern prevents manipulation by validating multiple price sources and implementing safety checks"
+          },
+          "testing_approach": {
+            "unit_tests": ["Test with manipulated oracle prices", "Test circuit breaker triggers", "Test price staleness detection"],
+            "integration_tests": ["Test with live oracle feeds", "Test during market volatility simulations"],
+            "fuzzing_targets": ["Price calculation functions with extreme values"],
+            "formal_verification": true
+          },
+          "references": [
+            {
+              "title": "Oracle Manipulation Attacks on DeFi Protocols",
+              "url": "https://consensys.github.io/smart-contract-best-practices/attacks/oracle-manipulation/",
+              "type": "documentation", 
+              "relevance": "HIGH",
+              "description": "Comprehensive guide to oracle security in DeFi"
+            },
+            {
+              "title": "Chainlink Price Feeds Best Practices",
+              "url": "https://docs.chain.link/data-feeds/price-feeds/",
+              "type": "documentation",
+              "relevance": "HIGH",
+              "description": "Official Chainlink documentation on secure price feed usage"
+            }
+          ]
+        },
+        "risk_metrics": {
+          "cvss_v3": {
+            "score": 9.1,
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H"
+          },
+          "exploitability": {
+            "ease": "MODERATE",
+            "prerequisites": ["Flash loan access", "Oracle manipulation capability", "Market timing knowledge"],
+            "attack_complexity": "MEDIUM",
+            "cost_to_exploit": "HIGH"
+          },
+          "business_impact": {
+            "financial": {
+              "direct_loss": "CRITICAL",
+              "loss_estimate": "Entire liquidity pool could be drained",
+              "affected_funds": "BOTH"
+            },
+            "operational": "COMPLETE_SHUTDOWN",
+            "reputation": "CRITICAL",
+            "compliance": ["DeFi regulatory frameworks"]
+          },
+          "likelihood": {
+            "probability": "HIGH",
+            "threat_actors": ["SOPHISTICATED", "OPPORTUNISTIC"],
+            "attack_motivation": ["FINANCIAL_GAIN"],
+            "environmental_factors": ["High TVL target", "Market volatility", "Oracle latency periods"]
+          }
+        },
+        "blockchain_context": {
+          "networks": ["ETHEREUM", "POLYGON", "BSC", "ARBITRUM"],
+          "evm_specifics": {
+            "solidity_version": "0.8.19",
+            "optimization_enabled": true,
+            "optimization_runs": 200
+          },
+          "gas_analysis": {
+            "vulnerability_gas_cost": 150000,
+            "fix_gas_impact": 50000,
+            "optimization_potential": 0,
+            "dos_risk": true
+          },
+          "defi_context": {
+            "protocol_type": ["AMM", "YIELD_FARMING"],
+            "tvl_impact": "COMPLETE",
+            "liquidity_risk": true,
+            "oracle_dependency": true,
+            "governance_impact": false,
+            "yield_manipulation": true
+          },
+          "token_standards": ["ERC20"]
+        },
+        "ai_metadata": {
+          "model": "gpt-4",
+          "analysis_version": "4.1.0", 
+          "detection_method": "LLM_ANALYSIS",
+          "prompt_engineering": {
+            "prompt_version": "v4.0",
+            "prompt_type": "DEEP_DIVE",
+            "context_window": 8192,
+            "temperature": 0.1,
+            "top_p": 0.9
+          },
+          "performance_metrics": {
+            "tokens_input": 3200,
+            "tokens_output": 1800,
+            "processing_time_ms": 6500,
+            "cost_usd": 0.18,
+            "retry_count": 0
+          },
+          "confidence_scoring": {
+            "base_confidence": 0.91,
+            "false_positive_probability": 0.05,
+            "validation_score": 0.89,
+            "pattern_match_strength": 0.93,
+            "contextual_factors": [
+              {"factor": "Single oracle dependency", "impact": 0.4, "weight": 0.4},
+              {"factor": "No price validation logic", "impact": 0.3, "weight": 0.3},
+              {"factor": "High-value DeFi target", "impact": 0.3, "weight": 0.3}
+            ]
+          },
+          "validation": {
+            "human_reviewed": false,
+            "automated_validation": true,
+            "cross_validation": true,
+            "peer_review": false,
+            "validation_notes": "Pattern matches known oracle manipulation vulnerabilities"
+          }
+        },
+        "exploit_scenario": {
+          "attack_vector": "Manipulate price oracle through flash loans and front-running to create arbitrage opportunities",
+          "step_by_step": [
+            {
+              "step": 1,
+              "actor": "ATTACKER",
+              "action": "Monitor oracle price updates and identify lag periods",
+              "preconditions": ["Access to oracle price feeds", "Market monitoring tools"],
+              "outcome": "Oracle lag periods identified",
+              "evidence": "Price difference between oracle and market rates"
+            },
+            {
+              "step": 2,
+              "actor": "ATTACKER", 
+              "action": "Execute large flash loan to manipulate underlying market",
+              "preconditions": ["Flash loan availability", "Sufficient market impact capability"],
+              "outcome": "Market price temporarily shifted",
+              "evidence": "Large transactions moving market price"
+            },
+            {
+              "step": 3,
+              "actor": "ATTACKER",
+              "action": "Trade against stale oracle price in target AMM",
+              "preconditions": ["Oracle hasn't updated", "AMM has sufficient liquidity"],
+              "outcome": "Profitable arbitrage executed",
+              "evidence": "Trades at favorable prices before oracle update"
+            },
+            {
+              "step": 4,
+              "actor": "SYSTEM",
+              "action": "Oracle eventually updates but damage is done",
+              "preconditions": ["Oracle update mechanism triggers"],
+              "outcome": "Liquidity pool drained or significantly impacted",
+              "evidence": "Pool imbalance and loss of funds"
+            }
+          ],
+          "proof_of_concept": {
+            "code": "contract OracleAttack {\n    ILiquidityPool pool;\n    IFlashLoanProvider flashLoan;\n    IERC20 token;\n    \n    function executeAttack() external {\n        uint256 currentOraclePrice = pool.getTokenPrice();\n        uint256 marketPrice = getMarketPrice(); // Real market price\n        \n        if (abs(currentOraclePrice - marketPrice) > PROFITABLE_THRESHOLD) {\n            // Flash loan to manipulate market further\n            flashLoan.flashLoan(LARGE_AMOUNT, address(this), \"\");\n        }\n    }\n    \n    function onFlashLoan(uint256 amount) external {\n        // Manipulate market price\n        manipulateMarket(amount);\n        \n        // Trade against stale oracle in AMM\n        if (pool.getTokenPrice() < getRealPrice()) {\n            pool.swap(token, PROFITABLE_AMOUNT);\n        }\n        \n        // Repay flash loan with profit\n        repayFlashLoan();\n    }\n}",
+            "explanation": "This exploit leverages flash loans to manipulate market conditions and profit from oracle lag",
+            "execution_environment": "Ethereum mainnet fork with realistic market conditions",
+            "expected_result": "Attacker extracts significant value from liquidity pools"
+          }
+        },
+        "remediation_tracking": {
+          "status": "OPEN",
+          "priority": 1,
+          "effort_estimate": {
+            "developer_hours": 12,
+            "testing_hours": 20,
+            "review_hours": 8
+          },
+          "timeline": {
+            "discovery_date": "2025-08-06T15:00:00Z",
+            "target_fix_date": "2025-08-08"
+          }
+        },
+        "compliance_mapping": {
+          "standards": [
+            {
+              "framework": "CONSENSYS_BEST_PRACTICES",
+              "control_id": "ORACLE-001",
+              "description": "Secure Oracle Integration",
+              "compliance_level": "NON_COMPLIANT"
+            }
+          ]
+        },
+        "tags": ["oracle-manipulation", "defi", "flash-loan", "arbitrage", "critical", "liquidity-pool", "amm"],
+        "created_at": "2025-08-06T15:00:00Z",
+        "updated_at": "2025-08-06T15:00:00Z"
+      }
+    }
+  ],
+  "usage_guidelines": {
+    "prompt_engineering": {
+      "best_practices": [
+        "Always provide specific line numbers and code snippets",
+        "Include detailed exploitation scenarios with step-by-step breakdown",
+        "Specify exact remediation steps with code examples",
+        "Use appropriate severity levels based on actual impact",
+        "Include comprehensive testing approaches"
+      ],
+      "common_patterns": {
+        "reentrancy": "External call before state change pattern",
+        "overflow": "Arithmetic operations without protection in pre-0.8.0 Solidity",
+        "access_control": "Missing or insufficient permission checks",
+        "oracle_manipulation": "Single oracle dependency without validation",
+        "gas_optimization": "Inefficient storage access or loop patterns"
+      }
+    },
+    "validation_requirements": {
+      "required_fields": ["id", "severity", "title", "category", "description", "confidence", "location", "recommendation", "ai_metadata"],
+      "quality_indicators": {
+        "high_quality": "Detailed technical explanation, specific remediation, code examples, comprehensive risk assessment",
+        "medium_quality": "Good technical detail, clear recommendations, basic risk assessment",
+        "low_quality": "Minimal detail, vague recommendations, limited context"
+      }
+    }
+  }
+}

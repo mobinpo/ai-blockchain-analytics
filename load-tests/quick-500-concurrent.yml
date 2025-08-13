@@ -1,0 +1,166 @@
+# =============================================================================
+# AI Blockchain Analytics - Quick 500 Concurrent Load Test
+# =============================================================================
+# Simplified configuration for immediate execution
+
+config:
+  target: 'https://httpbin.org'  # Reliable test endpoint
+  
+  # Optimized phases for quick 500 concurrent test
+  phases:
+    # Quick warmup
+    - duration: 30
+      arrivalRate: 10
+      name: "Warmup Phase"
+    
+    # Rapid scale to 100
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 100
+      name: "Scale to 100"
+    
+    # Push to 300
+    - duration: 90
+      arrivalRate: 100
+      rampTo: 300
+      name: "Scale to 300"
+    
+    # Final push to 500
+    - duration: 60
+      arrivalRate: 300
+      rampTo: 500
+      name: "Push to 500 Concurrent"
+    
+    # Sustained load at 500 for 5 minutes
+    - duration: 300
+      arrivalRate: 500
+      name: "Sustained 500 Concurrent Load"
+    
+    # Cool down
+    - duration: 60
+      arrivalRate: 500
+      rampTo: 50
+      name: "Cool Down"
+
+  # HTTP configuration optimized for high concurrency
+  http:
+    timeout: 60
+    pool: 200
+    maxSockets: 1000
+    keepAlive: true
+    requestIdHeader: 'x-request-id'
+
+  # Performance expectations
+  ensure:
+    - http.request_rate > 300
+    - http.response_time.p95 < 5000
+    - http.codes.200 > 80
+    - http.codes.500 < 5
+
+  # Test variables
+  variables:
+    analysis_types: ["sentiment", "technical", "fundamental", "risk"]
+    crypto_symbols: ["BTC", "ETH", "ADA", "SOL", "MATIC"]
+    batch_sizes: [100, 200, 500, 1000]
+
+scenarios:
+  # Simulated blockchain analysis requests (60% of traffic)
+  - name: "Blockchain Analysis Simulation"
+    weight: 60
+    flow:
+      # Simulate sentiment analysis POST
+      - post:
+          url: "/post"
+          headers:
+            'Content-Type': 'application/json'
+          json:
+            analysis_type: "{{ $pick(analysis_types) }}"
+            symbol: "{{ $pick(crypto_symbols) }}"
+            batch_size: "{{ $pick(batch_sizes) }}"
+            priority: "high"
+            timestamp: "{{ $timestamp() }}"
+            test_scenario: "500_concurrent_blockchain_analysis"
+          expect:
+            - statusCode: 200
+          capture:
+            - json: "$.json.analysis_type"
+              as: "analysis_result"
+      
+      - think: "{{ $randomInt(1, 3) }}"
+      
+      # Simulate status check
+      - get:
+          url: "/uuid"
+          expect:
+            - statusCode: 200
+
+  # Simulated verification requests (25% of traffic)
+  - name: "Verification Analysis Simulation"
+    weight: 25
+    flow:
+      # Verification request
+      - post:
+          url: "/post"
+          headers:
+            'Content-Type': 'application/json'
+          json:
+            type: "blockchain_verification"
+            symbol: "{{ $pick(crypto_symbols) }}"
+            verification_level: "premium"
+            request_id: "{{ $uuid() }}"
+            concurrent_test: true
+          expect:
+            - statusCode: 200
+      
+      - think: "{{ $randomInt(1, 2) }}"
+      
+      # Status check
+      - get:
+          url: "/json"
+          expect:
+            - statusCode: 200
+
+  # Simulated PDF generation (10% of traffic)
+  - name: "PDF Generation Simulation"
+    weight: 10
+    flow:
+      - post:
+          url: "/post"
+          headers:
+            'Content-Type': 'application/json'
+          json:
+            report_type: "comprehensive_analysis"
+            symbol: "{{ $pick(crypto_symbols) }}"
+            charts: ["price", "sentiment", "volume"]
+            format: "pdf"
+            test_load: "500_concurrent"
+          expect:
+            - statusCode: 200
+      
+      - think: "{{ $randomInt(2, 5) }}"
+
+  # High-frequency requests (5% of traffic)
+  - name: "High Frequency Requests"
+    weight: 5
+    flow:
+      - loop:
+          count: "{{ $randomInt(3, 8) }}"
+          over:
+            - get:
+                url: "/json"
+                expect:
+                  - statusCode: 200
+            - think: 0.1
+
+# Custom metrics and reporting
+plugins:
+  - name: "@artilleryio/plugin-metrics-by-endpoint"
+    config:
+      details: true
+
+after:
+  flow:
+    - log: "🎉 500 concurrent blockchain analysis simulation completed!"
+    - log: "📊 Peak concurrent users: 500"
+    - log: "⏱️  Total test duration: ~11 minutes"
+

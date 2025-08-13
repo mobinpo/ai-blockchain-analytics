@@ -1,0 +1,81 @@
+{
+  "serviceName": "ai-blockchain-analytics-app",
+  "cluster": "ai-blockchain-analytics-cluster",
+  "taskDefinition": "ai-blockchain-analytics-app",
+  "desiredCount": 3,
+  "launchType": "FARGATE",
+  "platformVersion": "LATEST",
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "subnets": [
+        "subnet-xxxxxxxxx",
+        "subnet-yyyyyyyyy",
+        "subnet-zzzzzzzzz"
+      ],
+      "securityGroups": [
+        "sg-app-xxxxxxxxx"
+      ],
+      "assignPublicIp": "DISABLED"
+    }
+  },
+  "loadBalancers": [
+    {
+      "targetGroupArn": "arn:aws:elasticloadbalancing:region:account:targetgroup/ai-blockchain-analytics-app/xxxxxxxxx",
+      "containerName": "ai-blockchain-analytics-app",
+      "containerPort": 8080
+    }
+  ],
+  "serviceRegistries": [
+    {
+      "registryArn": "arn:aws:servicediscovery:region:account:service/srv-xxxxxxxxx",
+      "containerName": "ai-blockchain-analytics-app",
+      "containerPort": 8080
+    }
+  ],
+  "deploymentConfiguration": {
+    "deploymentCircuitBreaker": {
+      "enable": true,
+      "rollback": true
+    },
+    "maximumPercent": 200,
+    "minimumHealthyPercent": 50,
+    "alarms": {
+      "alarmNames": [
+        "ai-blockchain-analytics-app-high-cpu",
+        "ai-blockchain-analytics-app-high-memory",
+        "ai-blockchain-analytics-app-unhealthy-targets"
+      ],
+      "enable": true,
+      "rollback": true
+    }
+  },
+  "capacityProviderStrategy": [
+    {
+      "capacityProvider": "FARGATE",
+      "weight": 1,
+      "base": 1
+    },
+    {
+      "capacityProvider": "FARGATE_SPOT",
+      "weight": 3,
+      "base": 0
+    }
+  ],
+  "enableExecuteCommand": true,
+  "enableLogging": true,
+  "tags": [
+    {
+      "key": "Environment",
+      "value": "production"
+    },
+    {
+      "key": "Application",
+      "value": "ai-blockchain-analytics"
+    },
+    {
+      "key": "Component",
+      "value": "app-service"
+    }
+  ],
+  "propagateTags": "SERVICE"
+}

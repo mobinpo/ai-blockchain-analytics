@@ -1,0 +1,182 @@
+service: social-media-crawler
+
+provider:
+  name: aws
+  runtime: python3.9
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
+  timeout: 900  # 15 minutes max for crawling
+  memorySize: 1024
+  
+  environment:
+    TWITTER_BEARER_TOKEN: ${env:TWITTER_BEARER_TOKEN}
+    TELEGRAM_BOT_TOKEN: ${env:TELEGRAM_BOT_TOKEN}
+    POSTS_TABLE: ${self:service}-${self:provider.stage}-posts
+    RULES_TABLE: ${self:service}-${self:provider.stage}-rules
+    STAGE: ${self:provider.stage}
+  
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.POSTS_TABLE}"
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.RULES_TABLE}"
+    - Effect: Allow
+      Action:
+        - logs:CreateLogGroup
+        - logs:CreateLogStream
+        - logs:PutLogEvents
+      Resource: "arn:aws:logs:*:*:*"
+
+functions:
+  crawl:
+    handler: social_media_crawler.lambda_handler
+    name: ${self:service}-${self:provider.stage}-crawl
+    description: Crawl social media platforms for blockchain content
+    events:
+      - schedule:
+          rate: rate(30 minutes)  # Run every 30 minutes
+          enabled: true
+          input:
+            source: "scheduled"
+      - http:
+          path: crawl
+          method: get
+          cors: true
+
+  crawlOnDemand:
+    handler: social_media_crawler.lambda_handler
+    name: ${self:service}-${self:provider.stage}-crawl-on-demand
+    description: On-demand social media crawling
+    timeout: 300  # 5 minutes for on-demand requests
+    events:
+      - http:
+          path: crawl/trigger
+          method: post
+          cors: true
+
+resources:
+  Resources:
+    # DynamoDB Tables
+    PostsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.POSTS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: platform
+            AttributeType: S
+          - AttributeName: platform_id
+            AttributeType: S
+          - AttributeName: created_at
+            AttributeType: S
+        KeySchema:
+          - AttributeName: platform
+            KeyType: HASH
+          - AttributeName: platform_id
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: platform-created-at-index
+            KeySchema:
+              - AttributeName: platform
+                KeyType: HASH
+              - AttributeName: created_at
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+            BillingMode: PAY_PER_REQUEST
+        BillingMode: PAY_PER_REQUEST
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        Tags:
+          - Key: Service
+            Value: ${self:service}
+          - Key: Stage
+            Value: ${self:provider.stage}
+
+    RulesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.RULES_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: priority
+            AttributeType: N
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: priority-index
+            KeySchema:
+              - AttributeName: priority
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            BillingMode: PAY_PER_REQUEST
+        BillingMode: PAY_PER_REQUEST
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        Tags:
+          - Key: Service
+            Value: ${self:service}
+          - Key: Stage
+            Value: ${self:provider.stage}
+
+    # CloudWatch Dashboard
+    CrawlerDashboard:
+      Type: AWS::CloudWatch::Dashboard
+      Properties:
+        DashboardName: ${self:service}-${self:provider.stage}-dashboard
+        DashboardBody: |
+          {
+            "widgets": [
+              {
+                "type": "metric",
+                "properties": {
+                  "metrics": [
+                    ["AWS/Lambda", "Invocations", "FunctionName", "${self:service}-${self:provider.stage}-crawl"],
+                    ["AWS/Lambda", "Errors", "FunctionName", "${self:service}-${self:provider.stage}-crawl"],
+                    ["AWS/Lambda", "Duration", "FunctionName", "${self:service}-${self:provider.stage}-crawl"]
+                  ],
+                  "period": 300,
+                  "stat": "Sum",
+                  "region": "${self:provider.region}",
+                  "title": "Crawler Lambda Metrics"
+                }
+              },
+              {
+                "type": "metric",
+                "properties": {
+                  "metrics": [
+                    ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${self:provider.environment.POSTS_TABLE}"],
+                    ["AWS/DynamoDB", "ConsumedWriteCapacityUnits", "TableName", "${self:provider.environment.POSTS_TABLE}"]
+                  ],
+                  "period": 300,
+                  "stat": "Sum",
+                  "region": "${self:provider.region}",
+                  "title": "DynamoDB Capacity Units"
+                }
+              }
+            ]
+          }
+
+plugins:
+  - serverless-python-requirements
+  - serverless-plugin-warmup
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    zip: true
+    strip: false
+  warmup:
+    enabled: true
+    events:
+      - schedule: rate(5 minutes)
+    timeout: 20

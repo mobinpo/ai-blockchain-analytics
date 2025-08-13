@@ -1,0 +1,160 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: sentiment_shield_app
+    working_dir: /var/www
+    env_file: .env
+    volumes:
+      - ./:/var/www:delegated
+      - composer_cache:/root/.composer:cached
+      - node_modules:/var/www/node_modules:cached
+    ports:
+      - "8003:8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://192.168.1.114:8003
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: sentiment_shield
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      QUEUE_CONNECTION: redis
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: database
+    depends_on:
+      - postgres
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - sentiment_shield
+
+  horizon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: sentiment_shield_horizon
+    working_dir: /var/www
+    env_file: .env
+    volumes:
+      - ./:/var/www:delegated
+      - composer_cache:/root/.composer:cached
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: sentiment_shield
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      QUEUE_CONNECTION: redis
+    depends_on:
+      app:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: php artisan horizon
+    networks:
+      - sentiment_shield
+
+  vite:
+    image: node:20-alpine
+    container_name: sentiment_shield_vite
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www:delegated
+      - node_modules:/var/www/node_modules:cached
+    ports:
+      - "5173:5173"
+    environment:
+      NODE_ENV: development
+      VITE_HOST: 0.0.0.0
+      VITE_PORT: 5173
+      VITE_HMR_HOST: 192.168.1.114
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    depends_on:
+      - app
+    networks:
+      - sentiment_shield
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: sentiment_shield_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sentiment_shield
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sentiment_shield"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - sentiment_shield
+
+  redis:
+    image: redis:7-alpine
+    container_name: sentiment_shield_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - sentiment_shield
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: sentiment_shield_mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - sentiment_shield
+
+networks:
+  sentiment_shield:
+    driver: bridge
+    name: sentiment_shield_network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  composer_cache:
+    driver: local
+  node_modules:
+    driver: local 

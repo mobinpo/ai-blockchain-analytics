@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-blockchain-analytics-config
+  namespace: ai-blockchain-analytics
+  labels:
+    app.kubernetes.io/name: ai-blockchain-analytics
+    app.kubernetes.io/component: config
+data:
+  # Application Configuration
+  APP_NAME: "AI Blockchain Analytics"
+  APP_ENV: "production"
+  APP_DEBUG: "false"
+  APP_URL: "https://analytics.yourcompany.com"
+  APP_TIMEZONE: "UTC"
+  
+  # Database Configuration
+  DB_CONNECTION: "pgsql"
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  DB_DATABASE: "ai_blockchain_analytics"
+  
+  # Redis Configuration
+  REDIS_HOST: "redis-service"
+  REDIS_PASSWORD: ""
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  
+  # Cache Configuration
+  CACHE_DRIVER: "redis"
+  SESSION_DRIVER: "redis"
+  QUEUE_CONNECTION: "redis"
+  
+  # Logging
+  LOG_CHANNEL: "stack"
+  LOG_DEPRECATIONS_CHANNEL: "null"
+  LOG_LEVEL: "warning"
+  
+  # Broadcasting
+  BROADCAST_DRIVER: "redis"
+  
+  # RoadRunner Configuration
+  APP_RUNTIME: "RoadRunner"
+  
+  # PDF Generation
+  BROWSERLESS_ENABLED: "false"
+  BROWSERLESS_URL: "https://chrome.browserless.io"
+  BROWSERLESS_TIMEOUT: "30"
+  
+  # Monitoring
+  SENTRY_TRACES_SAMPLE_RATE: "0.1"
+  TELESCOPE_ENABLED: "false"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-blockchain-analytics-scripts
+  namespace: ai-blockchain-analytics
+  labels:
+    app.kubernetes.io/name: ai-blockchain-analytics
+    app.kubernetes.io/component: scripts
+data:
+  healthcheck.sh: |
+    #!/bin/bash
+    set -e
+    
+    # Check application health
+    curl -f http://localhost:8080/health || exit 1
+    
+    # Check database connection
+    php artisan db:monitor --max-tries=1 || exit 1
+    
+    # Check Redis connection
+    timeout 2 bash -c "</dev/tcp/${REDIS_HOST}/${REDIS_PORT}" || exit 1
+    
+    exit 0
+  
+  startup.sh: |
+    #!/bin/bash
+    set -e
+    
+    echo "🚀 Starting AI Blockchain Analytics post-deployment tasks..."
+    
+    # Wait for dependencies
+    echo "⏳ Waiting for dependencies..."
+    sleep 10
+    
+    # Run database migrations
+    echo "🔄 Running migrations..."
+    php artisan migrate --force
+    
+    # Seed initial data if needed
+    if [ "$SEED_DATABASE" = "true" ]; then
+        echo "🌱 Seeding database..."
+        php artisan db:seed --force
+    fi
+    
+    # Clear caches
+    echo "🧹 Clearing caches..."
+    php artisan cache:clear
+    php artisan config:clear
+    php artisan route:clear
+    php artisan view:clear
+    
+    # Warm up caches
+    echo "🔥 Warming up caches..."
+    php artisan cache:maintenance --warm
+    
+    echo "✅ Post-deployment tasks completed!"

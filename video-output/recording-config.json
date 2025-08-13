@@ -1,0 +1,119 @@
+{
+    "video": {
+        "resolution": "1920x1080",
+        "fps": 30,
+        "format": "mp4",
+        "codec": "h264",
+        "bitrate": "10M"
+    },
+    "audio": {
+        "sample_rate": "48000",
+        "channels": 2,
+        "codec": "aac",
+        "bitrate": "192k"
+    },
+    "scenes": {
+        "hook": {
+            "name": "Problem Hook",
+            "duration": 10,
+            "start_time": 0,
+            "description": "News headlines about DeFi exploits",
+            "visuals": [
+                "headlines",
+                "exploit_notifications",
+                "dollar_amounts"
+            ],
+            "audio": "urgent_professional_tone"
+        },
+        "solution": {
+            "name": "Platform Introduction",
+            "duration": 20,
+            "start_time": 10,
+            "description": "Dashboard overview and platform introduction",
+            "visuals": [
+                "dashboard",
+                "logo_animation",
+                "feature_icons"
+            ],
+            "audio": "confident_solution_oriented"
+        },
+        "analysis_demo": {
+            "name": "Contract Analysis Demo",
+            "duration": 15,
+            "start_time": 30,
+            "description": "Live contract analysis demonstration",
+            "visuals": [
+                "contract_input",
+                "analysis_progress",
+                "risk_score",
+                "findings"
+            ],
+            "audio": "technical_explanation"
+        },
+        "sentiment_demo": {
+            "name": "Sentiment Monitoring",
+            "duration": 15,
+            "start_time": 45,
+            "description": "Real-time sentiment dashboard",
+            "visuals": [
+                "social_feeds",
+                "sentiment_charts",
+                "multi_platform"
+            ],
+            "audio": "data_focused"
+        },
+        "reporting_demo": {
+            "name": "PDF Generation",
+            "duration": 15,
+            "start_time": 60,
+            "description": "Professional report generation",
+            "visuals": [
+                "pdf_generation",
+                "report_preview",
+                "download"
+            ],
+            "audio": "professional_benefits"
+        },
+        "famous_contracts": {
+            "name": "Famous Contracts Database",
+            "duration": 15,
+            "start_time": 75,
+            "description": "Historical exploit analysis",
+            "visuals": [
+                "contracts_list",
+                "risk_comparison",
+                "historical_data"
+            ],
+            "audio": "educational_tone"
+        },
+        "proof_points": {
+            "name": "Statistics & Achievements",
+            "duration": 20,
+            "start_time": 90,
+            "description": "Performance metrics and credibility",
+            "visuals": [
+                "statistics",
+                "performance_graphs",
+                "certifications"
+            ],
+            "audio": "credibility_building"
+        },
+        "call_to_action": {
+            "name": "Call to Action",
+            "duration": 10,
+            "start_time": 110,
+            "description": "Contact information and next steps",
+            "visuals": [
+                "contact_info",
+                "website_url",
+                "get_started_button"
+            ],
+            "audio": "compelling_close"
+        }
+    },
+    "output": {
+        "directory": "video-output",
+        "naming_pattern": "scene_{id}_{timestamp}",
+        "backup_copies": 3
+    }
+}

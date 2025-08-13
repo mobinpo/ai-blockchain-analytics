@@ -1,0 +1,461 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-blockchain-analytics.com/schemas/security-finding/v2.0.0",
+  "title": "OWASP-Style Smart Contract Security Finding Schema",
+  "description": "Comprehensive JSON schema for AI-generated smart contract security findings following OWASP Top 10 methodology with prompt engineering optimization",
+  "type": "object",
+  "required": [
+    "id",
+    "severity",
+    "category",
+    "title",
+    "description",
+    "location",
+    "recommendation",
+    "confidence",
+    "impact"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]{8}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{12}$",
+      "description": "Unique identifier for the finding (UUID format)",
+      "examples": ["12345678-1234-1234-1234-123456789012"]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"],
+      "description": "Severity level following OWASP classification"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "ACCESS_CONTROL",
+        "ARITHMETIC",
+        "REENTRANCY", 
+        "UNCHECKED_CALLS",
+        "DENIAL_OF_SERVICE",
+        "FRONT_RUNNING",
+        "TIME_MANIPULATION",
+        "BAD_RANDOMNESS",
+        "ORACLE_MANIPULATION",
+        "FLASH_LOAN_ATTACK",
+        "GOVERNANCE_ATTACK",
+        "SIGNATURE_REPLAY",
+        "INTEGER_OVERFLOW",
+        "UNINITIALIZED_STORAGE",
+        "DELEGATECALL_INJECTION",
+        "TX_ORIGIN_USAGE",
+        "BLOCK_VALUES_MANIPULATION",
+        "LOGICAL_ERROR",
+        "CODE_QUALITY",
+        "GAS_OPTIMIZATION",
+        "CENTRALIZATION_RISK",
+        "UPGRADABILITY_RISK",
+        "MEV_VULNERABILITY",
+        "CROSS_CHAIN_BRIDGE",
+        "DEFI_SPECIFIC",
+        "NFT_SPECIFIC"
+      ],
+      "description": "Primary vulnerability category"
+    },
+    "subcategory": {
+      "type": "string",
+      "description": "More specific classification within the category",
+      "examples": [
+        "Classic Reentrancy",
+        "Cross-function Reentrancy", 
+        "Cross-contract Reentrancy",
+        "Read-only Reentrancy",
+        "Missing Access Control",
+        "Privilege Escalation",
+        "SafeMath Not Used",
+        "Unchecked Return Value"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 100,
+      "description": "Concise, descriptive title of the vulnerability",
+      "examples": [
+        "Reentrancy vulnerability in withdraw function",
+        "Missing access control on critical function",
+        "Integer overflow in token calculation"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 50,
+      "maxLength": 2000,
+      "description": "Detailed explanation of the vulnerability and its potential impact"
+    },
+    "location": {
+      "type": "object",
+      "required": ["contract", "function", "line"],
+      "properties": {
+        "contract": {
+          "type": "string",
+          "description": "Name of the affected contract",
+          "examples": ["MyToken", "TokenSale", "Vault"]
+        },
+        "function": {
+          "type": "string",
+          "description": "Name of the affected function",
+          "examples": ["withdraw", "transfer", "mint", "constructor"]
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Line number where the vulnerability occurs"
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Column number (optional)"
+        },
+        "code_snippet": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Relevant code snippet showing the vulnerability"
+        },
+        "file_path": {
+          "type": "string",
+          "description": "Relative path to the file containing the vulnerability"
+        }
+      }
+    },
+    "recommendation": {
+      "type": "object",
+      "required": ["summary", "detailed_steps"],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 200,
+          "description": "Brief remediation summary",
+          "examples": [
+            "Implement checks-effects-interactions pattern to prevent reentrancy",
+            "Add proper access control modifiers to sensitive functions"
+          ]
+        },
+        "detailed_steps": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 300
+          },
+          "description": "Step-by-step remediation instructions"
+        },
+        "code_fix": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Example code showing the fix"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["title", "url"],
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Reference title"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Reference URL"
+              }
+            }
+          },
+          "description": "External references for further reading"
+        }
+      }
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["HIGH", "MEDIUM", "LOW"],
+      "description": "AI confidence level in the finding accuracy"
+    },
+    "impact": {
+      "type": "object",
+      "required": ["financial", "operational", "reputational"],
+      "properties": {
+        "financial": {
+          "type": "string",
+          "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "NONE"],
+          "description": "Potential financial impact"
+        },
+        "operational": {
+          "type": "string", 
+          "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "NONE"],
+          "description": "Impact on contract functionality"
+        },
+        "reputational": {
+          "type": "string",
+          "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "NONE"],
+          "description": "Potential reputational damage"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Detailed impact assessment"
+        },
+        "affected_functions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of functions affected by this vulnerability"
+        },
+        "attack_scenario": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Realistic attack scenario description"
+        }
+      }
+    },
+    "technical_details": {
+      "type": "object",
+      "properties": {
+        "vulnerability_type": {
+          "type": "string",
+          "enum": [
+            "LOGIC_ERROR",
+            "IMPLEMENTATION_BUG", 
+            "DESIGN_FLAW",
+            "CONFIGURATION_ISSUE",
+            "DEPENDENCY_VULNERABILITY"
+          ]
+        },
+        "attack_vector": {
+          "type": "string",
+          "enum": [
+            "EXTERNAL_CALL",
+            "INTERNAL_CALL", 
+            "DIRECT_ACCESS",
+            "PRIVILEGE_ESCALATION",
+            "STATE_MANIPULATION",
+            "ECONOMIC_ATTACK"
+          ]
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Conditions required for successful exploitation"
+        },
+        "gas_impact": {
+          "type": "object",
+          "properties": {
+            "gas_cost_increase": {
+              "type": "number",
+              "description": "Estimated gas cost increase if vulnerability is exploited"
+            },
+            "dos_potential": {
+              "type": "boolean",
+              "description": "Whether the vulnerability can cause denial of service"
+            }
+          }
+        }
+      }
+    },
+    "compliance": {
+      "type": "object",
+      "properties": {
+        "owasp_category": {
+          "type": "string",
+          "description": "OWASP Smart Contract Top 10 category if applicable"
+        },
+        "cwe_id": {
+          "type": "integer",
+          "description": "Common Weakness Enumeration ID if applicable"
+        },
+        "swc_id": {
+          "type": "string",
+          "pattern": "^SWC-[0-9]{3}$",
+          "description": "Smart Contract Weakness Classification ID",
+          "examples": ["SWC-107", "SWC-101"]
+        },
+        "standards_violated": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Security standards or best practices violated"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "detected_by": {
+          "type": "string",
+          "description": "AI model or tool that detected this vulnerability"
+        },
+        "detection_timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the vulnerability was detected"
+        },
+        "analysis_version": {
+          "type": "string",
+          "description": "Version of the analysis engine"
+        },
+        "contract_hash": {
+          "type": "string",
+          "pattern": "^0x[a-fA-F0-9]{64}$",
+          "description": "Hash of the analyzed contract code"
+        },
+        "false_positive_likelihood": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Estimated probability of false positive (0-1)"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional tags for categorization"
+        }
+      }
+    },
+    "remediation_priority": {
+      "type": "object",
+      "properties": {
+        "priority_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Calculated priority score (0-100)"
+        },
+        "estimated_effort": {
+          "type": "string",
+          "enum": ["TRIVIAL", "EASY", "MODERATE", "HARD", "EXPERT"],
+          "description": "Estimated effort required to fix"
+        },
+        "estimated_time": {
+          "type": "string",
+          "description": "Estimated time to fix (e.g., '2 hours', '1 day')"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Other findings that must be fixed first"
+        }
+      }
+    },
+    "testing": {
+      "type": "object",
+      "properties": {
+        "test_case": {
+          "type": "string",
+          "description": "Proof of concept test case"
+        },
+        "reproduction_steps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Steps to reproduce the vulnerability"
+        },
+        "expected_behavior": {
+          "type": "string",
+          "description": "What the secure behavior should be"
+        },
+        "verification_method": {
+          "type": "string",
+          "description": "How to verify the fix works"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "12345678-1234-1234-1234-123456789012",
+      "severity": "HIGH",
+      "category": "REENTRANCY",
+      "subcategory": "Classic Reentrancy",
+      "title": "Reentrancy vulnerability in withdraw function",
+      "description": "The withdraw function updates the user's balance after sending Ether, allowing for reentrancy attacks where an attacker can recursively call withdraw before their balance is updated, potentially draining the contract.",
+      "location": {
+        "contract": "Bank",
+        "function": "withdraw",
+        "line": 125,
+        "code_snippet": "msg.sender.call{value: amount}(\"\");\nbalances[msg.sender] -= amount;",
+        "file_path": "contracts/Bank.sol"
+      },
+      "recommendation": {
+        "summary": "Implement checks-effects-interactions pattern to prevent reentrancy",
+        "detailed_steps": [
+          "Update the user's balance before making the external call",
+          "Consider using OpenZeppelin's ReentrancyGuard modifier",
+          "Validate the call return value and handle failures properly"
+        ],
+        "code_fix": "balances[msg.sender] -= amount;\n(bool success, ) = msg.sender.call{value: amount}(\"\");\nrequire(success, \"Transfer failed\");",
+        "references": [
+          {
+            "title": "Ethereum Smart Contract Best Practices - Reentrancy",
+            "url": "https://consensys.github.io/smart-contract-best-practices/attacks/reentrancy/"
+          }
+        ]
+      },
+      "confidence": "HIGH",
+      "impact": {
+        "financial": "CRITICAL",
+        "operational": "HIGH",
+        "reputational": "HIGH",
+        "description": "Attacker could drain all contract funds through recursive calls",
+        "affected_functions": ["withdraw", "emergencyWithdraw"],
+        "attack_scenario": "Attacker deploys malicious contract with fallback function that calls withdraw again, draining contract funds"
+      },
+      "technical_details": {
+        "vulnerability_type": "IMPLEMENTATION_BUG",
+        "attack_vector": "EXTERNAL_CALL",
+        "prerequisites": ["Contract must have Ether balance", "Attacker needs some initial deposit"],
+        "gas_impact": {
+          "gas_cost_increase": 50000,
+          "dos_potential": false
+        }
+      },
+      "compliance": {
+        "swc_id": "SWC-107",
+        "cwe_id": 841,
+        "standards_violated": ["CEI Pattern", "Secure Coding Practices"]
+      },
+      "metadata": {
+        "detected_by": "Claude-4 Security Analysis v1.0",
+        "detection_timestamp": "2025-01-01T12:00:00Z",
+        "analysis_version": "1.0.0",
+        "false_positive_likelihood": 0.05,
+        "tags": ["reentrancy", "external-call", "state-change"]
+      },
+      "remediation_priority": {
+        "priority_score": 95,
+        "estimated_effort": "EASY",
+        "estimated_time": "2 hours",
+        "dependencies": []
+      },
+      "testing": {
+        "test_case": "Deploy malicious contract that implements fallback to call withdraw recursively",
+        "reproduction_steps": [
+          "Deploy vulnerable contract with some Ether",
+          "Deploy attack contract with fallback function",
+          "Call withdraw from attack contract",
+          "Observe multiple withdraw calls in transaction trace"
+        ],
+        "expected_behavior": "Only one withdrawal per transaction should be possible",
+        "verification_method": "Verify balance updates happen before external calls in fixed version"
+      }
+    }
+  ]
+}

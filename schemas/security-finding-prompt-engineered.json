@@ -1,0 +1,422 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AI-Optimized Security Finding Schema",
+  "description": "Prompt-engineered schema for AI analysis of smart contract vulnerabilities - optimized for token efficiency and accuracy",
+  "version": "2.0",
+  "type": "object",
+  "required": ["severity", "title", "line", "recommendation"],
+  "properties": {
+    "severity": {
+      "type": "string",
+      "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"],
+      "description": "Risk severity level. CRITICAL=immediate threat, HIGH=significant risk, MEDIUM=moderate concern, LOW=minor issue, INFO=advisory",
+      "ai_guidance": "Always classify based on potential financial/security impact. Re-entrancy, flash loan attacks = CRITICAL. Access control bypass = HIGH. Gas issues = LOW/INFO."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 60,
+      "pattern": "^[A-Za-z0-9\\s\\-/()]+$",
+      "description": "Concise vulnerability name (3-60 chars). Use standard terminology.",
+      "ai_guidance": "Use precise, searchable terms: 'Reentrancy Vulnerability', 'Integer Overflow in calculateReward()', 'Unprotected selfdestruct()'. Avoid verbose descriptions.",
+      "examples": ["Reentrancy Vulnerability", "Integer Overflow", "Unprotected selfdestruct()", "Flash Loan Attack Vector", "Missing Access Control", "Gas Optimization Opportunity"]
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50000,
+      "description": "Exact line number where vulnerability occurs",
+      "ai_guidance": "Always provide the FIRST line where the vulnerability starts. For multi-line issues, use the line with the problematic statement."
+    },
+    "end_line": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50000,
+      "description": "Last line of vulnerability (optional, for multi-line issues)"
+    },
+    "recommendation": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 800,
+      "description": "Clear, actionable fix instructions. Start with imperative verb.",
+      "ai_guidance": "Structure as: 1) Immediate action 2) Implementation details 3) Best practices. Be specific about libraries/patterns to use.",
+      "examples": [
+        "Implement checks-effects-interactions pattern by moving state changes before external calls. Add OpenZeppelin's ReentrancyGuard modifier.",
+        "Use SafeMath library or upgrade to Solidity 0.8+ for automatic overflow protection. Add require statements for input validation.",
+        "Add onlyOwner modifier to restrict access. Consider implementing role-based access control using OpenZeppelin's AccessControl."
+      ]
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Reentrancy", 
+        "Integer Overflow/Underflow",
+        "Access Control",
+        "Input Validation", 
+        "Business Logic",
+        "Cryptographic Issues",
+        "Information Disclosure",
+        "Denial of Service",
+        "Front-running/MEV",
+        "Oracle Manipulation",
+        "Flash Loan Attack",
+        "Gas Optimization",
+        "Code Quality",
+        "Upgrade Pattern",
+        "Proxy Vulnerability",
+        "Timelock Issues",
+        "Governance Attack",
+        "Cross-Chain Bridge",
+        "NFT Specific",
+        "DeFi Protocol",
+        "Unchecked External Call",
+        "State Variable Shadowing",
+        "Timestamp Dependence",
+        "Tx.origin Usage",
+        "Uninitialized Storage"
+      ],
+      "description": "Vulnerability classification category",
+      "ai_guidance": "Choose the most specific applicable category. Prefer 'Reentrancy' over 'Business Logic' for reentrancy issues."
+    },
+    "function": {
+      "type": "string",
+      "maxLength": 80,
+      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+      "description": "Function name containing vulnerability (without parentheses)",
+      "ai_guidance": "Extract exact function name from code. Use 'constructor' for constructor issues, 'fallback' for fallback function."
+    },
+    "contract": {
+      "type": "string",
+      "maxLength": 80,
+      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+      "description": "Contract name containing vulnerability",
+      "ai_guidance": "Use the contract name as declared in the code, not the filename."
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Technical explanation of the vulnerability and its root cause",
+      "ai_guidance": "Explain WHY it's vulnerable, not just WHAT it does. Focus on the security implication and attack scenario."
+    },
+    "impact": {
+      "type": "string",
+      "enum": ["FUND_LOSS", "FUND_LOCK", "UNAUTHORIZED_ACCESS", "SERVICE_DISRUPTION", "DATA_EXPOSURE", "REPUTATION_DAMAGE", "GOVERNANCE_BYPASS", "GAS_WASTE", "MINIMAL"],
+      "description": "Primary business/technical impact",
+      "ai_guidance": "Choose based on worst-case scenario. Financial vulnerabilities = FUND_LOSS/FUND_LOCK. Access issues = UNAUTHORIZED_ACCESS."
+    },
+    "exploitability": {
+      "type": "string", 
+      "enum": ["TRIVIAL", "EASY", "MODERATE", "DIFFICULT", "THEORETICAL"],
+      "description": "Difficulty to exploit",
+      "ai_guidance": "TRIVIAL=single transaction, EASY=simple contract interaction, MODERATE=requires setup, DIFFICULT=complex conditions, THEORETICAL=proof-of-concept only"
+    },
+    "code_snippet": {
+      "type": "string",
+      "maxLength": 400,
+      "description": "Vulnerable code excerpt (formatted, minimal)",
+      "ai_guidance": "Include only the problematic lines plus 1-2 lines of context. Use proper Solidity formatting."
+    },
+    "fix_example": {
+      "type": "string",
+      "maxLength": 400,
+      "description": "Corrected code example",
+      "ai_guidance": "Show the exact fix applied to the vulnerable code. Maintain same function signature when possible."
+    },
+    "attack_vector": {
+      "type": "string",
+      "maxLength": 300,
+      "description": "Step-by-step attack scenario",
+      "ai_guidance": "Describe in 2-3 sentences: 1) Setup 2) Exploitation 3) Result. Be specific about attacker actions."
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["HIGH", "MEDIUM", "LOW"],
+      "description": "AI confidence in finding accuracy",
+      "ai_guidance": "HIGH=clear vulnerability pattern, MEDIUM=likely but needs verification, LOW=potential issue requiring manual review"
+    },
+    "false_positive_risk": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH"],
+      "description": "Likelihood this is a false positive",
+      "ai_guidance": "Consider context, protective measures, and code patterns. Standard library usage may reduce risk."
+    },
+    "gas_impact": {
+      "type": "object",
+      "properties": {
+        "estimated_extra_cost": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Estimated extra gas cost for vulnerability exploitation"
+        },
+        "potential_savings": {
+          "type": "integer", 
+          "minimum": 0,
+          "description": "Gas savings from implementing fix"
+        },
+        "optimization_type": {
+          "type": "string",
+          "enum": ["LOOP_OPTIMIZATION", "STORAGE_PACKING", "FUNCTION_VISIBILITY", "REDUNDANT_OPERATIONS", "COMPILER_OPTIMIZATION", "OTHER"],
+          "description": "Type of gas optimization"
+        }
+      },
+      "description": "Gas-related metrics"
+    },
+    "swc_id": {
+      "type": "string",
+      "pattern": "^SWC-\\d{3}$",
+      "description": "Smart Contract Weakness Classification ID",
+      "ai_guidance": "Common mappings: Reentrancy=SWC-107, Integer Overflow=SWC-101, Access Control=SWC-106, Unprotected Selfdestruct=SWC-106"
+    },
+    "owasp_category": {
+      "type": "string",
+      "enum": [
+        "A01-Broken Access Control",
+        "A02-Cryptographic Failures", 
+        "A03-Injection",
+        "A04-Insecure Design",
+        "A05-Security Misconfiguration",
+        "A06-Vulnerable Components",
+        "A07-Authentication Failures",
+        "A08-Data Integrity Failures",
+        "A09-Security Logging Failures",
+        "A10-Server-Side Request Forgery"
+      ],
+      "description": "OWASP Top 10 2021 mapping"
+    },
+    "remediation_effort": {
+      "type": "string",
+      "enum": ["TRIVIAL", "LOW", "MEDIUM", "HIGH", "EXTENSIVE"],
+      "description": "Development effort to fix",
+      "ai_guidance": "TRIVIAL=add modifier/1-line fix, LOW=simple refactor, MEDIUM=logic changes, HIGH=architecture changes, EXTENSIVE=major redesign"
+    },
+    "remediation_priority": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Fix priority (1=urgent, 5=when convenient)",
+      "ai_guidance": "Combine severity + exploitability: CRITICAL/HIGH+EASY=1, MEDIUM+MODERATE=3, LOW+DIFFICULT=5"
+    },
+    "blockchain_networks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["ETHEREUM", "POLYGON", "BSC", "ARBITRUM", "OPTIMISM", "AVALANCHE", "FANTOM", "ALL_EVM", "SOLANA", "COSMOS"]
+      },
+      "description": "Applicable blockchain networks",
+      "ai_guidance": "Use ALL_EVM for general Solidity issues. Specify networks for protocol-specific vulnerabilities."
+    },
+    "defi_protocol_type": {
+      "type": "string",
+      "enum": ["DEX", "LENDING", "YIELD_FARMING", "STAKING", "DERIVATIVES", "INSURANCE", "DAO", "BRIDGE", "ORACLE", "LAUNCHPAD", "OTHER", "N/A"],
+      "description": "DeFi protocol category if applicable"
+    },
+    "token_standards": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["ERC20", "ERC721", "ERC1155", "ERC777", "ERC4626", "ERC2981", "BEP20", "OTHER"]
+      },
+      "description": "Relevant token standards"
+    },
+    "historical_reference": {
+      "type": "object",
+      "properties": {
+        "incident_name": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Notable hack/incident name"
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 2009,
+          "maximum": 2030
+        },
+        "impact_usd": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Financial impact (e.g., '$50M', '$1.2B')"
+        }
+      },
+      "description": "Reference to similar historical incident"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_-]+$",
+        "maxLength": 20
+      },
+      "maxItems": 8,
+      "uniqueItems": true,
+      "description": "Searchable classification tags",
+      "ai_guidance": "Use lowercase, hyphen-separated tags. Include vulnerability type, severity, and relevant protocols."
+    },
+    "ai_analysis_meta": {
+      "type": "object",
+      "properties": {
+        "model_used": {
+          "type": "string",
+          "description": "AI model identifier (e.g., 'gpt-4', 'claude-3-sonnet')"
+        },
+        "tokens_consumed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "analysis_time_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "prompt_version": {
+          "type": "string",
+          "description": "Version of analysis prompt used"
+        }
+      },
+      "description": "AI analysis metadata"
+    }
+  },
+  "additionalProperties": false,
+  "ai_instructions": {
+    "analysis_approach": "1. Scan code for security patterns 2. Identify exact vulnerability location 3. Assess severity based on impact + exploitability 4. Provide actionable remediation",
+    "response_format": "Always return valid JSON array of findings. Each finding must have required fields. Use consistent terminology.",
+    "severity_guidelines": {
+      "CRITICAL": "Immediate fund loss/theft possible (reentrancy, flash loans, major access control bypass)",
+      "HIGH": "Significant financial/security risk (overflow in financial calculations, privilege escalation)",
+      "MEDIUM": "Moderate risk requiring attention (DoS conditions, information disclosure)",
+      "LOW": "Minor security concern (gas optimization, code quality)",
+      "INFO": "Best practice recommendation (documentation, style)"
+    },
+    "common_patterns": {
+      "reentrancy": "External call before state change",
+      "overflow": "Arithmetic without SafeMath in Solidity <0.8",
+      "access_control": "Missing onlyOwner/require checks",
+      "uninitialized": "Storage variables without initialization",
+      "timestamp": "block.timestamp used for critical logic"
+    }
+  },
+  "examples": [
+    {
+      "severity": "CRITICAL",
+      "title": "Reentrancy Vulnerability",
+      "line": 42,
+      "recommendation": "Implement checks-effects-interactions pattern by moving `balances[msg.sender] -= amount` before the external call. Add OpenZeppelin's `nonReentrant` modifier to prevent recursive calls.",
+      "category": "Reentrancy",
+      "function": "withdraw",
+      "contract": "VulnerableBank",
+      "description": "External call to `msg.sender.call{value: amount}(\"\")` occurs before balance update, allowing recursive calls to drain contract funds.",
+      "impact": "FUND_LOSS",
+      "exploitability": "EASY",
+      "code_snippet": "function withdraw(uint amount) public {\n    require(balances[msg.sender] >= amount);\n    msg.sender.call{value: amount}(\"\");\n    balances[msg.sender] -= amount;\n}",
+      "fix_example": "function withdraw(uint amount) public nonReentrant {\n    require(balances[msg.sender] >= amount);\n    balances[msg.sender] -= amount;\n    (bool success, ) = msg.sender.call{value: amount}(\"\");\n    require(success);\n}",
+      "attack_vector": "Attacker deploys malicious contract with fallback function that recursively calls withdraw() during external call execution.",
+      "confidence": "HIGH",
+      "false_positive_risk": "LOW",
+      "swc_id": "SWC-107",
+      "remediation_effort": "LOW",
+      "remediation_priority": 1,
+      "blockchain_networks": ["ALL_EVM"],
+      "historical_reference": {
+        "incident_name": "The DAO Hack",
+        "year": 2016,
+        "impact_usd": "$50M"
+      },
+      "tags": ["reentrancy", "external-call", "critical", "defi"]
+    },
+    {
+      "severity": "HIGH", 
+      "title": "Integer Overflow in Reward Calculation",
+      "line": 89,
+      "recommendation": "Use SafeMath library for arithmetic operations or upgrade to Solidity 0.8+ for automatic overflow protection. Add explicit bounds checking for large multiplications.",
+      "category": "Integer Overflow/Underflow",
+      "function": "calculateReward",
+      "contract": "StakingPool",
+      "description": "Multiplication `reward = stake * multiplier * timeBonus` can overflow with large stakes, causing incorrect reward calculations.",
+      "impact": "FUND_LOSS",
+      "exploitability": "MODERATE",
+      "code_snippet": "uint256 reward = stake * multiplier * timeBonus;\nrewards[user] += reward;",
+      "fix_example": "uint256 reward = stake.mul(multiplier).mul(timeBonus);\nrewards[user] = rewards[user].add(reward);",
+      "attack_vector": "User stakes large amount causing overflow in reward calculation, potentially receiving excessive rewards or causing underflow.",
+      "confidence": "HIGH",
+      "false_positive_risk": "LOW",
+      "swc_id": "SWC-101",
+      "remediation_effort": "LOW",
+      "remediation_priority": 2,
+      "blockchain_networks": ["ETHEREUM", "POLYGON"],
+      "defi_protocol_type": "STAKING",
+      "tags": ["overflow", "math", "staking", "rewards"]
+    },
+    {
+      "severity": "MEDIUM",
+      "title": "Missing Access Control on Admin Function",
+      "line": 156,
+      "recommendation": "Add `onlyOwner` modifier to restrict access to authorized addresses. Consider implementing role-based access control using OpenZeppelin's AccessControl for granular permissions.",
+      "category": "Access Control",
+      "function": "updateFeeRate",
+      "contract": "DEXRouter",
+      "description": "Administrative function `updateFeeRate()` lacks access control, allowing anyone to modify protocol fees.",
+      "impact": "UNAUTHORIZED_ACCESS",
+      "exploitability": "TRIVIAL",
+      "code_snippet": "function updateFeeRate(uint256 newRate) public {\n    feeRate = newRate;\n}",
+      "fix_example": "function updateFeeRate(uint256 newRate) public onlyOwner {\n    require(newRate <= MAX_FEE_RATE, \"Fee too high\");\n    feeRate = newRate;\n}",
+      "attack_vector": "Anyone can call updateFeeRate() to set fees to 100%, effectively stealing all trading fees.",
+      "confidence": "HIGH",
+      "false_positive_risk": "LOW",
+      "swc_id": "SWC-106",
+      "owasp_category": "A01-Broken Access Control",
+      "remediation_effort": "TRIVIAL",
+      "remediation_priority": 2,
+      "blockchain_networks": ["ALL_EVM"],
+      "defi_protocol_type": "DEX",
+      "tags": ["access-control", "admin", "fees", "unauthorized"]
+    },
+    {
+      "severity": "LOW",
+      "title": "Gas Optimization in Loop",
+      "line": 203,
+      "recommendation": "Use `++i` instead of `i++` in for loops to save gas. Consider using `unchecked` blocks for counter increments in Solidity 0.8+ to further optimize.",
+      "category": "Gas Optimization",
+      "function": "distributeRewards",
+      "contract": "RewardDistributor",
+      "description": "Post-increment operator in loop wastes gas compared to pre-increment.",
+      "impact": "GAS_WASTE",
+      "exploitability": "THEORETICAL",
+      "code_snippet": "for (uint i = 0; i < users.length; i++) {\n    processReward(users[i]);\n}",
+      "fix_example": "for (uint i = 0; i < users.length; ++i) {\n    processReward(users[i]);\n}",
+      "confidence": "HIGH",
+      "false_positive_risk": "LOW",
+      "gas_impact": {
+        "potential_savings": 5000,
+        "optimization_type": "LOOP_OPTIMIZATION"
+      },
+      "remediation_effort": "TRIVIAL",
+      "remediation_priority": 5,
+      "blockchain_networks": ["ALL_EVM"],
+      "tags": ["gas", "optimization", "loops", "efficiency"]
+    },
+    {
+      "severity": "CRITICAL",
+      "title": "Flash Loan Attack Vector",
+      "line": 234,
+      "recommendation": "Implement flash loan protection by checking that liquidation doesn't occur in the same transaction as borrowing. Add minimum time delays and multi-block constraints for large operations.",
+      "category": "Flash Loan Attack",
+      "function": "liquidate",
+      "contract": "LendingProtocol",
+      "description": "Protocol allows flash loan borrowing and immediate liquidation in same transaction, enabling price manipulation attacks via oracle exploitation.",
+      "impact": "FUND_LOSS",
+      "exploitability": "EASY",
+      "code_snippet": "function liquidate(address borrower, uint amount) external {\n    require(getCollateralRatio(borrower) < liquidationThreshold);\n    // Liquidation logic without flash loan protection\n}",
+      "attack_vector": "Attacker uses flash loan to manipulate oracle price, trigger liquidation conditions, profit from liquidation, and repay flash loan.",
+      "confidence": "HIGH",
+      "false_positive_risk": "LOW",
+      "remediation_effort": "HIGH",
+      "remediation_priority": 1,
+      "blockchain_networks": ["ETHEREUM", "POLYGON", "ARBITRUM"],
+      "defi_protocol_type": "LENDING",
+      "historical_reference": {
+        "incident_name": "bZx Flash Loan Attack",
+        "year": 2020,
+        "impact_usd": "$1M"
+      },
+      "tags": ["flashloan", "oracle", "manipulation", "lending", "critical"]
+    }
+  ]
+}

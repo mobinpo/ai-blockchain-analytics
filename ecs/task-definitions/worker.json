@@ -1,0 +1,136 @@
+{
+  "family": "ai-blockchain-analytics-worker",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskRole",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "containerDefinitions": [
+    {
+      "name": "ai-blockchain-analytics-worker",
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/ai-blockchain-analytics:latest",
+      "essential": true,
+      "command": ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--max-time=3600"],
+      "environment": [
+        {
+          "name": "APP_NAME",
+          "value": "AI Blockchain Analytics Worker"
+        },
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        },
+        {
+          "name": "APP_DEBUG",
+          "value": "false"
+        },
+        {
+          "name": "DB_CONNECTION",
+          "value": "pgsql"
+        },
+        {
+          "name": "DB_HOST",
+          "value": "ai-blockchain-analytics-postgres.cluster-xxxxx.region.rds.amazonaws.com"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "5432"
+        },
+        {
+          "name": "DB_DATABASE",
+          "value": "ai_blockchain_analytics"
+        },
+        {
+          "name": "REDIS_HOST",
+          "value": "ai-blockchain-analytics-redis.xxxxx.cache.amazonaws.com"
+        },
+        {
+          "name": "REDIS_PORT",
+          "value": "6379"
+        },
+        {
+          "name": "REDIS_DB",
+          "value": "0"
+        },
+        {
+          "name": "CACHE_DRIVER",
+          "value": "redis"
+        },
+        {
+          "name": "SESSION_DRIVER",
+          "value": "redis"
+        },
+        {
+          "name": "QUEUE_CONNECTION",
+          "value": "redis"
+        },
+        {
+          "name": "LOG_CHANNEL",
+          "value": "cloudwatch"
+        },
+        {
+          "name": "AWS_DEFAULT_REGION",
+          "value": "us-east-1"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "APP_KEY",
+          "valueFrom": "/ai-blockchain-analytics/app-key"
+        },
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "/ai-blockchain-analytics/db-username"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "/ai-blockchain-analytics/db-password"
+        },
+        {
+          "name": "COINGECKO_API_KEY",
+          "valueFrom": "/ai-blockchain-analytics/coingecko-api-key"
+        },
+        {
+          "name": "ETHERSCAN_API_KEY",
+          "valueFrom": "/ai-blockchain-analytics/etherscan-api-key"
+        }
+      ],
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "php artisan queue:monitor || exit 1"
+        ],
+        "interval": 60,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 120
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-blockchain-analytics-worker",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      },
+      "stopTimeout": 120
+    }
+  ],
+  "placementConstraints": [],
+  "tags": [
+    {
+      "key": "Environment",
+      "value": "production"
+    },
+    {
+      "key": "Application",
+      "value": "ai-blockchain-analytics"
+    },
+    {
+      "key": "Component",
+      "value": "worker"
+    }
+  ]
+}

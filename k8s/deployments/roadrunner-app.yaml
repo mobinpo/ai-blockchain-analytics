@@ -1,0 +1,507 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+  namespace: ai-blockchain-analytics
+type: Opaque
+data:
+  APP_KEY: YmFzZTY0OkFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBPQ==
+  DB_PASSWORD: cGFzc3dvcmQ=  # password
+  REDIS_PASSWORD: cmVkaXNfcGFzc3dvcmQ=  # redis_password
+  OPENAI_API_KEY: ""  # Add your OpenAI API key
+  STRIPE_SECRET: ""  # Add your Stripe secret key
+  MAILGUN_SECRET: ""  # Add your Mailgun secret
+  MAILGUN_WEBHOOK_SIGNING_KEY: ""  # Add your Mailgun webhook signing key
+  SENTRY_LARAVEL_DSN: ""  # Add your Sentry DSN
+  TELESCOPE_AUTH_TOKEN: ""  # Add secure token for Telescope access
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: ai-blockchain-analytics
+data:
+  APP_NAME: "AI Blockchain Analytics"
+  APP_ENV: "production"
+  APP_DEBUG: "false"
+  APP_URL: "https://ai-blockchain-analytics.com"
+  DB_CONNECTION: "pgsql"
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  DB_DATABASE: "ai_blockchain_analytics"
+  DB_USERNAME: "postgres"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  CACHE_DRIVER: "redis"
+  SESSION_DRIVER: "redis"
+  QUEUE_CONNECTION: "redis"
+  MAIL_MAILER: "mailgun"
+  MAILGUN_DOMAIN: "mg.ai-blockchain-analytics.com"
+  MAILGUN_ENDPOINT: "api.mailgun.net"
+  ONBOARDING_ENABLED: "true"
+  ONBOARDING_FROM_EMAIL: "welcome@blockchain-analytics.com"
+  ONBOARDING_FROM_NAME: "AI Blockchain Analytics Team"
+  ONBOARDING_REPLY_TO: "support@blockchain-analytics.com"
+  ONBOARDING_WEBHOOKS_ENABLED: "true"
+  ONBOARDING_TRACK_OPENS: "true"
+  ONBOARDING_TRACK_CLICKS: "true"
+  FILESYSTEM_DISK: "s3"
+  LOG_CHANNEL: "stderr"
+  TELESCOPE_ENABLED: "true"
+  TELESCOPE_DOMAIN: "monitoring.ai-blockchain-analytics.com"
+  TELESCOPE_PATH: "telescope"
+  TELESCOPE_DRIVER: "database"
+  TELESCOPE_QUEUE_CONNECTION: "redis"
+  SENTRY_ENVIRONMENT: "production"
+  SENTRY_RELEASE: "v1.0.0"
+  SENTRY_SAMPLE_RATE: "0.1"
+  SENTRY_TRACES_SAMPLE_RATE: "0.05"
+  SENTRY_PROFILES_SAMPLE_RATE: "0.01"
+  SENTRY_ENABLE_LOGS: "true"
+  SENTRY_SEND_DEFAULT_PII: "false"
+  BROWSERLESS_ENABLED: "true"
+  BROWSERLESS_URL: "http://browserless:3000"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: roadrunner-config
+  namespace: ai-blockchain-analytics
+data:
+  .rr.yaml: |
+    version: '3'
+    
+    rpc:
+      listen: tcp://0.0.0.0:6001
+    
+    server:
+      command: "php worker.php"
+      user: "www"
+      group: "www"
+    
+    http:
+      address: 0.0.0.0:8000
+      middleware: ["gzip", "headers"]
+      uploads:
+        forbid: [".php", ".exe", ".bat"]
+      trusted_subnets: ["10.0.0.0/8", "127.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+      headers:
+        cors:
+          allowed_origin: "*"
+          allowed_headers: "*"
+          allowed_methods: "GET,POST,PUT,DELETE,OPTIONS"
+          allow_credentials: true
+        response:
+          X-Powered-By: "RoadRunner"
+          Server: "AI-Blockchain-Analytics"
+    
+    logs:
+      mode: production
+      level: error
+      file_logger_options:
+        log_output: "/var/www/html/storage/logs/roadrunner.log"
+        max_size: 10
+        max_age: 30
+        max_backups: 3
+        compress: true
+    
+    pool:
+      num_workers: 8
+      max_jobs: 1000
+      allocate_timeout: 60s
+      destroy_timeout: 60s
+      supervisor:
+        max_worker_memory: 256
+        ttl: 0s
+    
+    metrics:
+      address: 0.0.0.0:2112
+    
+    status:
+      address: 0.0.0.0:2114
+    
+    jobs:
+      num_pollers: 4
+      pipeline_size: 100000
+      pool:
+        num_workers: 8
+        max_jobs: 1000
+        allocate_timeout: 60s
+        destroy_timeout: 60s
+      pipelines:
+        default:
+          driver: redis
+          config:
+            addrs: ["redis:6379"]
+            master_name: ""
+            username: ""
+            password: "redis_password"
+            db: 0
+            read_timeout: 0
+            write_timeout: 0
+            dial_timeout: 0
+            pool_size: 20
+      consume: ["default"]
+    
+    kv:
+      default:
+        driver: redis
+        config:
+          addrs: ["redis:6379"]
+          master_name: ""
+          username: ""
+          password: "redis_password"
+          db: 1
+          read_timeout: 0
+          write_timeout: 0
+          dial_timeout: 0
+          pool_size: 20
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: roadrunner-app
+  namespace: ai-blockchain-analytics
+  labels:
+    app: roadrunner-app
+    component: application
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: roadrunner-app
+  template:
+    metadata:
+      labels:
+        app: roadrunner-app
+        component: application
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:15-alpine
+        command: ['sh', '-c']
+        args:
+          - |
+            until pg_isready -h postgres -p 5432; do
+              echo "Waiting for postgres..."
+              sleep 2
+            done
+            echo "PostgreSQL is ready!"
+      - name: wait-for-redis
+        image: redis:7-alpine
+        command: ['sh', '-c']
+        args:
+          - |
+            until redis-cli -h redis -p 6379 -a redis_password ping; do
+              echo "Waiting for redis..."
+              sleep 2
+            done
+            echo "Redis is ready!"
+      containers:
+      - name: roadrunner
+        image: ai-blockchain-analytics:latest  # Build and push your image
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 2112
+          name: metrics
+        - containerPort: 2114
+          name: health
+        env:
+        - name: APP_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: APP_NAME
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: APP_ENV
+        - name: APP_DEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: APP_DEBUG
+        - name: APP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: APP_KEY
+        - name: APP_URL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: APP_URL
+        - name: DB_CONNECTION
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_CONNECTION
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_PORT
+        - name: DB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_DATABASE
+        - name: DB_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: DB_PASSWORD
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: REDIS_PORT
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: REDIS_PASSWORD
+        - name: CACHE_DRIVER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: CACHE_DRIVER
+        - name: QUEUE_CONNECTION
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: QUEUE_CONNECTION
+        - name: TELESCOPE_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: TELESCOPE_ENABLED
+        - name: TELESCOPE_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: TELESCOPE_DOMAIN
+        - name: TELESCOPE_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: TELESCOPE_PATH
+        - name: TELESCOPE_DRIVER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: TELESCOPE_DRIVER
+        - name: TELESCOPE_QUEUE_CONNECTION
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: TELESCOPE_QUEUE_CONNECTION
+        - name: TELESCOPE_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: TELESCOPE_AUTH_TOKEN
+        - name: SENTRY_LARAVEL_DSN
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: SENTRY_LARAVEL_DSN
+        - name: SENTRY_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SENTRY_ENVIRONMENT
+        - name: SENTRY_RELEASE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SENTRY_RELEASE
+        - name: SENTRY_SAMPLE_RATE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SENTRY_SAMPLE_RATE
+        - name: SENTRY_TRACES_SAMPLE_RATE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SENTRY_TRACES_SAMPLE_RATE
+        - name: SENTRY_PROFILES_SAMPLE_RATE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SENTRY_PROFILES_SAMPLE_RATE
+        - name: SENTRY_ENABLE_LOGS
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SENTRY_ENABLE_LOGS
+        - name: SENTRY_SEND_DEFAULT_PII
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SENTRY_SEND_DEFAULT_PII
+        - name: MAILGUN_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: MAILGUN_SECRET
+        - name: MAILGUN_WEBHOOK_SIGNING_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: MAILGUN_WEBHOOK_SIGNING_KEY
+        - name: MAILGUN_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: MAILGUN_DOMAIN
+        - name: MAILGUN_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: MAILGUN_ENDPOINT
+        - name: ONBOARDING_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: ONBOARDING_ENABLED
+        - name: ONBOARDING_FROM_EMAIL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: ONBOARDING_FROM_EMAIL
+        - name: ONBOARDING_FROM_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: ONBOARDING_FROM_NAME
+        - name: ONBOARDING_WEBHOOKS_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: ONBOARDING_WEBHOOKS_ENABLED
+        volumeMounts:
+        - name: roadrunner-config
+          mountPath: /var/www/.rr.yaml
+          subPath: .rr.yaml
+        - name: storage
+          mountPath: /var/www/storage
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 2
+            memory: 2Gi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 2114
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 2114
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
+      volumes:
+      - name: roadrunner-config
+        configMap:
+          name: roadrunner-config
+      - name: storage
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: roadrunner-app
+  namespace: ai-blockchain-analytics
+  labels:
+    app: roadrunner-app
+    component: application
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    name: http
+  - port: 2112
+    targetPort: 2112
+    name: metrics
+  - port: 2114
+    targetPort: 2114
+    name: health
+  selector:
+    app: roadrunner-app
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: roadrunner-app-hpa
+  namespace: ai-blockchain-analytics
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: roadrunner-app
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60

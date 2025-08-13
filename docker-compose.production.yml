@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.roadrunner
+    container_name: ai_blockchain_app_prod
+    restart: unless-stopped
+    ports:
+      - "80:8000"
+      - "443:8000"
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://ai-blockchain-analytics.com
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_DATABASE=ai_blockchain_analytics
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=SecureProductionPassword2024!
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=SecureRedisPassword2024!
+      - CACHE_DRIVER=redis
+      - SESSION_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+      - LOG_LEVEL=warning
+      - SENTRY_ENVIRONMENT=production
+      - SENTRY_RELEASE=v0.9.0
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - ai_blockchain_network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ai_blockchain_postgres_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ai_blockchain_analytics
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: SecureProductionPassword2024!
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - ai_blockchain_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: ai_blockchain_redis_prod
+    restart: unless-stopped
+    command: redis-server --requirepass SecureRedisPassword2024!
+    volumes:
+      - redis_data_prod:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - ai_blockchain_network
+
+  horizon:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.roadrunner
+    container_name: ai_blockchain_horizon_prod
+    restart: unless-stopped
+    command: php artisan horizon
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_DATABASE=ai_blockchain_analytics
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=SecureProductionPassword2024!
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=SecureRedisPassword2024!
+      - QUEUE_CONNECTION=redis
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache
+    depends_on:
+      - app
+      - redis
+      - postgres
+    networks:
+      - ai_blockchain_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: ai_blockchain_nginx_prod
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./public:/var/www/html/public
+    depends_on:
+      - app
+    networks:
+      - ai_blockchain_network
+
+volumes:
+  postgres_data_prod:
+  redis_data_prod:
+
+networks:
+  ai_blockchain_network:
+    driver: bridge

@@ -1,0 +1,96 @@
+{
+  "family": "ai-blockchain-analytics-scheduler",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ai-blockchain-analytics-task-role",
+  "containerDefinitions": [
+    {
+      "name": "scheduler",
+      "image": "${DOCKER_REGISTRY}/ai-blockchain-analytics-scheduler:${IMAGE_TAG}",
+      "cpu": 512,
+      "memory": 1024,
+      "memoryReservation": 512,
+      "essential": true,
+      "environment": [
+        {"name": "APP_ENV", "value": "production"},
+        {"name": "APP_DEBUG", "value": "false"},
+        {"name": "LOG_CHANNEL", "value": "stderr"},
+        {"name": "LOG_LEVEL", "value": "info"},
+        {"name": "DB_CONNECTION", "value": "pgsql"},
+        {"name": "DB_HOST", "value": "${RDS_ENDPOINT}"},
+        {"name": "DB_PORT", "value": "5432"},
+        {"name": "DB_DATABASE", "value": "ai_blockchain_analytics"},
+        {"name": "CACHE_DRIVER", "value": "redis"},
+        {"name": "QUEUE_CONNECTION", "value": "redis"},
+        {"name": "REDIS_HOST", "value": "${ELASTICACHE_ENDPOINT}"},
+        {"name": "REDIS_PORT", "value": "6379"},
+        {"name": "AWS_DEFAULT_REGION", "value": "${AWS_REGION}"}
+      ],
+      "secrets": [
+        {
+          "name": "APP_KEY",
+          "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:ai-blockchain-analytics/app-key"
+        },
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:ai-blockchain-analytics/db-credentials:username::"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:ai-blockchain-analytics/db-credentials:password::"
+        },
+        {
+          "name": "GOOGLE_CLOUD_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:ai-blockchain-analytics/google-cloud-api-key"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-blockchain-analytics/scheduler",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "scheduler",
+          "awslogs-create-group": "true"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "php artisan schedule:list | grep -q 'Next Due' || exit 1"],
+        "interval": 60,
+        "timeout": 30,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "command": ["php", "artisan", "schedule:work"],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "linuxParameters": {
+        "capabilities": {
+          "drop": ["ALL"]
+        }
+      },
+      "user": "1000:1000",
+      "readonlyRootFilesystem": false,
+      "privileged": false,
+      "stopTimeout": 30
+    }
+  ],
+  "volumes": [],
+  "placementConstraints": [],
+  "tags": [
+    {
+      "key": "Environment",
+      "value": "production"
+    },
+    {
+      "key": "Application",
+      "value": "ai-blockchain-analytics"
+    },
+    {
+      "key": "Component",
+      "value": "scheduler"
+    }
+  ]
+}

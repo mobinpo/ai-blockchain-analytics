@@ -1,0 +1,434 @@
+# =============================================================================
+# AI Blockchain Analytics - Enhanced 500 Concurrent Analyses Load Test
+# =============================================================================
+# Comprehensive load test targeting blockchain analysis endpoints with
+# realistic user behavior patterns and robust error handling
+
+config:
+  target: 'http://localhost:8003'
+  
+  # Optimized phases for 500 concurrent analyses with gradual ramp-up
+  phases:
+    # 1. Warmup Phase - Establish baseline (60 seconds)
+    - duration: 60
+      arrivalRate: 5
+      name: "Warmup Phase - Baseline"
+    
+    # 2. Gradual Ramp - Scale to 50 concurrent (120 seconds)
+    - duration: 120
+      arrivalRate: 5
+      rampTo: 50
+      name: "Gradual Ramp - 50 Concurrent"
+    
+    # 3. Scale Up - Reach 150 concurrent (180 seconds)
+    - duration: 180
+      arrivalRate: 50
+      rampTo: 150
+      name: "Scale Up - 150 Concurrent"
+    
+    # 4. Major Scale - Push to 300 concurrent (240 seconds)
+    - duration: 240
+      arrivalRate: 150
+      rampTo: 300
+      name: "Major Scale - 300 Concurrent"
+    
+    # 5. Final Push - Reach 500 concurrent (180 seconds)
+    - duration: 180
+      arrivalRate: 300
+      rampTo: 500
+      name: "Final Push - 500 Concurrent"
+    
+    # 6. Sustained Load - Maintain 500 concurrent (600 seconds = 10 minutes)
+    - duration: 600
+      arrivalRate: 500
+      name: "Sustained 500 Concurrent Load"
+    
+    # 7. Stress Test - Brief spike to 600 (60 seconds)
+    - duration: 60
+      arrivalRate: 500
+      rampTo: 600
+      name: "Stress Test - 600 Concurrent Spike"
+    
+    # 8. Cool Down - Gradual reduction to zero (180 seconds)
+    - duration: 180
+      arrivalRate: 600
+      rampTo: 0
+      name: "Cool Down Phase"
+
+  # HTTP configuration optimized for high concurrency
+  http:
+    timeout: 300              # 5 minutes timeout for AI operations
+    pool: 300                 # Connection pool size
+    maxSockets: 2000          # Maximum concurrent sockets
+    keepAlive: true           # Reuse connections
+    requestIdHeader: 'x-request-id'
+    headers:
+      'User-Agent': 'Artillery-LoadTest/2.0'
+      'Accept': 'application/json,text/html,*/*'
+      'Accept-Encoding': 'gzip, deflate'
+
+  # Performance thresholds for AI blockchain analysis workloads
+  ensure:
+    - http.request_rate > 200         # Min 200 req/sec during peak
+    - http.response_time.p50 < 5000   # Median under 5s
+    - http.response_time.p95 < 20000  # 95th percentile under 20s
+    - http.response_time.p99 < 45000  # 99th percentile under 45s
+    - http.codes.200 > 60             # At least 60% success rate
+    - http.codes.500 < 10             # Less than 10% server errors
+
+  # Environment variables for realistic test data
+  variables:
+    crypto_symbols: ["BTC", "ETH", "ADA", "SOL", "MATIC", "AVAX", "DOT", "LINK", "UNI", "AAVE", "NEAR", "ATOM", "ALGO", "XTZ", "FTM"]
+    blockchain_networks: ["ethereum", "bitcoin", "polygon", "avalanche", "solana", "cardano", "polkadot"]
+    analysis_types: ["sentiment", "price_prediction", "market_analysis", "risk_assessment", "volatility_analysis", "trend_analysis"]
+    priorities: ["low", "medium", "high", "urgent"]
+    timeframes: ["1h", "4h", "1d", "7d", "30d", "90d"]
+    data_sources: ["twitter", "reddit", "telegram", "news", "social", "technical", "onchain"]
+    contract_types: ["defi", "nft", "gamefi", "dao", "bridge", "oracle", "token"]
+
+scenarios:
+  # 1. Primary AI Sentiment Analysis Pipeline (40% of traffic)
+  - name: "AI Sentiment Analysis Pipeline"
+    weight: 40
+    flow:
+      # Health check first
+      - get:
+          url: "/"
+          expect:
+            - statusCode: [200, 404, 500, 502, 503]
+      
+      # Submit comprehensive sentiment analysis
+      - post:
+          url: "/api/sentiment/analyze"
+          headers:
+            'Content-Type': 'application/json'
+            'X-Requested-With': 'XMLHttpRequest'
+            'X-Analysis-Type': 'bulk-sentiment'
+          json:
+            symbol: "{{ $pick(crypto_symbols) }}"
+            network: "{{ $pick(blockchain_networks) }}"
+            analysis_type: "{{ $pick(analysis_types) }}"
+            priority: "{{ $pick(priorities) }}"
+            timeframe: "{{ $pick(timeframes) }}"
+            sources: "{{ $pick(data_sources) }}"
+            batch_config:
+              batch_size: "{{ $randomInt(50, 500) }}"
+              sentiment_threshold: "{{ $randomNumber(0.1, 0.9) }}"
+              include_metrics: true
+              include_trends: true
+              include_keywords: true
+            options:
+              deep_analysis: "{{ $randomBoolean() }}"
+              include_context: true
+              sentiment_breakdown: true
+              emotion_analysis: "{{ $randomBoolean() }}"
+          expect:
+            - statusCode: [200, 201, 202, 422, 429, 500, 503]
+          capture:
+            - json: "$.job_id"
+              as: "sentiment_job_id"
+            - json: "$.batch_id"
+              as: "batch_id"
+      
+      # Brief processing delay
+      - think: "{{ $randomInt(2, 8) }}"
+      
+      # Check job status with retry logic
+      - loop:
+        - get:
+            url: "/api/sentiment/status/{{ sentiment_job_id }}"
+            expect:
+              - statusCode: [200, 404, 422, 500, 503]
+        - think: "{{ $randomInt(1, 3) }}"
+        count: 3
+      
+      # Get analysis results if available
+      - get:
+          url: "/api/sentiment/results/{{ sentiment_job_id }}"
+          expect:
+            - statusCode: [200, 202, 404, 422, 500]
+
+  # 2. Blockchain Contract Analysis (25% of traffic)
+  - name: "Smart Contract Analysis"
+    weight: 25
+    flow:
+      # Generate realistic contract address
+      - function: "generateContractAddress"
+        as: "contract_address"
+      
+      # Submit contract analysis request
+      - post:
+          url: "/api/contracts/analyze"
+          headers:
+            'Content-Type': 'application/json'
+            'X-Analysis-Depth': 'comprehensive'
+          json:
+            contract_address: "{{ contract_address }}"
+            network: "{{ $pick(blockchain_networks) }}"
+            analysis_type: "{{ $pick(contract_types) }}"
+            scan_depth: "{{ $pick(['surface', 'medium', 'deep', 'comprehensive']) }}"
+            security_checks: true
+            vulnerability_scan: true
+            gas_analysis: true
+            code_quality: "{{ $randomBoolean() }}"
+            options:
+              include_bytecode: "{{ $randomBoolean() }}"
+              decompile_contract: false
+              audit_level: "{{ $pick(['basic', 'standard', 'premium']) }}"
+              ai_enhancement: true
+          expect:
+            - statusCode: [200, 201, 202, 400, 422, 429, 500, 503]
+          capture:
+            - json: "$.analysis_id"
+              as: "contract_analysis_id"
+      
+      - think: "{{ $randomInt(3, 10) }}"
+      
+      # Check analysis progress
+      - get:
+          url: "/api/contracts/status/{{ contract_analysis_id }}"
+          expect:
+            - statusCode: [200, 404, 500, 503]
+
+  # 3. Enhanced Verification Workflow (15% of traffic)
+  - name: "Enhanced Verification Analysis"
+    weight: 15
+    flow:
+      # Get verification dashboard
+      - get:
+          url: "/get-verified"
+          expect:
+            - statusCode: [200, 302, 401, 500, 503]
+      
+      # Submit enhanced verification request
+      - post:
+          url: "/api/enhanced-verification/submit"
+          headers:
+            'Content-Type': 'application/json'
+            'X-Verification-Level': 'enhanced'
+          json:
+            verification_type: "crypto_project"
+            project_data:
+              symbol: "{{ $pick(crypto_symbols) }}"
+              network: "{{ $pick(blockchain_networks) }}"
+              contract_address: "{{ generateContractAddress() }}"
+              project_type: "{{ $pick(contract_types) }}"
+            verification_level: "{{ $pick(['standard', 'enhanced', 'premium', 'enterprise']) }}"
+            security_checks:
+              smart_contract_audit: true
+              tokenomics_analysis: true
+              team_verification: "{{ $randomBoolean() }}"
+              liquidity_analysis: true
+            ai_analysis:
+              sentiment_score: true
+              risk_assessment: true
+              market_analysis: "{{ $randomBoolean() }}"
+            priority: "{{ $pick(priorities) }}"
+          expect:
+            - statusCode: [200, 201, 202, 400, 422, 429, 500, 503]
+          capture:
+            - json: "$.verification_id"
+              as: "verification_id"
+            - json: "$.verification_url"
+              as: "verification_url"
+      
+      - think: "{{ $randomInt(2, 6) }}"
+      
+      # Check verification status
+      - get:
+          url: "/api/enhanced-verification/status/{{ verification_id }}"
+          expect:
+            - statusCode: [200, 404, 422, 500, 503]
+
+  # 4. PDF Report Generation (10% of traffic)
+  - name: "Advanced PDF Report Generation"
+    weight: 10
+    flow:
+      # Request comprehensive PDF report
+      - post:
+          url: "/api/enhanced-pdf/generate"
+          headers:
+            'Content-Type': 'application/json'
+            'X-Report-Type': 'comprehensive'
+          json:
+            report_config:
+              type: "comprehensive_analysis"
+              format: "premium_pdf"
+              language: "en"
+            data_sources:
+              symbol: "{{ $pick(crypto_symbols) }}"
+              network: "{{ $pick(blockchain_networks) }}"
+              timeframe: "{{ $pick(timeframes) }}"
+              analysis_types: ["{{ $pick(analysis_types) }}", "{{ $pick(analysis_types) }}"]
+            content_options:
+              include_charts: true
+              include_metrics: true
+              include_predictions: "{{ $randomBoolean() }}"
+              include_risk_analysis: true
+              include_sentiment: true
+              chart_types: ["price", "sentiment", "volume", "volatility"]
+            formatting:
+              template: "{{ $pick(['standard', 'premium', 'executive']) }}"
+              branding: "{{ $randomBoolean() }}"
+              watermark: false
+            ai_enhancements:
+              auto_insights: true
+              trend_analysis: "{{ $randomBoolean() }}"
+              risk_scoring: true
+          expect:
+            - statusCode: [200, 201, 202, 400, 422, 429, 500, 503]
+          capture:
+            - json: "$.task_id"
+              as: "pdf_task_id"
+            - json: "$.estimated_time"
+              as: "pdf_estimate"
+      
+      - think: "{{ $randomInt(5, 15) }}"
+      
+      # Check PDF generation status
+      - get:
+          url: "/api/enhanced-pdf/status/{{ pdf_task_id }}"
+          expect:
+            - statusCode: [200, 202, 404, 422, 500, 503]
+
+  # 5. Dashboard and Monitoring (5% of traffic)
+  - name: "Dashboard and System Monitoring"
+    weight: 5
+    flow:
+      # Access main dashboard
+      - get:
+          url: "/dashboard"
+          expect:
+            - statusCode: [200, 302, 401, 500, 503]
+      
+      # Get real-time metrics
+      - get:
+          url: "/api/dashboard/metrics"
+          qs:
+            timeframe: "{{ $pick(timeframes) }}"
+            symbols: "{{ $pick(crypto_symbols) }}"
+            networks: "{{ $pick(blockchain_networks) }}"
+            live_data: true
+          expect:
+            - statusCode: [200, 400, 500, 503]
+      
+      # Get recent analyses summary
+      - get:
+          url: "/api/analyses/recent"
+          qs:
+            limit: "{{ $randomInt(10, 50) }}"
+            type: "{{ $pick(analysis_types) }}"
+            status: "completed"
+          expect:
+            - statusCode: [200, 400, 500, 503]
+      
+      # Check system health
+      - get:
+          url: "/api/monitoring/health"
+          expect:
+            - statusCode: [200, 503]
+
+  # 6. API Health and Status Checks (5% of traffic)
+  - name: "System Health Monitoring"
+    weight: 5
+    flow:
+      # Basic health check
+      - get:
+          url: "/api/health"
+          expect:
+            - statusCode: [200, 503]
+      
+      # Monitoring endpoints
+      - get:
+          url: "/api/monitoring/sentry/status"
+          expect:
+            - statusCode: [200, 401, 500, 503]
+      
+      # Queue status
+      - get:
+          url: "/api/queue/status"
+          expect:
+            - statusCode: [200, 401, 500, 503]
+      
+      # Database health
+      - get:
+          url: "/api/monitoring/database"
+          expect:
+            - statusCode: [200, 401, 500, 503]
+
+# Custom functions for realistic test data
+functions:
+  generateContractAddress: |
+    function() {
+      const chars = 'abcdef0123456789';
+      let result = '0x';
+      for (let i = 0; i < 40; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+  
+  generateTransactionHash: |
+    function() {
+      const chars = 'abcdef0123456789';
+      let result = '0x';
+      for (let i = 0; i < 64; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+  
+  generateTimestamp: |
+    function() {
+      const now = Date.now();
+      const oneMonthAgo = now - (30 * 24 * 60 * 60 * 1000);
+      return Math.floor(Math.random() * (now - oneMonthAgo) + oneMonthAgo);
+    }
+  
+  generateWalletAddress: |
+    function() {
+      const chars = 'abcdef0123456789';
+      let result = '0x';
+      for (let i = 0; i < 40; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+# Advanced plugins for comprehensive monitoring
+plugins:
+  # Detailed metrics by endpoint
+  - name: "@artilleryio/plugin-metrics-by-endpoint"
+    config:
+      details: true
+      
+  # Performance monitoring integration
+  - name: "artillery-plugin-statsd"
+    config:
+      host: "localhost"
+      port: 8125
+      prefix: "artillery.ai_blockchain.500_concurrent"
+      
+  # Custom metrics collection
+  - name: "artillery-plugin-cloudwatch"
+    config:
+      namespace: "AI-Blockchain-Analytics/LoadTest"
+      dimensions:
+        TestType: "500-Concurrent-Analysis"
+        Environment: "LoadTest"
+
+# Pre-test setup
+before:
+  flow:
+    - log: "🚀 Starting Enhanced 500 Concurrent AI Blockchain Analysis Load Test"
+    - log: "📊 Target: {{ target }}"
+    - log: "⏱️  Duration: ~25 minutes with sustained 10-minute peak load"
+    - log: "🔬 Scenarios: Sentiment Analysis, Contract Analysis, Verification, PDF Generation"
+
+# Post-test reporting
+after:
+  flow:
+    - log: "✅ Enhanced 500 concurrent AI blockchain analyses load test completed!"
+    - log: "📈 Processing performance metrics and generating comprehensive report"
+    - log: "🔍 Check monitoring data for detailed system performance analysis"
+    - log: "📊 Results will be saved with timestamp for historical comparison"

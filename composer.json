@@ -1,0 +1,126 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "mobin/sentiment-shield",
+    "type": "project",
+    "description": "Sentiment Shield - AI-powered blockchain security platform with dual smart contract & sentiment analysis",
+    "keywords": ["sentiment-shield", "blockchain-security", "smart-contract-analysis", "sentiment-analysis", "laravel", "octane", "ai", "vue", "inertia", "web3", "defi"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mobin",
+            "email": "mobin@sentimentshield.app"
+        }
+    ],
+    "homepage": "https://sentimentshield.app",
+    "support": {
+        "issues": "https://github.com/mobin/sentiment-shield/issues",
+        "source": "https://github.com/mobin/sentiment-shield"
+    },
+    "require": {
+        "php": "^8.2",
+        "barryvdh/laravel-dompdf": "^3.1",
+        "google/cloud-language": "^1.0",
+        "guzzlehttp/guzzle": "^7.9",
+        "inertiajs/inertia-laravel": "^2.0",
+        "justinrainbow/json-schema": "^6.4",
+        "laravel/cashier": "^15.7",
+        "laravel/framework": "^12.0",
+        "laravel/horizon": "^5.33",
+        "laravel/octane": "^2.12",
+        "laravel/sanctum": "^4.0",
+        "laravel/telescope": "^5.11",
+        "laravel/tinker": "^2.10.1",
+        "mailgun/mailgun-php": "^4.3",
+        "openai-php/client": "^0.14.0",
+        "predis/predis": "^3.1",
+        "sentry/sentry-laravel": "^4.15",
+        "spiral/roadrunner-cli": "^2.6.0",
+        "spiral/roadrunner-http": "^3.3.0",
+        "symfony/mailgun-mailer": "^7.3",
+        "tightenco/ziggy": "^2.0",
+        "web3-php/web3": "dev-master"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "laravel/breeze": "^2.3",
+        "laravel/pail": "^1.2.2",
+        "laravel/pint": "^1.13",
+        "laravel/sail": "^1.41",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "phpunit/phpunit": "^11.5.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi",
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+            "@php artisan migrate --graceful --ansi"
+        ],
+        "dev": [
+            "@test",
+            "@pint-test",
+            "@psalm"
+        ],
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-html coverage",
+        "pint": "pint",
+        "pint-test": "pint --test",
+        "psalm": "psalm --show-info=true",
+        "phpstan": "phpstan analyze --memory-limit=2G",
+        "quality": [
+            "@pint-test",
+            "@psalm",
+            "@phpstan"
+        ],
+        "fresh": [
+            "@php artisan migrate:fresh",
+            "@php artisan db:seed"
+        ],
+        "optimize": [
+            "@php artisan optimize",
+            "@php artisan view:cache",
+            "@php artisan config:cache",
+            "@php artisan route:cache"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "platform": {
+            "php": "8.2.0"
+        },
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

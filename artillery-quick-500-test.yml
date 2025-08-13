@@ -1,0 +1,94 @@
+config:
+  target: 'http://localhost:8000'
+  phases:
+    # Quick ramp-up for testing
+    - duration: 30
+      arrivalRate: 50
+      name: "Warm-up (50 RPS)"
+    
+    # Peak load - 500 concurrent
+    - duration: 120
+      arrivalRate: 500
+      name: "🎯 PEAK: 500 Concurrent"
+    
+    # Cool down
+    - duration: 30
+      arrivalRate: 50
+      name: "Cool down (50 RPS)"
+
+  http:
+    timeout: 30
+    pool: 200
+    maxSockets: 300
+    keepAlive: true
+
+  plugins:
+    metrics-by-endpoint:
+      enabled: true
+
+variables:
+  # Test data from our generated CSV
+  test_symbols:
+    - "BTC"
+    - "ETH" 
+    - "USDT"
+    - "BNB"
+    - "SOL"
+
+scenarios:
+  # Application Health Check (50%)
+  - name: "🏥 Health Checks"
+    weight: 50
+    flow:
+      - get:
+          url: "/up"
+          name: "App Status"
+          expect:
+            - statusCode: 200
+          think: 1
+
+  # Load Test Endpoints (30%)
+  - name: "🧪 Load Test APIs"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/load-test/analysis"
+          name: "Load Test Analysis"
+          json:
+            analysis_type: "comprehensive"
+            intensity: "high"
+          expect:
+            - statusCode: [200, 404]
+          think: 2
+      
+      - get:
+          url: "/api/load-test/complex-query"
+          name: "Complex Query"
+          expect:
+            - statusCode: [200, 404, 500]
+          think: 1
+
+  # Sentiment Analysis (15%)
+  - name: "📊 Sentiment Testing"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/load-test/sentiment"
+          name: "Sentiment Analysis"
+          json:
+            text: "{{ test_symbols.random }} cryptocurrency market analysis for blockchain sentiment"
+            intensity: "high"
+          expect:
+            - statusCode: [200, 404]
+          think: 2
+
+  # PDF Generation (5%)
+  - name: "📄 PDF Testing"  
+    weight: 5
+    flow:
+      - get:
+          url: "/api/pdf/status"
+          name: "PDF Status"
+          expect:
+            - statusCode: [200, 404]
+          think: 1

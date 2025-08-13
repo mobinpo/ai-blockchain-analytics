@@ -1,0 +1,22 @@
+# OBS Studio Scene Configuration for AI Blockchain Analytics Promo
+
+## Scene 1: Browser Capture
+- Source: Browser Source or Window Capture
+- Resolution: 1920x1080
+- Frame Rate: 60 FPS
+- Audio: Desktop Audio + Microphone
+
+## Scene 2: Mobile View (if needed)
+- Source: Browser Developer Tools (mobile view)
+- Resolution: 375x812 (iPhone X size)
+
+## Recording Settings
+- Format: MP4
+- Encoder: Hardware (NVENC) or Software (x264)
+- Quality: High (CRF 18-20)
+- Audio: 48kHz, Stereo
+
+## Filters
+- Noise Suppression: On microphone
+- Compressor: On microphone  
+- Color Correction: Slight contrast boost

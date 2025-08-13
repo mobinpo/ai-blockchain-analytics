@@ -1,0 +1,87 @@
+# =============================================================================
+# AI Blockchain Analytics - Realistic Load Analysis 
+# =============================================================================
+# Gradual load increase to find actual capacity limits
+
+config:
+  target: 'http://localhost:8000'
+  
+  # Progressive load phases to find breaking point
+  phases:
+    # Start small - 5 concurrent users
+    - duration: 30
+      arrivalRate: 5
+      name: "Phase 1: 5 concurrent users"
+    
+    # Scale to 10
+    - duration: 30
+      arrivalRate: 10
+      name: "Phase 2: 10 concurrent users"
+    
+    # Scale to 20
+    - duration: 30
+      arrivalRate: 20
+      name: "Phase 3: 20 concurrent users"
+    
+    # Scale to 50
+    - duration: 60
+      arrivalRate: 50
+      name: "Phase 4: 50 concurrent users"
+    
+    # Scale to 100
+    - duration: 60
+      arrivalRate: 100
+      name: "Phase 5: 100 concurrent users"
+    
+    # Scale to 200
+    - duration: 60
+      arrivalRate: 200
+      name: "Phase 6: 200 concurrent users"
+    
+    # Attempt 500 (may fail)
+    - duration: 60
+      arrivalRate: 500
+      name: "Phase 7: 500 concurrent users (stress test)"
+
+  # HTTP configuration with connection reuse
+  http:
+    timeout: 120
+    pool: 50
+    maxSockets: 500
+    keepAlive: true
+    headers:
+      'Connection': 'keep-alive'
+
+  # Capture all response codes for analysis
+  ensure: []
+
+scenarios:
+  # Lightweight health check scenario
+  - name: "Health Check"
+    weight: 40
+    flow:
+      - get:
+          url: "/"
+          expect:
+            - statusCode: [200, 404, 500]
+      - think: 1
+
+  # Basic API test
+  - name: "API Test"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/dashboard/metrics"
+          expect:
+            - statusCode: [200, 404, 422, 500]
+      - think: 2
+
+  # Dashboard access
+  - name: "Dashboard Access"
+    weight: 30
+    flow:
+      - get:
+          url: "/dashboard"
+          expect:
+            - statusCode: [200, 302, 404, 500]
+      - think: 1.5

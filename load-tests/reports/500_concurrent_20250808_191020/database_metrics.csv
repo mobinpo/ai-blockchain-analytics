@@ -1,0 +1,1 @@
+timestamp,active_connections,idle_connections,total_connections,max_connections,queries_per_sec,commits_per_sec,rollbacks_per_sec,cache_hit_ratio,deadlocks,temp_files,checkpoint_sync_time

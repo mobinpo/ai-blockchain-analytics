@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login Form</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h2>Direct Login Test</h2>
+    <p>This form tests authentication directly without Inertia.js</p>
+    
+    <form action="/login" method="POST">
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" value="admin@example.com" required>
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" value="password123" required>
+        </div>
+        <div>
+            <input type="checkbox" id="remember" name="remember" value="1">
+            <label for="remember">Remember me</label>
+        </div>
+        <div>
+            <button type="submit">Login</button>
+        </div>
+    </form>
+
+    <hr>
+    <h3>Instructions:</h3>
+    <ol>
+        <li>Visit <a href="http://localhost:8003/test_login.html">http://localhost:8003/test_login.html</a></li>
+        <li>Click the Login button</li>
+        <li>Check if you get redirected to dashboard or get a 419 error</li>
+    </ol>
+
+    <script>
+        // Add CSRF token dynamically
+        fetch('/login')
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const csrfToken = doc.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                
+                if (csrfToken) {
+                    const form = document.querySelector('form');
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_token';
+                    csrfInput.value = csrfToken;
+                    form.appendChild(csrfInput);
+                    
+                    console.log('CSRF token added:', csrfToken.substring(0, 20) + '...');
+                } else {
+                    console.error('Could not retrieve CSRF token');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching CSRF token:', error);
+            });
+    </script>
+</body>
+</html>

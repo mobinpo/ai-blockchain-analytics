@@ -1,0 +1,113 @@
+# RoadRunner Development Configuration
+# AI Blockchain Analytics - Development Environment
+
+version: '3'
+
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+server:
+  command: "php /app/psr-worker.php"
+
+# HTTP Server Configuration (Development)
+http:
+  address: ":8080"
+  middleware: ["headers", "gzip"]
+  uploads:
+    forbid: [".php", ".exe", ".bat"]
+  trusted_subnets:
+    - "10.0.0.0/8"
+    - "127.0.0.0/8"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+    - "::1/128"
+    - "fc00::/7"
+    - "fe80::/10"
+  
+  # Development pool settings (fewer workers, shorter timeouts)
+  pool:
+    num_workers: 2
+    max_jobs: 16
+    allocate_timeout: 30s
+    destroy_timeout: 30s
+    supervisor:
+      watch_tick: 1s
+      ttl: 0s
+      idle_ttl: 5s
+      exec_ttl: 30s
+      max_worker_memory: 256
+
+# Static files serving
+static:
+  dir: "/app/public"
+  forbid: [".htaccess", ".env"]
+  calculate_etag: false
+  weak: true
+  allow: [".txt", ".php"]
+
+# Headers middleware (relaxed for development)
+headers:
+  cors:
+    allowed_origin: "*"
+    allowed_headers: "*"
+    allowed_methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+    allow_credentials: true
+    exposed_headers: "*"
+    max_age: 0
+  request:
+    "X-Powered-By": "RoadRunner-Dev"
+    "Server": "AI-Blockchain-Analytics-Dev/2.0"
+  response:
+    "X-Debug-Mode": "enabled"
+
+# Gzip compression (lighter for development)
+gzip:
+  level: 1
+
+# Metrics and monitoring
+metrics:
+  address: "127.0.0.1:2112"
+  collect:
+    app_metric:
+      type: histogram
+      help: "Development application metrics"
+
+# Health checks
+status:
+  address: "127.0.0.1:2114"
+
+# Logging (verbose for development)
+logs:
+  mode: development
+  level: debug
+  encoding: console
+  file_logger_options:
+    log_output: "/app/storage/logs/roadrunner-dev.log"
+    max_size: 5
+    max_age: 7
+    max_backups: 3
+    compress: false
+
+# Hot reload for development
+reload:
+  interval: 1s
+  patterns: [ ".php" ]
+  services:
+    http:
+      recursive: true
+      ignore: [ "vendor", "node_modules", ".git" ]
+      patterns: [ ".php", ".env" ]
+      dirs: [ "app", "config", "routes", "resources" ]
+
+# Development limits (more lenient)
+limits:
+  services:
+    http:
+      memory_limit: 256
+      ttl: 0s
+      idle_ttl: 5s
+      exec_ttl: 30s
+
+# Debug mode enabled
+debug:
+  enabled: true

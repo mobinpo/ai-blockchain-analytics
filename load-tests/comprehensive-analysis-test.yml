@@ -1,0 +1,114 @@
+config:
+  target: "http://localhost:8000"
+  phases:
+    # Extended test with actual analysis endpoints
+    - duration: 60
+      arrivalRate: 5
+      name: "Extended Warm-up"
+    
+    - duration: 180
+      arrivalRate: 25
+      rampTo: 85
+      name: "Heavy Ramp-up to 500+"
+    
+    - duration: 240
+      arrivalRate: 85
+      name: "Sustained 500+ Concurrent Load"
+    
+    - duration: 60
+      arrivalRate: 30
+      name: "Graceful Cool-down"
+
+  ensure:
+    thresholds:
+      - http.response_time.p95: 8000   # Allow for actual processing
+      - http.response_time.median: 3000
+      - http.response_time.p99: 12000
+
+  # Test data payloads
+  payload:
+    path: "./test-data/blockchain-addresses.csv"
+    fields:
+      - address
+      - chain
+      - type
+
+scenarios:
+  # Root application test
+  - name: "Application Root"
+    weight: 15
+    flow:
+      - get:
+          url: "/"
+          expect:
+            - statusCode: [200, 302, 404, 500]
+
+  # Dashboard access simulation
+  - name: "Dashboard Access"  
+    weight: 25
+    flow:
+      - get:
+          url: "/dashboard"
+          expect:
+            - statusCode: [200, 302, 404]
+      
+      - think: 1
+      
+      - get:
+          url: "/dashboard/analytics"
+          expect:
+            - statusCode: [200, 302, 404, 500]
+
+  # API Health and Status
+  - name: "System Health Check"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/health"
+          expect:
+            - statusCode: [200, 404, 500]
+      
+      - get:
+          url: "/health"
+          expect:
+            - statusCode: [200, 404, 500]
+
+  # Simulated blockchain analysis
+  - name: "Blockchain Analysis Simulation"
+    weight: 30  
+    flow:
+      - post:
+          url: "/api/blockchain/analyze"
+          headers:
+            Content-Type: "application/json"
+            Accept: "application/json"
+          json:
+            address: "{{ address }}"
+            chain: "{{ chain }}"
+            analysis_type: "full"
+            simulate: true
+          expect:
+            - statusCode: [200, 201, 202, 400, 404, 422, 500]
+
+  # PDF generation load test
+  - name: "PDF Generation"
+    weight: 10
+    flow:
+      - get:
+          url: "/pdf/demo"
+          expect:
+            - statusCode: [200, 404, 500]
+      
+      - think: 2
+      
+      - post:
+          url: "/api/pdf/generate"
+          headers:
+            Content-Type: "application/json"
+          json:
+            type: "dashboard"
+            data:
+              address: "{{ address }}"
+              chain: "{{ chain }}"
+          expect:
+            - statusCode: [200, 201, 202, 400, 404, 500]

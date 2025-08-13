@@ -1,0 +1,73 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: testing
+    container_name: ai_blockchain_app_ci
+    working_dir: /var/www
+    environment:
+      APP_ENV: testing
+      APP_DEBUG: "false"
+      APP_KEY: base64:TEST_KEY_FOR_CI_ENVIRONMENT_ONLY
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ai_blockchain_analytics_test
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      QUEUE_CONNECTION: sync
+      CACHE_DRIVER: array
+      SESSION_DRIVER: array
+      LOG_CHANNEL: stderr
+      BCRYPT_ROUNDS: 4
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ai_blockchain_ci
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ai_blockchain_postgres_ci
+    environment:
+      POSTGRES_DB: ai_blockchain_analytics_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    tmpfs:
+      - /var/lib/postgresql/data:rw,noexec,nosuid,size=512m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ai_blockchain_analytics_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - ai_blockchain_ci
+
+  redis:
+    image: redis:7-alpine
+    container_name: ai_blockchain_redis_ci
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    tmpfs:
+      - /data:rw,noexec,nosuid,size=128m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - ai_blockchain_ci
+
+networks:
+  ai_blockchain_ci:
+    driver: bridge
+    name: ai_blockchain_network_ci

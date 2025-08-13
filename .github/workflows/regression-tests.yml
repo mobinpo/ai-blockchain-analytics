@@ -1,0 +1,344 @@
+name: Vulnerability Detection Regression Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run regression tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      model:
+        description: 'OpenAI model to use'
+        required: false
+        default: 'gpt-4'
+        type: choice
+        options:
+          - gpt-4
+          - gpt-3.5-turbo
+      run_full_suite:
+        description: 'Run full regression suite (uses OpenAI API)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, xml, bcmath, pdo, sqlite, pdo_sqlite
+        tools: composer:v2
+
+    - name: Cache Composer packages
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Copy environment file
+      run: cp .env.example .env
+
+    - name: Generate application key
+      run: php artisan key:generate
+
+    - name: Create SQLite database
+      run: touch database/database.sqlite
+
+    - name: Run database migrations
+      run: php artisan migrate --force
+
+    - name: Run vulnerability regression unit tests
+      run: php artisan test --filter=VulnerabilityRegressionTest
+
+  structure-validation:
+    name: Validate Test Structure
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, xml, bcmath
+        tools: composer:v2
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Copy environment file
+      run: cp .env.example .env
+
+    - name: Generate application key
+      run: php artisan key:generate
+
+    - name: Validate vulnerable contracts exist
+      run: |
+        if [ ! -f "tests/Contracts/VulnerableContracts.sol" ]; then
+          echo "❌ Vulnerable contracts file missing"
+          exit 1
+        fi
+        echo "✅ Vulnerable contracts file exists"
+
+    - name: Check contract structure
+      run: |
+        contracts=("ReentrancyVulnerable" "IntegerOverflowVulnerable" "AccessControlVulnerable" "UncheckedCallsVulnerable" "TimestampVulnerable" "WeakRandomnessVulnerable" "DosVulnerable" "DelegatecallVulnerable" "FrontRunningVulnerable" "SignatureReplayVulnerable")
+        
+        for contract in "${contracts[@]}"; do
+          if grep -q "contract $contract" tests/Contracts/VulnerableContracts.sol; then
+            echo "✅ Found contract: $contract"
+          else
+            echo "❌ Missing contract: $contract"
+            exit 1
+          fi
+        done
+
+    - name: Validate regression test command
+      run: php artisan test:regression --skip-api --help
+
+  regression-tests:
+    name: Full Regression Suite
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.run_full_suite == 'true' || github.event_name == 'schedule' }}
+    
+    strategy:
+      matrix:
+        model: ['gpt-4', 'gpt-3.5-turbo']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, xml, bcmath, pdo, sqlite, pdo_sqlite
+        tools: composer:v2
+
+    - name: Cache Composer packages
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Copy environment file
+      run: cp .env.example .env
+
+    - name: Generate application key
+      run: php artisan key:generate
+
+    - name: Create SQLite database
+      run: touch database/database.sqlite
+
+    - name: Run database migrations
+      run: php artisan migrate --force
+
+    - name: Run regression tests with ${{ matrix.model }}
+      run: |
+        php artisan test:regression \
+          --model=${{ matrix.model }} \
+          --detailed
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    - name: Upload regression results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: regression-results-${{ matrix.model }}
+        path: |
+          tests/baseline_results.json
+          storage/logs/laravel.log
+        retention-days: 30
+
+  baseline-comparison:
+    name: Compare with Baseline
+    runs-on: ubuntu-latest
+    needs: [regression-tests]
+    if: ${{ always() && (github.event.inputs.run_full_suite == 'true' || github.event_name == 'schedule') }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download regression results
+      uses: actions/download-artifact@v3
+      with:
+        name: regression-results-gpt-4
+        path: ./results
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, xml, bcmath
+        tools: composer:v2
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Copy environment file
+      run: cp .env.example .env
+
+    - name: Generate application key
+      run: php artisan key:generate
+
+    - name: Compare results with baseline
+      run: |
+        if [ -f "results/baseline_results.json" ]; then
+          echo "📊 Baseline comparison available"
+          # Add baseline comparison logic here
+        else
+          echo "⚠️ No baseline results to compare"
+        fi
+
+  performance-benchmark:
+    name: Performance Benchmark
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.run_full_suite == 'true' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, xml, bcmath, pdo, sqlite, pdo_sqlite
+        tools: composer:v2
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Copy environment file
+      run: cp .env.example .env
+
+    - name: Generate application key
+      run: php artisan key:generate
+
+    - name: Create SQLite database
+      run: touch database/database.sqlite
+
+    - name: Run database migrations
+      run: php artisan migrate --force
+
+    - name: Benchmark individual contracts
+      run: |
+        contracts=("ReentrancyVulnerable" "AccessControlVulnerable" "WeakRandomnessVulnerable")
+        
+        for contract in "${contracts[@]}"; do
+          echo "🔍 Benchmarking $contract..."
+          start_time=$(date +%s.%N)
+          
+          php artisan analyze:vulnerable "$contract" \
+            --model=gpt-4 \
+            --save-results
+          
+          end_time=$(date +%s.%N)
+          duration=$(echo "$end_time - $start_time" | bc)
+          echo "⏱️ $contract completed in ${duration}s"
+        done
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  security-check:
+    name: Security Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Validate test contracts are not deployable
+      run: |
+        echo "🔒 Ensuring test contracts have proper warnings..."
+        
+        if grep -q "DO NOT DEPLOY TO MAINNET" tests/Contracts/VulnerableContracts.sol; then
+          echo "✅ Warning found in vulnerable contracts"
+        else
+          echo "❌ Missing deployment warning"
+          exit 1
+        fi
+        
+        if grep -q "deliberately vulnerable" tests/Contracts/VulnerableContracts.sol; then
+          echo "✅ Vulnerability warning found"
+        else
+          echo "❌ Missing vulnerability warning"
+          exit 1
+        fi
+
+    - name: Check for sensitive data exposure
+      run: |
+        echo "🔍 Checking for exposed sensitive data..."
+        
+        # Check that no real API keys are in the test files
+        if grep -r "sk-" tests/ --exclude-dir=.git || \
+           grep -r "API_KEY.*=" tests/ --exclude-dir=.git | grep -v "EXAMPLE\|TEST\|DUMMY"; then
+          echo "❌ Potential API key exposure detected"
+          exit 1
+        else
+          echo "✅ No sensitive data exposure detected"
+        fi
+
+  notification:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [unit-tests, structure-validation, regression-tests, baseline-comparison]
+    if: always()
+    
+    steps:
+    - name: Determine overall status
+      id: status
+      run: |
+        if [[ "${{ needs.unit-tests.result }}" == "success" && 
+              "${{ needs.structure-validation.result }}" == "success" ]]; then
+          if [[ "${{ needs.regression-tests.result }}" == "success" || 
+                "${{ needs.regression-tests.result }}" == "skipped" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Output summary
+      run: |
+        echo "## 🧪 Regression Test Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Unit Tests | ${{ needs.unit-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Structure Validation | ${{ needs.structure-validation.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Regression Tests | ${{ needs.regression-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Baseline Comparison | ${{ needs.baseline-comparison.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Overall Status:** ${{ steps.status.outputs.status }}" >> $GITHUB_STEP_SUMMARY

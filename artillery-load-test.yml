@@ -1,0 +1,187 @@
+config:
+  # Load test configuration for 500 concurrent analyses
+  target: "http://localhost:8003"
+  phases:
+    # Warmup phase - gradually ramp up to identify any immediate issues
+    - duration: 30
+      arrivalRate: 10
+      name: "Warmup phase"
+    
+    # Ramp up phase - gradually increase load to 500 concurrent users
+    - duration: 120
+      arrivalRate: 10
+      rampTo: 100
+      name: "Ramp up phase"
+    
+    # Peak load phase - maintain 500 concurrent analyses for 5 minutes
+    - duration: 300
+      arrivalRate: 100
+      name: "Peak load phase - 500 concurrent analyses"
+    
+    # Ramp down phase - gradually decrease load
+    - duration: 60
+      arrivalRate: 100
+      rampTo: 10
+      name: "Ramp down phase"
+
+  # Processor for custom metrics and response processing
+  processor: "./artillery-processor.js"
+  
+  # HTTP configuration
+  http:
+    timeout: 30
+    pool: 50
+    extendedMetrics: true
+    
+  # Plugins for enhanced monitoring
+  plugins:
+    metrics-by-endpoint:
+      # Group metrics by endpoint for detailed analysis
+      useOnlyRequestNames: true
+    expect:
+      # Add response validation
+      outputFormat: 'prettyError'
+
+  # Environment variables
+  variables:
+    baseUrl: "http://localhost:8003"
+    
+  # Payload configuration for different analysis types
+  payload:
+    - path: "./test-data/contract-addresses.csv"
+      fields:
+        - "contract_address"
+        - "network"
+    - path: "./test-data/sentiment-texts.csv"
+      fields:
+        - "text_content"
+        - "platform"
+
+# Test scenarios
+scenarios:
+  # Primary blockchain analysis scenarios
+  - name: "Blockchain Analysis - Security Audit"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/load-test/analysis"
+          name: "Security Audit Analysis"
+          headers:
+            Content-Type: "application/json"
+            Accept: "application/json"
+          json:
+            contract_address: "{{ $randomString() | slice(0, 40) | prepend('0x') }}"
+            analysis_type: "security_audit"
+            priority: "{{ $randomString() | pick(['low', 'medium', 'high', 'critical']) }}"
+          capture:
+            - json: "$.analysis_id"
+              as: "analysisId"
+          expect:
+            - statusCode: 200
+            - hasProperty: "analysis_id"
+            - hasProperty: "results"
+      
+      # Follow up with status check
+      - get:
+          url: "/api/load-test/analysis/{{ analysisId }}/status"
+          name: "Analysis Status Check"
+          expect:
+            - statusCode: [200, 404]
+
+  - name: "Blockchain Analysis - Vulnerability Scan"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/load-test/analysis"
+          name: "Vulnerability Scan Analysis"
+          headers:
+            Content-Type: "application/json"
+          json:
+            contract_address: "{{ contract_address || $randomString() | slice(0, 40) | prepend('0x') }}"
+            analysis_type: "vulnerability_scan"
+            priority: "high"
+          expect:
+            - statusCode: 200
+            - hasProperty: "analysis_id"
+
+  - name: "Blockchain Analysis - Gas Optimization"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/load-test/analysis"
+          name: "Gas Optimization Analysis"
+          headers:
+            Content-Type: "application/json"
+          json:
+            contract_address: "0x{{ $randomString() | slice(0, 40) }}"
+            analysis_type: "gas_optimization"
+            priority: "medium"
+          expect:
+            - statusCode: 200
+
+  - name: "Sentiment Analysis"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/load-test/sentiment"
+          name: "Sentiment Analysis"
+          headers:
+            Content-Type: "application/json"
+          json:
+            texts:
+              - "{{ text_content || 'Bitcoin is showing strong momentum today' }}"
+              - "Ethereum gas fees are high but worth it for DeFi"
+              - "{{ $randomString() | slice(0, 100) }}"
+            platforms: ["{{ platform || 'twitter' }}"]
+          expect:
+            - statusCode: 200
+            - hasProperty: "batch_id"
+
+  - name: "Complex Query Analysis"
+    weight: 7
+    flow:
+      - get:
+          url: "/api/load-test/complex-query"
+          name: "Complex Database Query"
+          qs:
+            date_range: "{{ $randomString() | pick(['7d', '30d', '90d', '1y']) }}"
+            aggregation_level: "{{ $randomString() | pick(['basic', 'detailed', 'comprehensive']) }}"
+            include_relationships: "{{ $randomString() | pick(['true', 'false']) }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: "query_id"
+
+  - name: "CPU Intensive Operations"
+    weight: 3
+    flow:
+      - post:
+          url: "/api/load-test/cpu-intensive"
+          name: "CPU Intensive Analysis"
+          headers:
+            Content-Type: "application/json"
+          json:
+            complexity_level: "{{ $randomString() | pick(['low', 'medium', 'high']) }}"
+            include_ml_processing: "{{ $randomString() | pick([true, false]) }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: "operation_id"
+
+# Health check scenario to monitor system health during load
+  - name: "Health Check Monitoring"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/health"
+          name: "System Health Check"
+          expect:
+            - statusCode: 200
+            - hasProperty: "status"
+            - contentType: json
+      
+      # Also check load test specific health endpoint
+      - get:
+          url: "/api/load-test/health"
+          name: "Load Test Health Check"
+          expect:
+            - statusCode: 200
+            - hasProperty: "status"

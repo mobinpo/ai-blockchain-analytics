@@ -1,0 +1,212 @@
+{
+  "family": "ai-blockchain-analytics-horizon-worker",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "horizon-worker",
+      "image": "ai-blockchain-analytics:latest",
+      "essential": true,
+      "command": ["php", "artisan", "horizon"],
+      "environment": [
+        {
+          "name": "APP_NAME",
+          "value": "AI Blockchain Analytics"
+        },
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        },
+        {
+          "name": "APP_DEBUG",
+          "value": "false"
+        },
+        {
+          "name": "DB_CONNECTION",
+          "value": "pgsql"
+        },
+        {
+          "name": "DB_HOST",
+          "value": "ai-blockchain-analytics-postgres.cluster-xyz.region.rds.amazonaws.com"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "5432"
+        },
+        {
+          "name": "DB_DATABASE",
+          "value": "ai_blockchain_analytics"
+        },
+        {
+          "name": "DB_USERNAME",
+          "value": "postgres"
+        },
+        {
+          "name": "REDIS_HOST",
+          "value": "ai-blockchain-analytics-redis.xyz.cache.amazonaws.com"
+        },
+        {
+          "name": "REDIS_PORT",
+          "value": "6379"
+        },
+        {
+          "name": "CACHE_DRIVER",
+          "value": "redis"
+        },
+        {
+          "name": "SESSION_DRIVER",
+          "value": "redis"
+        },
+        {
+          "name": "QUEUE_CONNECTION",
+          "value": "redis"
+        },
+        {
+          "name": "FILESYSTEM_DISK",
+          "value": "s3"
+        },
+        {
+          "name": "AWS_BUCKET",
+          "value": "ai-blockchain-analytics-storage"
+        },
+        {
+          "name": "AWS_DEFAULT_REGION",
+          "value": "us-east-1"
+        },
+        {
+          "name": "LOG_CHANNEL",
+          "value": "cloudwatch"
+        },
+        {
+          "name": "LOG_LEVEL",
+          "value": "info"
+        },
+        {
+          "name": "TELESCOPE_ENABLED",
+          "value": "true"
+        },
+        {
+          "name": "TELESCOPE_DRIVER",
+          "value": "database"
+        },
+        {
+          "name": "TELESCOPE_QUEUE_CONNECTION",
+          "value": "redis"
+        },
+        {
+          "name": "SENTRY_ENVIRONMENT",
+          "value": "production"
+        },
+        {
+          "name": "SENTRY_RELEASE",
+          "value": "v1.0.0"
+        },
+        {
+          "name": "SENTRY_SAMPLE_RATE",
+          "value": "0.1"
+        },
+        {
+          "name": "SENTRY_TRACES_SAMPLE_RATE",
+          "value": "0.05"
+        },
+        {
+          "name": "SENTRY_ENABLE_LOGS",
+          "value": "true"
+        },
+        {
+          "name": "SENTRY_SEND_DEFAULT_PII",
+          "value": "false"
+        },
+        {
+          "name": "HORIZON_MEMORY",
+          "value": "512"
+        },
+        {
+          "name": "HORIZON_BALANCE",
+          "value": "auto"
+        },
+        {
+          "name": "HORIZON_PROCESSES",
+          "value": "4"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "APP_KEY",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/app-key"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/db-password"
+        },
+        {
+          "name": "REDIS_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/redis-password"
+        },
+        {
+          "name": "OPENAI_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/openai-api-key"
+        },
+        {
+          "name": "STRIPE_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/stripe-secret"
+        },
+        {
+          "name": "MAILGUN_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/mailgun-secret"
+        },
+        {
+          "name": "SENTRY_LARAVEL_DSN",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/sentry-dsn"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-blockchain-analytics-horizon-worker",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "horizon-worker"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "php artisan horizon:status || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "ulimits": [
+        {
+          "name": "nofile",
+          "softLimit": 65536,
+          "hardLimit": 65536
+        }
+      ],
+      "linuxParameters": {
+        "initProcessEnabled": true
+      }
+    }
+  ],
+  "placementConstraints": [],
+  "tags": [
+    {
+      "key": "Environment",
+      "value": "production"
+    },
+    {
+      "key": "Application",
+      "value": "ai-blockchain-analytics"
+    },
+    {
+      "key": "Component",
+      "value": "horizon-worker"
+    }
+  ]
+}

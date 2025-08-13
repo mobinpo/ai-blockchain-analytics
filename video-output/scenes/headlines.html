@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeFi Exploits Headlines</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: 'Arial', sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        .headline {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 20px 0;
+            opacity: 0;
+            animation: fadeInSlide 2s ease-in-out forwards;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        .headline.critical {
+            color: #ff4757;
+            border: 2px solid #ff4757;
+            padding: 20px;
+            border-radius: 10px;
+            background: rgba(255, 71, 87, 0.1);
+        }
+        .amount {
+            font-size: 4rem;
+            color: #ff6b6b;
+            font-weight: 900;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
+        }
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .headline:nth-child(2) { animation-delay: 0.5s; }
+        .headline:nth-child(3) { animation-delay: 1s; }
+        .headline:nth-child(4) { animation-delay: 1.5s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="headline critical">EULER FINANCE EXPLOITED</div>
+        <div class="headline amount">$200 MILLION LOST</div>
+        <div class="headline critical">MULTICHAIN BRIDGE COMPROMISED</div>
+        <div class="headline amount">$126 MILLION STOLEN</div>
+    </div>
+</body>
+</html>

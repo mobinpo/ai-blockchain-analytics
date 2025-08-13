@@ -1,0 +1,87 @@
+# =============================================================================
+# AI Blockchain Analytics - 50 Concurrent Test (Validation)
+# =============================================================================
+# Scaled-down version to validate endpoints before running full 500 concurrent test
+
+config:
+  target: 'http://localhost:8000'
+  
+  # Quick validation test phases
+  phases:
+    # Quick ramp to 50 concurrent
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 50
+      name: "Ramp to 50 Concurrent"
+    
+    # Short sustained load
+    - duration: 120
+      arrivalRate: 50
+      name: "Sustained 50 Concurrent"
+    
+    # Quick cool down
+    - duration: 30
+      arrivalRate: 50
+      rampTo: 0
+      name: "Cool Down"
+
+  # HTTP configuration
+  http:
+    timeout: 60
+    pool: 20
+    maxSockets: 100
+    keepAlive: true
+
+  # Relaxed thresholds for validation
+  ensure:
+    - http.request_rate > 30
+    - http.response_time.p95 < 15000
+    - http.codes.200 > 40
+    - http.codes.500 < 20
+
+scenarios:
+  # Simple sentiment analysis test
+  - name: "Sentiment Analysis Test"
+    weight: 60
+    flow:
+      - get:
+          url: "/"
+          expect:
+            - statusCode: [200, 404]
+      
+      - post:
+          url: "/api/sentiment/analyze"
+          json:
+            symbol: "BTC"
+            analysis_type: "sentiment"
+            priority: "medium"
+            timeframe: "1h"
+          expect:
+            - statusCode: [200, 201, 202, 422, 500]
+      
+      - think: 2
+
+  # Basic verification test
+  - name: "Verification Test"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/verification/submit"
+          json:
+            type: "crypto_analysis"
+            data:
+              symbol: "ETH"
+              analysis_depth: "basic"
+          expect:
+            - statusCode: [200, 201, 422, 500]
+      
+      - think: 1
+
+  # Dashboard test
+  - name: "Dashboard Test"
+    weight: 10
+    flow:
+      - get:
+          url: "/dashboard"
+          expect:
+            - statusCode: [200, 302, 500]

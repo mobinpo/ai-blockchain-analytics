@@ -1,0 +1,151 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  pint:
+    name: Laravel Pint (Code Style)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        tools: composer:v2
+
+    - name: Cache Composer dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.composer/cache
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+
+    - name: Install Composer dependencies
+      run: composer install --prefer-dist --no-progress --optimize-autoloader
+
+    - name: Run Laravel Pint
+      run: ./vendor/bin/pint --test --verbose
+
+    - name: Annotate Pint results
+      if: failure()
+      run: |
+        echo "::warning title=Code Style Issues::Laravel Pint found code style violations. Run 'composer pint' to fix them."
+
+  psalm:
+    name: Psalm (Static Analysis)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: bcmath, ctype, curl, dom, fileinfo, filter, hash, json, libxml, mbstring, pcre, pdo, pdo_pgsql, tokenizer, xml
+        tools: composer:v2
+
+    - name: Cache Composer dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.composer/cache
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+
+    - name: Install Composer dependencies
+      run: composer install --prefer-dist --no-progress --optimize-autoloader
+
+    - name: Create Psalm cache directory
+      run: mkdir -p build/psalm
+
+    - name: Cache Psalm results
+      uses: actions/cache@v4
+      with:
+        path: build/psalm
+        key: psalm-${{ github.sha }}
+        restore-keys: psalm-
+
+    - name: Run Psalm
+      run: ./vendor/bin/psalm --show-info=true --stats --output-format=github
+
+  phpstan:
+    name: PHPStan (Static Analysis)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: bcmath, ctype, curl, dom, fileinfo, filter, hash, json, libxml, mbstring, pcre, pdo, pdo_pgsql, tokenizer, xml
+        tools: composer:v2
+
+    - name: Cache Composer dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.composer/cache
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+
+    - name: Install Composer dependencies
+      run: composer install --prefer-dist --no-progress --optimize-autoloader
+
+    - name: Install PHPStan
+      run: composer require --dev phpstan/phpstan --no-scripts
+
+    - name: Create PHPStan cache directory
+      run: mkdir -p build/phpstan
+
+    - name: Cache PHPStan results
+      uses: actions/cache@v4
+      with:
+        path: build/phpstan
+        key: phpstan-${{ github.sha }}
+        restore-keys: phpstan-
+
+    - name: Run PHPStan
+      run: ./vendor/bin/phpstan analyze --memory-limit=2G
+
+  rector:
+    name: Rector (Code Modernization)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: bcmath, ctype, curl, dom, fileinfo, filter, hash, json, libxml, mbstring, pcre, pdo, pdo_pgsql, tokenizer, xml
+        tools: composer:v2
+
+    - name: Cache Composer dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.composer/cache
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+
+    - name: Install Composer dependencies
+      run: composer install --prefer-dist --no-progress --optimize-autoloader
+
+    - name: Install Rector
+      run: composer require --dev rector/rector --no-scripts
+
+    - name: Run Rector
+      run: ./vendor/bin/rector process --dry-run

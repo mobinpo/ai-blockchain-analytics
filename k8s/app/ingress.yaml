@@ -1,0 +1,82 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ai-blockchain-analytics-ingress
+  namespace: ai-blockchain-analytics
+  labels:
+    app.kubernetes.io/name: ai-blockchain-analytics
+    app.kubernetes.io/component: ingress
+  annotations:
+    # AWS Load Balancer Controller annotations
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:region:account:certificate/xxxxxxxxx
+    
+    # Security headers
+    alb.ingress.kubernetes.io/load-balancer-attributes: |
+      routing.http2.enabled=true,
+      idle_timeout.timeout_seconds=300
+    
+    # Health check configuration
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '10'
+    alb.ingress.kubernetes.io/healthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: '3'
+    
+    # WAF (optional)
+    # alb.ingress.kubernetes.io/wafv2-acl-arn: arn:aws:wafv2:region:account:regional/webacl/name/id
+    
+    # Rate limiting (optional)
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    
+spec:
+  rules:
+  - host: analytics.yourcompany.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-blockchain-analytics-service
+            port:
+              number: 80
+  
+  # Additional hosts (optional)
+  - host: ai-blockchain.yourcompany.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-blockchain-analytics-service
+            port:
+              number: 80
+  
+  tls:
+  - hosts:
+    - analytics.yourcompany.com
+    - ai-blockchain.yourcompany.com
+    secretName: ai-blockchain-analytics-tls
+---
+# TLS Certificate (if not using AWS Certificate Manager)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ai-blockchain-analytics-tls
+  namespace: ai-blockchain-analytics
+  labels:
+    app.kubernetes.io/name: ai-blockchain-analytics
+    app.kubernetes.io/component: tls
+type: kubernetes.io/tls
+data:
+  # Base64 encoded certificate and key
+  # Generate with: kubectl create secret tls ai-blockchain-analytics-tls --cert=path/to/cert.crt --key=path/to/key.key --dry-run=client -o yaml
+  tls.crt: LS0tLS1CRUdJTi... # Your certificate here
+  tls.key: LS0tLS1CRUdJTi... # Your private key here

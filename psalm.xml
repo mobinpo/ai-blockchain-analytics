@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="4"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+    findUnusedBaselineEntry="true"
+    findUnusedCode="true"
+>
+    <projectFiles>
+        <directory name="app" />
+        <directory name="database/factories" />
+        <directory name="database/seeders" />
+        <ignoreFiles>
+            <directory name="vendor" />
+            <directory name="storage" />
+            <directory name="bootstrap/cache" />
+            <directory name="node_modules" />
+            <file name="app/Console/Kernel.php" />
+            <file name="app/Http/Kernel.php" />
+        </ignoreFiles>
+    </projectFiles>
+
+    <issueHandlers>
+        <LessSpecificReturnType errorLevel="info" />
+        <MoreSpecificReturnType errorLevel="info" />
+        <PropertyNotSetInConstructor errorLevel="info" />
+        <MissingConstructor errorLevel="info" />
+        <MissingClosureReturnType errorLevel="info" />
+        <MissingReturnType errorLevel="info" />
+        <InvalidScalarArgument errorLevel="info" />
+        <InvalidOperand errorLevel="info" />
+        <PossiblyInvalidOperand errorLevel="info" />
+        <RedundantCondition errorLevel="info" />
+        <DocblockTypeContradiction errorLevel="info" />
+        <RedundantConditionGivenDocblockType errorLevel="info" />
+        <UnusedClass errorLevel="info" />
+        <UnusedMethod errorLevel="info" />
+        <PossiblyUnusedMethod errorLevel="info" />
+        <UnusedProperty errorLevel="info" />
+        <PossiblyUnusedProperty errorLevel="info" />
+        <UnusedVariable errorLevel="info" />
+    </issueHandlers>
+
+    <plugins>
+        <pluginClass class="Psalm\LaravelPlugin\Plugin"/>
+    </plugins>
+</psalm>

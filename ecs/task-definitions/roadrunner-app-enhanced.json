@@ -1,0 +1,313 @@
+{
+  "family": "ai-blockchain-analytics-roadrunner",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "2048",
+  "memory": "4096",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ai-blockchain-analytics-task-role",
+  "containerDefinitions": [
+    {
+      "name": "roadrunner-app",
+      "image": "YOUR_ECR_REPO/ai-blockchain-analytics-roadrunner:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp",
+          "name": "http"
+        },
+        {
+          "containerPort": 6001,
+          "protocol": "tcp",
+          "name": "websocket"
+        },
+        {
+          "containerPort": 2112,
+          "protocol": "tcp",
+          "name": "metrics"
+        }
+      ],
+      "environment": [
+        {
+          "name": "APP_NAME",
+          "value": "AI Blockchain Analytics"
+        },
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        },
+        {
+          "name": "APP_DEBUG",
+          "value": "false"
+        },
+        {
+          "name": "APP_URL",
+          "value": "https://analytics.yourdomain.com"
+        },
+        {
+          "name": "DB_CONNECTION",
+          "value": "pgsql"
+        },
+        {
+          "name": "DB_HOST",
+          "value": "YOUR_RDS_POSTGRES_ENDPOINT"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "5432"
+        },
+        {
+          "name": "DB_DATABASE",
+          "value": "ai_blockchain_analytics"
+        },
+        {
+          "name": "REDIS_HOST",
+          "value": "YOUR_ELASTICACHE_REDIS_ENDPOINT"
+        },
+        {
+          "name": "REDIS_PORT",
+          "value": "6379"
+        },
+        {
+          "name": "CACHE_DRIVER",
+          "value": "redis"
+        },
+        {
+          "name": "SESSION_DRIVER",
+          "value": "redis"
+        },
+        {
+          "name": "QUEUE_CONNECTION",
+          "value": "redis"
+        },
+        {
+          "name": "OCTANE_SERVER",
+          "value": "roadrunner"
+        },
+        {
+          "name": "ROADRUNNER_HTTP_HOST",
+          "value": "0.0.0.0"
+        },
+        {
+          "name": "ROADRUNNER_HTTP_PORT",
+          "value": "8000"
+        },
+        {
+          "name": "ROADRUNNER_WORKERS",
+          "value": "8"
+        },
+        {
+          "name": "RR_WORKERS",
+          "value": "8"
+        },
+        {
+          "name": "RR_MAX_JOBS",
+          "value": "2000"
+        },
+        {
+          "name": "CONTAINER_ROLE",
+          "value": "app"
+        },
+        {
+          "name": "BLOCKCHAIN_EXPLORER_DEFAULT",
+          "value": "etherscan"
+        },
+        {
+          "name": "DOMPDF_ENABLED",
+          "value": "true"
+        },
+        {
+          "name": "BROWSERLESS_ENABLED",
+          "value": "false"
+        },
+        {
+          "name": "VERIFICATION_URL_LIFETIME",
+          "value": "3600"
+        },
+        {
+          "name": "VERIFICATION_RATE_LIMIT",
+          "value": "10"
+        },
+        {
+          "name": "OPENAI_MODEL",
+          "value": "gpt-4"
+        },
+        {
+          "name": "SENTRY_LARAVEL_DSN",
+          "value": ""
+        },
+        {
+          "name": "SENTRY_TRACES_SAMPLE_RATE",
+          "value": "0.1"
+        },
+        {
+          "name": "SENTRY_PROFILES_SAMPLE_RATE",
+          "value": "0.1"
+        },
+        {
+          "name": "SENTRY_ENVIRONMENT",
+          "value": "production"
+        },
+        {
+          "name": "SENTRY_RELEASE",
+          "value": "latest"
+        },
+        {
+          "name": "TELESCOPE_ENABLED",
+          "value": "true"
+        },
+        {
+          "name": "TELESCOPE_DRIVER",
+          "value": "database"
+        },
+        {
+          "name": "TELESCOPE_QUEUE_WATCHER",
+          "value": "true"
+        },
+        {
+          "name": "TELESCOPE_CACHE_WATCHER",
+          "value": "true"
+        },
+        {
+          "name": "TELESCOPE_DUMP_WATCHER",
+          "value": "false"
+        },
+        {
+          "name": "TELESCOPE_LOG_WATCHER",
+          "value": "true"
+        },
+        {
+          "name": "TELESCOPE_QUERY_WATCHER",
+          "value": "true"
+        },
+        {
+          "name": "TELESCOPE_REQUEST_WATCHER",
+          "value": "true"
+        },
+        {
+          "name": "TELESCOPE_VIEW_WATCHER",
+          "value": "false"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "APP_KEY",
+          "valueFrom": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/ai-blockchain-analytics/app-key"
+        },
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/ai-blockchain-analytics/db-username"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/ai-blockchain-analytics/db-password"
+        },
+        {
+          "name": "REDIS_PASSWORD",
+          "valueFrom": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/ai-blockchain-analytics/redis-password"
+        },
+        {
+          "name": "OPENAI_API_KEY",
+          "valueFrom": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/ai-blockchain-analytics/openai-api-key"
+        },
+        {
+          "name": "ETHERSCAN_API_KEY",
+          "valueFrom": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/ai-blockchain-analytics/etherscan-api-key"
+        },
+        {
+          "name": "BSCSCAN_API_KEY",
+          "valueFrom": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/ai-blockchain-analytics/bscscan-api-key"
+        },
+        {
+          "name": "POLYGONSCAN_API_KEY",
+          "valueFrom": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/ai-blockchain-analytics/polygonscan-api-key"
+        },
+        {
+          "name": "VERIFICATION_SECRET_KEY",
+          "valueFrom": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/ai-blockchain-analytics/verification-secret-key"
+        },
+        {
+          "name": "SENTRY_DSN",
+          "valueFrom": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/ai-blockchain-analytics/sentry-dsn"
+        },
+        {
+          "name": "TELESCOPE_ALLOWED_IPS",
+          "valueFrom": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/ai-blockchain-analytics/telescope-allowed-ips"
+        },
+        {
+          "name": "TELESCOPE_ADMIN_TOKEN",
+          "valueFrom": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/ai-blockchain-analytics/telescope-admin-token"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-blockchain-analytics-roadrunner",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "roadrunner-app"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:8000/api/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "mountPoints": [
+        {
+          "sourceVolume": "storage-volume",
+          "containerPath": "/var/www/storage",
+          "readOnly": false
+        },
+        {
+          "sourceVolume": "cache-volume", 
+          "containerPath": "/var/www/bootstrap/cache",
+          "readOnly": false
+        }
+      ],
+      "ulimits": [
+        {
+          "name": "nofile",
+          "softLimit": 65536,
+          "hardLimit": 65536
+        }
+      ],
+      "stopTimeout": 30,
+      "linuxParameters": {
+        "capabilities": {
+          "drop": ["ALL"]
+        },
+        "readonlyRootFilesystem": false
+      }
+    }
+  ],
+  "volumes": [
+    {
+      "name": "storage-volume",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-your-efs-id",
+        "rootDirectory": "/storage",
+        "transitEncryption": "ENABLED",
+        "authorizationConfig": {
+          "accessPointId": "fsap-your-storage-access-point-id"
+        }
+      }
+    },
+    {
+      "name": "cache-volume",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-your-efs-id",
+        "rootDirectory": "/cache",
+        "transitEncryption": "ENABLED",
+        "authorizationConfig": {
+          "accessPointId": "fsap-your-cache-access-point-id"
+        }
+      }
+    }
+  ]
+}

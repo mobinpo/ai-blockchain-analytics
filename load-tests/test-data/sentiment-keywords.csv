@@ -1,0 +1,52 @@
+keyword,category,context
+bitcoin,cryptocurrency,price analysis
+ethereum,cryptocurrency,market sentiment
+bullish,sentiment,positive outlook
+bearish,sentiment,negative outlook
+moon,sentiment,extremely positive
+crash,sentiment,extremely negative
+hodl,strategy,long term hold
+fomo,emotion,fear of missing out
+fud,emotion,fear uncertainty doubt
+whale,entity,large holder
+pump,action,price increase
+dump,action,price decrease
+defi,technology,decentralized finance
+nft,technology,non fungible tokens
+staking,strategy,earning rewards
+yield,strategy,passive income
+liquidity,market,trading volume
+volatility,market,price swings
+adoption,growth,mainstream acceptance
+regulation,policy,government oversight
+innovation,technology,new development
+partnership,business,collaboration
+integration,technology,system connection
+upgrade,technology,improvement
+fork,technology,blockchain split
+mining,process,block validation
+consensus,mechanism,agreement protocol
+governance,structure,decision making
+tokenomics,economics,token design
+utility,function,token purpose
+speculation,trading,price betting
+arbitrage,trading,price difference
+scalability,technology,transaction capacity
+interoperability,technology,cross chain
+security,safety,system protection
+audit,verification,code review
+hack,security,system breach
+exploit,security,vulnerability use
+rugpull,scam,project abandonment
+ponzi,scam,pyramid scheme
+diamond hands,sentiment,strong hold
+paper hands,sentiment,weak hold
+to the moon,sentiment,price optimism
+buy the dip,strategy,purchase decline
+dollar cost average,strategy,regular purchase
+market cap,metric,total value
+trading volume,metric,transaction amount
+all time high,milestone,peak price
+all time low,milestone,lowest price
+resistance,technical,price ceiling
+support,technical,price floor

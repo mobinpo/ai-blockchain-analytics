@@ -1,0 +1,1 @@
+timestamp,load_1m,load_5m,load_15m,cpu_user,cpu_system,cpu_idle,cpu_iowait,mem_total,mem_used,mem_available,mem_cached,swap_used,disk_usage,disk_io_read,disk_io_write,network_rx,network_tx

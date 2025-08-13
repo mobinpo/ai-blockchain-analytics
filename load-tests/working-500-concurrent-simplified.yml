@@ -1,0 +1,164 @@
+# =============================================================================
+# AI Blockchain Analytics - Working 500 Concurrent Load Test  
+# =============================================================================
+
+config:
+  target: 'http://localhost:8003'
+  
+  phases:
+    # 1. Warmup Phase (60 seconds)
+    - duration: 60
+      arrivalRate: 5
+      name: "Warmup"
+    
+    # 2. Ramp to 50 (120 seconds)
+    - duration: 120
+      arrivalRate: 5
+      rampTo: 50
+      name: "Ramp to 50"
+    
+    # 3. Scale to 150 (180 seconds)
+    - duration: 180
+      arrivalRate: 50
+      rampTo: 150
+      name: "Scale to 150"
+    
+    # 4. Push to 300 (240 seconds)
+    - duration: 240
+      arrivalRate: 150
+      rampTo: 300
+      name: "Scale to 300"
+    
+    # 5. Reach 500 (180 seconds)
+    - duration: 180
+      arrivalRate: 300
+      rampTo: 500
+      name: "Scale to 500"
+    
+    # 6. Sustained 500 (600 seconds = 10 minutes)
+    - duration: 600
+      arrivalRate: 500
+      name: "Sustained 500 Concurrent"
+    
+    # 7. Cool Down (180 seconds)
+    - duration: 180
+      arrivalRate: 500
+      rampTo: 0
+      name: "Cool Down"
+
+  http:
+    timeout: 300
+    pool: 300
+    maxSockets: 2000
+    keepAlive: true
+
+  ensure:
+    - http.request_rate > 200
+    - http.response_time.p95 < 20000
+    - http.codes.200 > 50
+
+  variables:
+    symbols: ["BTC", "ETH", "ADA", "SOL", "MATIC", "AVAX", "DOT", "LINK", "UNI"]
+    networks: ["ethereum", "bitcoin", "polygon", "avalanche", "solana"]
+    priorities: ["low", "medium", "high"]
+
+scenarios:
+  # AI Sentiment Analysis (60% of traffic)
+  - name: "sentiment-analysis"
+    weight: 60
+    flow:
+      - get:
+          url: "/"
+      
+      - post:
+          url: "/api/sentiment/analyze"
+          headers:
+            'Content-Type': 'application/json'
+            'X-Requested-With': 'XMLHttpRequest'
+          json:
+            symbol: "{{ $pick(symbols) }}"
+            network: "{{ $pick(networks) }}"
+            priority: "{{ $pick(priorities) }}"
+            batch_size: "{{ $randomInt(10, 100) }}"
+            analysis_type: "comprehensive"
+          expect:
+            - statusCode: [200, 201, 202, 422, 429, 500, 503]
+      
+      - think: 2
+      
+      - get:
+          url: "/api/sentiment/status/test-{{ $randomInt(1, 1000) }}"
+          expect:
+            - statusCode: [200, 404, 422, 500]
+
+  # Contract Analysis (25% of traffic)  
+  - name: "contract-analysis"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/contracts/analyze"
+          headers:
+            'Content-Type': 'application/json'
+          json:
+            contract_address: "0x{{ $randomString(40, 'abcdef0123456789') }}"
+            network: "{{ $pick(networks) }}"
+            analysis_depth: "comprehensive"
+            security_checks: true
+          expect:
+            - statusCode: [200, 201, 202, 400, 422, 500, 503]
+      
+      - think: 3
+
+  # Verification Requests (10% of traffic)
+  - name: "verification"
+    weight: 10
+    flow:
+      - get:
+          url: "/get-verified"
+      
+      - post:
+          url: "/api/enhanced-verification/submit"
+          headers:
+            'Content-Type': 'application/json'
+          json:
+            project_symbol: "{{ $pick(symbols) }}"
+            network: "{{ $pick(networks) }}"
+            verification_level: "enhanced"
+          expect:
+            - statusCode: [200, 201, 202, 400, 422, 500, 503]
+
+  # System Health (5% of traffic)
+  - name: "health-checks"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/health"
+      
+      - get:
+          url: "/dashboard"
+      
+      - get:
+          url: "/api/monitoring/health"
+          expect:
+            - statusCode: [200, 401, 500, 503]
+
+functions:
+  randomString: |
+    function(length, chars) {
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+before:
+  flow:
+    - log: "🚀 Starting 500 Concurrent AI Blockchain Analytics Load Test"
+    - log: "Target: {{ target }}"
+    - log: "Duration: ~25 minutes"
+
+after:
+  flow:
+    - log: "✅ 500 concurrent load test completed!"
+    - log: "Check results for performance analysis"

@@ -1,0 +1,142 @@
+config:
+  target: 'http://localhost:8000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up phase"
+    - duration: 120
+      arrivalRate: 100
+      name: "Ramp up to 500 concurrent"
+    - duration: 300
+      arrivalRate: 500
+      name: "Sustained load - 500 concurrent analyses"
+    - duration: 60
+      arrivalRate: 50
+      name: "Cool down phase"
+  payload:
+    path: "./test-data.csv"
+    fields:
+      - "symbol"
+      - "address"
+      - "keyword"
+  processor: "./artillery-processor.js"
+  http:
+    timeout: 30
+    pool: 50
+  plugins:
+    metrics-by-endpoint: {}
+    hls:
+      numberOfUsersPerGenerator: 100
+
+scenarios:
+  - name: "Sentiment Analysis Load Test"
+    weight: 100
+    flow:
+      # Simulate user login first
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "test@example.com"
+            password: "password"
+          capture:
+            - json: "$.token"
+              as: "auth_token"
+          afterResponse: "setAuthToken"
+      
+      # Test sentiment pipeline processing
+      - post:
+          url: "/api/sentiment-pipeline/process"
+          headers:
+            Authorization: "Bearer {{ auth_token }}"
+          json:
+            symbol: "{{ symbol }}"
+            address: "{{ address }}"
+            keyword: "{{ keyword }}"
+            timeframe: "24h"
+          think: 1
+      
+      # Test sentiment chart data retrieval
+      - get:
+          url: "/api/sentiment-charts/data"
+          headers:
+            Authorization: "Bearer {{ auth_token }}"
+          qs:
+            symbol: "{{ symbol }}"
+            period: "1d"
+          think: 0.5
+      
+      # Test sentiment summary
+      - get:
+          url: "/api/sentiment-charts/sentiment-summary"
+          headers:
+            Authorization: "Bearer {{ auth_token }}"
+          qs:
+            keyword: "{{ keyword }}"
+          think: 0.5
+      
+      # Test PDF generation under load
+      - post:
+          url: "/api/pdf/sentiment-chart"
+          headers:
+            Authorization: "Bearer {{ auth_token }}"
+          json:
+            symbol: "{{ symbol }}"
+            timeframe: "24h"
+            format: "pdf"
+          think: 2
+      
+      # Test load test endpoint specifically
+      - post:
+          url: "/api/load-test/sentiment"
+          json:
+            text: "Bitcoin price analysis for {{ symbol }}"
+            intensity: "high"
+          think: 1
+
+  - name: "Real-time Sentiment Monitoring"
+    weight: 30
+    flow:
+      # Test real-time sentiment data
+      - get:
+          url: "/api/sentiment-charts/realtime"
+          qs:
+            symbols: "BTC,ETH,ADA"
+          think: 2
+      
+      # Test sentiment price timeline
+      - get:
+          url: "/api/sentiment-price-timeline/data"
+          qs:
+            symbol: "{{ symbol }}"
+            period: "7d"
+          think: 1
+      
+      # Test batch sentiment processing
+      - post:
+          url: "/api/sentiment-nlp/batch-process"
+          json:
+            texts: ["{{ keyword }} market analysis", "{{ symbol }} price prediction"]
+            model: "google-nlp"
+          think: 3
+
+  - name: "PDF Generation Stress Test"  
+    weight: 20
+    flow:
+      # Test enhanced PDF generation
+      - post:
+          url: "/api/enhanced-pdf/generate/sentiment-timeline"
+          json:
+            symbol: "{{ symbol }}"
+            period: "30d"
+            include_charts: true
+            format: "a4"
+          think: 5
+      
+      # Test Vue PDF generation
+      - post:
+          url: "/api/vue-pdf/sentiment-dashboard"
+          json:
+            symbols: ["{{ symbol }}"]
+            timeframe: "7d"
+            theme: "dark"
+          think: 3

@@ -1,0 +1,54 @@
+config:
+  # Quick load test - smaller scale for testing the setup
+  target: "http://localhost:8003"
+  phases:
+    # Quick test phase - 5 concurrent users for 30 seconds
+    - duration: 30
+      arrivalRate: 5
+      name: "Quick test phase"
+
+  http:
+    timeout: 10
+    extendedMetrics: true
+
+scenarios:
+  - name: "Quick Analysis Test"
+    weight: 50
+    flow:
+      - post:
+          url: "/api/load-test/analysis"
+          name: "Quick Security Analysis"
+          headers:
+            Content-Type: "application/json"
+          json:
+            contract_address: "0x1234567890123456789012345678901234567890"
+            analysis_type: "security_audit"
+            priority: "medium"
+          expect:
+            - statusCode: 200
+            - hasProperty: "analysis_id"
+
+  - name: "Quick Health Check"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/load-test/health"
+          name: "Health Check"
+          expect:
+            - statusCode: 200
+            - hasProperty: "status"
+
+  - name: "Quick Sentiment Test"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/load-test/sentiment"
+          name: "Quick Sentiment"
+          headers:
+            Content-Type: "application/json"
+          json:
+            texts: ["Bitcoin is performing well today"]
+            platforms: ["twitter"]
+          expect:
+            - statusCode: 200
+            - hasProperty: "batch_id"

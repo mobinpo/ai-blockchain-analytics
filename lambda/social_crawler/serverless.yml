@@ -1,0 +1,230 @@
+service: social-media-crawler
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  timeout: 900  # 15 minutes (max for Lambda)
+  memorySize: 1024
+  architecture: x86_64
+  
+  environment:
+    STAGE: ${self:provider.stage}
+    REGION: ${self:provider.region}
+    
+    # Social Media API Keys (set via AWS Parameter Store or env vars)
+    TWITTER_BEARER_TOKEN: ${ssm:/social-crawler/${self:provider.stage}/twitter/bearer-token}
+    REDDIT_CLIENT_ID: ${ssm:/social-crawler/${self:provider.stage}/reddit/client-id}
+    REDDIT_CLIENT_SECRET: ${ssm:/social-crawler/${self:provider.stage}/reddit/client-secret}
+    REDDIT_USERNAME: ${ssm:/social-crawler/${self:provider.stage}/reddit/username}
+    REDDIT_PASSWORD: ${ssm:/social-crawler/${self:provider.stage}/reddit/password}
+    TELEGRAM_BOT_TOKEN: ${ssm:/social-crawler/${self:provider.stage}/telegram/bot-token}
+    
+    # Database connection
+    DATABASE_URL: ${ssm:/social-crawler/${self:provider.stage}/database/url}
+    
+    # Platform toggles
+    TWITTER_ENABLED: true
+    REDDIT_ENABLED: true
+    TELEGRAM_ENABLED: true
+    
+  iam:
+    role:
+      statements:
+        # SSM Parameter Store access
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+            - ssm:GetParameters
+            - ssm:GetParametersByPath
+          Resource:
+            - arn:aws:ssm:${self:provider.region}:*:parameter/social-crawler/${self:provider.stage}/*
+            
+        # CloudWatch Logs
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - arn:aws:logs:${self:provider.region}:*:log-group:/aws/lambda/social-media-crawler-*
+            
+        # SQS for job queuing (optional)
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+          Resource:
+            - arn:aws:sqs:${self:provider.region}:*:social-crawler-*
+            
+        # S3 for storing large results (optional)
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:DeleteObject
+          Resource:
+            - arn:aws:s3:::social-crawler-results-${self:provider.stage}/*
+
+functions:
+  crawler:
+    name: social-media-crawler-${self:provider.stage}
+    handler: main.lambda_handler
+    description: Social media crawler for Twitter, Reddit, and Telegram
+    events:
+      # HTTP API for manual triggers
+      - httpApi:
+          path: /crawl
+          method: post
+          cors: true
+          
+      # Scheduled crawling (every 30 minutes)
+      - schedule:
+          name: social-crawler-schedule-${self:provider.stage}
+          description: 'Automated social media crawling'
+          rate: rate(30 minutes)
+          enabled: true
+          input:
+            job_id: scheduled-crawl
+            platforms: ['twitter', 'reddit', 'telegram']
+            platform_options:
+              twitter:
+                keywords: ['blockchain', 'cryptocurrency', 'defi', 'ethereum', 'bitcoin']
+              reddit:
+                subreddits: ['cryptocurrency', 'ethereum', 'defi', 'smartcontracts']
+              telegram:
+                channels: ['blockchain', 'cryptocurrency']
+                
+      # SQS trigger for job queue processing
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - CrawlerJobQueue
+              - Arn
+          batchSize: 1
+          enabled: true
+
+  # Health check function
+  health:
+    name: social-media-crawler-health-${self:provider.stage}
+    handler: health_check.lambda_handler
+    description: Health check for social media crawler
+    timeout: 30
+    events:
+      - httpApi:
+          path: /health
+          method: get
+          cors: true
+
+  # Keyword rules management
+  manage-keywords:
+    name: social-media-keyword-manager-${self:provider.stage}
+    handler: keyword_manager.lambda_handler
+    description: Manage keyword rules for social media crawler
+    timeout: 60
+    events:
+      - httpApi:
+          path: /keywords
+          method: post
+          cors: true
+      - httpApi:
+          path: /keywords
+          method: get
+          cors: true
+
+resources:
+  Resources:
+    # SQS Queue for job processing
+    CrawlerJobQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: social-crawler-jobs-${self:provider.stage}
+        VisibilityTimeoutSeconds: 960  # 16 minutes
+        MessageRetentionPeriod: 1209600  # 14 days
+        DelaySeconds: 0
+        ReceiveMessageWaitTimeSeconds: 20  # Long polling
+        DeadLetterQueue:
+          targetArn:
+            Fn::GetAtt:
+              - CrawlerDeadLetterQueue
+              - Arn
+          maxReceiveCount: 3
+              
+    # Dead Letter Queue
+    CrawlerDeadLetterQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: social-crawler-dlq-${self:provider.stage}
+        MessageRetentionPeriod: 1209600  # 14 days
+        
+    # S3 Bucket for storing large results
+    CrawlerResultsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: social-crawler-results-${self:provider.stage}
+        LifecycleConfiguration:
+          Rules:
+            - Id: DeleteOldResults
+              Status: Enabled
+              ExpirationInDays: 30
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+          
+    # CloudWatch Log Group
+    CrawlerLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/social-media-crawler-${self:provider.stage}
+        RetentionInDays: 14
+        
+    # CloudWatch Alarm for errors
+    CrawlerErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: social-crawler-errors-${self:provider.stage}
+        AlarmDescription: Alert when crawler has high error rate
+        MetricName: Errors
+        Namespace: AWS/Lambda
+        Statistic: Sum
+        Period: 300
+        EvaluationPeriods: 2
+        Threshold: 5
+        ComparisonOperator: GreaterThanThreshold
+        Dimensions:
+          - Name: FunctionName
+            Value: social-media-crawler-${self:provider.stage}
+
+plugins:
+  - serverless-python-requirements
+  - serverless-plugin-warmup
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+    zip: true
+    slim: true
+    strip: false
+    noDeps: false
+    
+  warmup:
+    enabled: true
+    events:
+      - schedule: 'cron(0/5 8-17 ? * MON-FRI *)'  # Every 5 minutes during business hours
+    timeout: 20
+    prewarm: true
+
+package:
+  patterns:
+    - '!**'
+    - 'main.py'
+    - 'health_check.py'
+    - 'keyword_manager.py'
+    - 'requirements.txt'

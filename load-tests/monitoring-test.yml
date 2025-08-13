@@ -1,0 +1,139 @@
+config:
+  target: "http://localhost:8000"
+  phases:
+    - duration: 300
+      arrivalRate: 10
+      name: "Monitoring Test"
+
+  # Enhanced monitoring and reporting
+  plugins:
+    expect: {}
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+    
+  processor: "./load-test-processor.js"
+
+scenarios:
+  # System health monitoring during load
+  - name: "Health Check Monitoring"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/health"
+          capture:
+            - json: "$.status"
+              as: "health_status"
+            - json: "$.database.status"
+              as: "db_status"
+            - json: "$.redis.status"
+              as: "redis_status"
+            - json: "$.memory.usage_percentage"
+              as: "memory_usage"
+            - json: "$.cpu.usage_percentage"
+              as: "cpu_usage"
+          expect:
+            - statusCode: 200
+            - equals:
+                - "{{ health_status }}"
+                - "healthy"
+
+  # Metrics endpoint monitoring
+  - name: "Metrics Collection"
+    weight: 10
+    flow:
+      - get:
+          url: "/metrics"
+          headers:
+            Accept: "text/plain"
+          capture:
+            - regexp: "http_requests_total{method=\"POST\",status=\"200\"} (\\d+)"
+              as: "successful_posts"
+            - regexp: "http_request_duration_seconds{quantile=\"0.95\"} ([0-9.]+)"
+              as: "response_time_p95"
+          expect:
+            - statusCode: 200
+            - contentType: "text/plain"
+
+  # Database performance monitoring
+  - name: "Database Performance"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/database/stats"
+          headers:
+            Authorization: "Bearer test-token"
+          capture:
+            - json: "$.connections.active"
+              as: "active_connections"
+            - json: "$.connections.total"
+              as: "total_connections"
+            - json: "$.query_performance.avg_duration"
+              as: "avg_query_time"
+            - json: "$.cache.hit_rate"
+              as: "cache_hit_rate"
+          expect:
+            - statusCode: 200
+
+  # Queue monitoring
+  - name: "Queue Monitoring"
+    weight: 15
+    flow:
+      - get:
+          url: "/api/queues/stats"
+          headers:
+            Authorization: "Bearer test-token"
+          capture:
+            - json: "$.default.pending"
+              as: "default_queue_pending"
+            - json: "$.sentiment.pending"
+              as: "sentiment_queue_pending"
+            - json: "$.onboarding-emails.pending"
+              as: "email_queue_pending"
+            - json: "$.workers.active"
+              as: "active_workers"
+          expect:
+            - statusCode: 200
+
+  # Memory and resource monitoring
+  - name: "Resource Monitoring" 
+    weight: 15
+    flow:
+      - get:
+          url: "/api/system/resources"
+          headers:
+            Authorization: "Bearer test-token"
+          capture:
+            - json: "$.memory.total"
+              as: "total_memory"
+            - json: "$.memory.used"
+              as: "used_memory"
+            - json: "$.cpu.cores"
+              as: "cpu_cores"
+            - json: "$.disk.free_space"
+              as: "free_disk_space"
+          expect:
+            - statusCode: 200
+
+  # Application performance test
+  - name: "Performance Test"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/blockchain/analyze"
+          headers:
+            Content-Type: "application/json"
+            Authorization: "Bearer test-token"
+          json:
+            address: "0x742d35Cc8000e80F28c8B4B6b0c26A6A0DcA6A5"
+            chain: "ethereum"
+            analysis_type: "quick"
+          beforeRequest: "logRequestStart"
+          afterResponse: "logRequestEnd"
+          capture:
+            - json: "$.processing_time_ms"
+              as: "processing_time"
+            - json: "$.queue_position"
+              as: "queue_position"
+          expect:
+            - statusCode: [200, 202]
+            - contentType: "application/json"

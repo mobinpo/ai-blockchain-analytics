@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true">
+    <testsuites>
+        <testsuite name="Vulnerability Regression">
+            <file>./tests/Feature/VulnerabilityRegressionTest.php</file>
+            <file>./tests/Feature/ComprehensiveVulnerabilityRegressionTest.php</file>
+            <file>./tests/Unit/VulnerabilityRegressionTest.php</file>
+        </testsuite>
+    </testsuites>
+    <coverage processUncoveredFiles="true">
+        <include>
+            <directory suffix=".php">./app/Services</directory>
+            <directory suffix=".php">./app/Models</directory>
+            <directory suffix=".php">./app/Jobs</directory>
+        </include>
+        <exclude>
+            <directory suffix=".php">./tests</directory>
+        </exclude>
+    </coverage>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="CACHE_DRIVER" value="array"/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        <!-- Set to true to use real OpenAI API during regression testing -->
+        <env name="REGRESSION_USE_REAL_API" value="false"/>
+        <!-- Timeout for analysis operations in seconds -->
+        <env name="REGRESSION_TIMEOUT" value="30"/>
+        <!-- Minimum detection rate for regression tests to pass -->
+        <env name="REGRESSION_MIN_DETECTION_RATE" value="70"/>
+    </php>
+</phpunit>

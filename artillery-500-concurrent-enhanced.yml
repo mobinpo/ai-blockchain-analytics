@@ -1,0 +1,293 @@
+config:
+  target: 'http://localhost:8000'
+  # For production testing, uncomment below:
+  # target: 'https://ai-blockchain-analytics.com'
+  
+  phases:
+    # Extended warmup phase
+    - duration: 30
+      arrivalRate: 5
+      name: "🔥 Warmup Phase (5 RPS)"
+    
+    # Initial ramp-up
+    - duration: 45
+      arrivalRate: 25
+      name: "📈 Initial Ramp (25 RPS)"
+    
+    # Medium load testing
+    - duration: 60
+      arrivalRate: 100
+      name: "⚖️ Medium Load (100 RPS)"
+    
+    # Pre-peak stress test
+    - duration: 90
+      arrivalRate: 250
+      name: "🚀 Pre-Peak Load (250 RPS)"
+    
+    # PEAK LOAD - 500 concurrent analyses
+    - duration: 180
+      arrivalRate: 500
+      name: "🎯 PEAK: 500 Concurrent Analyses"
+    
+    # Sustained high load
+    - duration: 120
+      arrivalRate: 350
+      name: "💪 Sustained High Load (350 RPS)"
+    
+    # Gradual cool-down
+    - duration: 45
+      arrivalRate: 100
+      name: "❄️ Cool Down (100 RPS)"
+    
+    # Final cooldown
+    - duration: 20
+      arrivalRate: 10
+      name: "🏁 Final Cooldown (10 RPS)"
+
+  # HTTP Configuration optimized for high load
+  http:
+    timeout: 90
+    pool: 200
+    maxSockets: 300
+    keepAlive: true
+    
+  # Request defaults
+  defaults:
+    headers:
+      'User-Agent': 'Artillery-LoadTest-v2.0'
+      'Accept': 'application/json'
+      'Content-Type': 'application/json'
+      'X-Load-Test': 'true'
+
+  # Enhanced plugins for monitoring
+  plugins:
+    metrics-by-endpoint:
+      enabled: true
+      useOnlyRequestNames: true
+      stripQueryString: true
+    
+    ensure:
+      thresholds:
+        - p95: 3000  # 95% under 3 seconds
+        - p99: 8000  # 99% under 8 seconds
+        - max: 15000 # No request over 15 seconds
+        - maxErrorRate: 8  # Max 8% error rate
+    
+    # Real-time console output
+    publish-metrics:
+      - type: statsd
+        enabled: false
+        host: localhost
+        port: 8125
+        prefix: 'artillery.blockchain'
+
+# Test data and variables
+variables:
+  # Ethereum mainnet contracts for testing
+  test_contracts:
+    - "0xE592427A0AEce92De3Edee1F18E0157C05861564"  # Uniswap V3 Router
+    - "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2"  # Aave V3 Pool
+    - "0x1f98431c8ad98523631ae4a59f267346ea31f984"  # Uniswap V3 Factory
+    - "0x27182842E098f60e3D576794A5bFFb0777E025d3"  # Euler Finance
+    - "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"  # Uniswap V2 Factory
+    - "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"  # Uniswap V2 Router
+    - "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"  # WETH
+    - "0xA0b86a33E6410928140CEB1Fd9f2EfDb306f8B0c"  # Compound
+  
+  cryptocurrencies:
+    - "BTC"
+    - "ETH"
+    - "USDT"
+    - "BNB"
+    - "USDC"
+    - "SOL"
+    - "XRP"
+    - "ADA"
+    - "DOGE"
+    - "AVAX"
+  
+  networks:
+    - "ethereum"
+    - "bsc"
+    - "polygon"
+    - "arbitrum"
+    - "optimism"
+  
+  sentiment_phrases:
+    - "Bitcoin is showing strong bullish momentum today"
+    - "Ethereum network congestion causing high gas fees"
+    - "DeFi protocols experiencing significant growth"
+    - "NFT market volatility creating trading opportunities"
+    - "Cryptocurrency adoption increasing among institutions"
+    - "Smart contract vulnerabilities detected in recent audit"
+    - "Layer 2 solutions gaining traction in the market"
+    - "Stablecoin regulations affecting market sentiment"
+
+# Load test scenarios
+scenarios:
+  # PRIMARY: Smart Contract Analysis (60% of traffic)
+  - name: "🔬 Smart Contract Analysis"
+    weight: 60
+    flow:
+      - post:
+          url: "/api/contracts/analyze-demo"
+          name: "Contract Analysis Request"
+          json:
+            contract_input: "{{ test_contracts.random }}"
+            network: "{{ networks.random }}"
+            analysis_depth: "comprehensive"
+            priority: "{{ $randomItem(['normal', 'high']) }}"
+          capture:
+            - json: "$.analysisId"
+              as: "analysisId"
+            - json: "$.success"
+              as: "success"
+          expect:
+            - statusCode: [200, 201, 202]
+            - hasProperty: "success"
+          think: "{{ $randomNumber(1, 3) }}"
+      
+      # Simulate user checking analysis progress
+      - loop:
+          - get:
+              url: "/api/contracts/analysis/{{ analysisId }}/status"
+              name: "Check Analysis Status"
+              ifTrue: "{{ success }}"
+              expect:
+                - statusCode: [200, 404]
+          - think: "{{ $randomNumber(2, 5) }}"
+        count: "{{ $randomInt(1, 4) }}"
+
+  # Sentiment Analysis APIs (20% of traffic)
+  - name: "📊 Sentiment Analysis"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/sentiment-analysis/summary"
+          name: "Sentiment Summary"
+          qs:
+            symbol: "{{ cryptocurrencies.random }}"
+            days: "{{ $randomInt(1, 30) }}"
+            platform: "{{ $randomItem(['all', 'twitter', 'reddit']) }}"
+          expect:
+            - statusCode: 200
+          think: 1
+      
+      - post:
+          url: "/api/load-test/sentiment"
+          name: "Live Sentiment Analysis"
+          json:
+            text: "{{ sentiment_phrases.random }}"
+            symbol: "{{ cryptocurrencies.random }}"
+            intensity: "{{ $randomItem(['low', 'medium', 'high']) }}"
+          expect:
+            - statusCode: [200, 201]
+          think: 2
+      
+      # Get sentiment timeline
+      - get:
+          url: "/api/sentiment-analysis/timeline"
+          name: "Sentiment Timeline"
+          qs:
+            symbol: "{{ cryptocurrencies.random }}"
+            period: "{{ $randomItem(['1h', '4h', '1d', '7d']) }}"
+          expect:
+            - statusCode: [200, 404]
+
+  # PDF Generation Load Test (8% of traffic)
+  - name: "📄 PDF Generation"
+    weight: 8
+    flow:
+      - post:
+          url: "/api/pdf/test"
+          name: "Test PDF Generation"
+          json:
+            type: "{{ $randomItem(['dashboard', 'sentiment', 'crawler']) }}"
+            method: "{{ $randomItem(['auto', 'dompdf']) }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: "success"
+          think: 3
+      
+      - post:
+          url: "/api/pdf/sentiment-report"
+          name: "Sentiment Report PDF"
+          json:
+            symbol: "{{ cryptocurrencies.random }}"
+            days: "{{ $randomInt(7, 30) }}"
+            format: "A4"
+          expect:
+            - statusCode: [200, 422]
+
+  # Social Media Crawler (7% of traffic)
+  - name: "🕷️ Social Media Crawler"
+    weight: 7
+    flow:
+      - get:
+          url: "/api/social-crawler/statistics"
+          name: "Crawler Statistics"
+          expect:
+            - statusCode: 200
+          think: 1
+      
+      - post:
+          url: "/api/social-crawler/search"
+          name: "Social Media Search"
+          json:
+            keywords: ["{{ cryptocurrencies.random }}", "blockchain", "crypto"]
+            platforms: ["twitter", "reddit"]
+            max_results: "{{ $randomInt(10, 50) }}"
+          expect:
+            - statusCode: [200, 202]
+
+  # System Health & Monitoring (3% of traffic)
+  - name: "🏥 Health Checks"
+    weight: 3
+    flow:
+      - get:
+          url: "/api/health"
+          name: "Health Check"
+          expect:
+            - statusCode: 200
+          think: 0.5
+      
+      - get:
+          url: "/up"
+          name: "App Status"
+          expect:
+            - statusCode: 200
+      
+      - get:
+          url: "/api/load-test/complex-query"
+          name: "Complex Query Test"
+          expect:
+            - statusCode: [200, 500]
+
+  # Frontend Dashboard (2% of traffic)
+  - name: "🖥️ Frontend Load"
+    weight: 2
+    flow:
+      - get:
+          url: "/dashboard"
+          name: "Dashboard Access"
+          expect:
+            - statusCode: [200, 302, 401]
+          think: 1
+      
+      - get:
+          url: "/sentiment-dashboard"
+          name: "Sentiment Dashboard"
+          expect:
+            - statusCode: [200, 302, 401]
+
+# Hooks for test lifecycle
+before:
+  flow:
+    - log: "🚀 Starting Artillery Load Test: 500 Concurrent Analyses"
+    - log: "Target: {{ $target }}"
+    - log: "Timestamp: {{ $timestamp }}"
+
+after:
+  flow:
+    - log: "✅ Load test completed successfully"
+    - log: "Final timestamp: {{ $timestamp }}"

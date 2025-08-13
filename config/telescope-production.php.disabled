@@ -1,0 +1,344 @@
+<?php
+
+use Laravel\Telescope\Http\Middleware\Authorize;
+use Laravel\Telescope\Watchers;
+
+/**
+ * Enhanced Telescope Configuration for AI Blockchain Analytics
+ * Production-safe configuration with strict access controls and optimized watchers
+ */
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Telescope Master Switch
+    |--------------------------------------------------------------------------
+    | 
+    | Production-safe enabling with multiple layers of protection
+    */
+    'enabled' => env('TELESCOPE_ENABLED', false) && (
+        env('APP_ENV') !== 'production' || 
+        env('TELESCOPE_PRODUCTION_ENABLED', false)
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Telescope Domain and Path
+    |--------------------------------------------------------------------------
+    */
+    'domain' => env('TELESCOPE_DOMAIN'),
+    'path' => env('TELESCOPE_PATH', 'telescope'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Telescope Storage Driver
+    |--------------------------------------------------------------------------
+    */
+    'driver' => env('TELESCOPE_DRIVER', 'database'),
+
+    'storage' => [
+        'database' => [
+            'connection' => env('TELESCOPE_DB_CONNECTION', env('DB_CONNECTION', 'pgsql')),
+            'chunk' => 1000,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Telescope Queue Configuration
+    |--------------------------------------------------------------------------
+    */
+    'queue' => [
+        'connection' => env('TELESCOPE_QUEUE_CONNECTION', 'redis'),
+        'queue' => env('TELESCOPE_QUEUE', 'telescope'),
+        'delay' => env('TELESCOPE_QUEUE_DELAY', 10),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Telescope Route Middleware (Enhanced Security)
+    |--------------------------------------------------------------------------
+    */
+    'middleware' => [
+        'web',
+        \App\Http\Middleware\TelescopeAuthorize::class,
+        // Add rate limiting for production
+        env('APP_ENV') === 'production' ? 'throttle:60,1' : null,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Telescope Authorization Gate
+    |--------------------------------------------------------------------------
+    */
+    'authorization' => [
+        'gate' => 'viewTelescope',
+        'callback' => function ($request) {
+            // Additional authorization logic
+            if (app()->isProduction()) {
+                // Require specific IP addresses in production
+                $allowedIps = explode(',', env('TELESCOPE_ALLOWED_IPS', ''));
+                $clientIp = $request->ip();
+                
+                if (!empty($allowedIps) && !in_array($clientIp, $allowedIps)) {
+                    return false;
+                }
+                
+                // Require admin token for production access
+                $adminToken = env('TELESCOPE_ADMIN_TOKEN');
+                if ($adminToken && $request->header('X-Telescope-Token') !== $adminToken) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Telescope Data Retention
+    |--------------------------------------------------------------------------
+    */
+    'retention' => [
+        'hours' => env('TELESCOPE_RETENTION_HOURS', app()->isProduction() ? 24 : 168), // 1 day in prod, 1 week in dev
+        'limit' => env('TELESCOPE_RETENTION_LIMIT', app()->isProduction() ? 1000 : 10000),
+        'auto_disable_hours' => env('TELESCOPE_AUTO_DISABLE_HOURS', app()->isProduction() ? 24 : null),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Performance and Resource Management
+    |--------------------------------------------------------------------------
+    */
+    'performance' => [
+        'sampling_rate' => env('TELESCOPE_SAMPLING_RATE', app()->isProduction() ? 0.1 : 1.0),
+        'max_entries_per_request' => env('TELESCOPE_MAX_ENTRIES_PER_REQUEST', 50),
+        'memory_limit' => env('TELESCOPE_MEMORY_LIMIT', '256M'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allowed / Ignored Paths & Commands
+    |--------------------------------------------------------------------------
+    */
+    'only_paths' => array_filter([
+        env('TELESCOPE_ONLY_PATHS') ? explode(',', env('TELESCOPE_ONLY_PATHS')) : null
+    ]),
+
+    'ignore_paths' => array_merge([
+        'livewire*',
+        'nova-api*',
+        'pulse*',
+        'horizon*',
+        '_ignition*',
+        'api/health',
+        'api/ready',
+        'metrics',
+        'status',
+        'up',
+    ], explode(',', env('TELESCOPE_IGNORE_PATHS', ''))),
+
+    'ignore_commands' => array_merge([
+        'telescope:clear',
+        'telescope:prune',
+        'schedule:run',
+        'queue:work',
+        'queue:listen',
+        'horizon',
+        'horizon:work',
+        'horizon:supervisor',
+    ], explode(',', env('TELESCOPE_IGNORE_COMMANDS', ''))),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Telescope Watchers (Production Optimized)
+    |--------------------------------------------------------------------------
+    */
+    'watchers' => [
+        // Batch Processing (Laravel Queues)
+        Watchers\BatchWatcher::class => env('TELESCOPE_BATCH_WATCHER', true),
+
+        // Cache Operations
+        Watchers\CacheWatcher::class => [
+            'enabled' => env('TELESCOPE_CACHE_WATCHER', !app()->isProduction()),
+            'hidden' => [],
+            'ignore' => ['telescope:*', 'framework/*'],
+        ],
+
+        // HTTP Client Requests
+        Watchers\ClientRequestWatcher::class => [
+            'enabled' => env('TELESCOPE_CLIENT_REQUEST_WATCHER', true),
+            'ignore_status_codes' => [200, 201, 204], // Don't log successful requests in production
+        ],
+
+        // Artisan Commands
+        Watchers\CommandWatcher::class => [
+            'enabled' => env('TELESCOPE_COMMAND_WATCHER', !app()->isProduction()),
+            'ignore' => [
+                'telescope:*',
+                'schedule:*',
+                'queue:*',
+                'horizon:*',
+                'migrate:*',
+            ],
+        ],
+
+        // Dump/Debug Statements
+        Watchers\DumpWatcher::class => [
+            'enabled' => env('TELESCOPE_DUMP_WATCHER', !app()->isProduction()),
+            'always' => env('TELESCOPE_DUMP_WATCHER_ALWAYS', false),
+        ],
+
+        // Events
+        Watchers\EventWatcher::class => [
+            'enabled' => env('TELESCOPE_EVENT_WATCHER', !app()->isProduction()),
+            'ignore' => [
+                'Illuminate\Auth\Events\*',
+                'Illuminate\Cache\Events\*',
+                'Illuminate\Foundation\Events\*',
+                'Illuminate\Log\Events\*',
+                'Illuminate\Session\Events\*',
+                'Laravel\Telescope\Events\*',
+            ],
+        ],
+
+        // Exceptions (Always enabled for error tracking)
+        Watchers\ExceptionWatcher::class => env('TELESCOPE_EXCEPTION_WATCHER', true),
+
+        // Authorization Gates
+        Watchers\GateWatcher::class => [
+            'enabled' => env('TELESCOPE_GATE_WATCHER', !app()->isProduction()),
+            'ignore_abilities' => [],
+            'ignore_packages' => true,
+            'ignore_paths' => ['telescope*', 'horizon*'],
+        ],
+
+        // Job Processing
+        Watchers\JobWatcher::class => [
+            'enabled' => env('TELESCOPE_JOB_WATCHER', true),
+            'ignore' => [
+                'Laravel\Telescope\Jobs\*',
+                'Laravel\Horizon\Jobs\*',
+            ],
+        ],
+
+        // Logs (Critical and Errors only in production)
+        Watchers\LogWatcher::class => [
+            'enabled' => env('TELESCOPE_LOG_WATCHER', true),
+            'level' => env('TELESCOPE_LOG_LEVEL', app()->isProduction() ? 'error' : 'debug'),
+        ],
+
+        // Mail
+        Watchers\MailWatcher::class => env('TELESCOPE_MAIL_WATCHER', true),
+
+        // Eloquent Model Operations
+        Watchers\ModelWatcher::class => [
+            'enabled' => env('TELESCOPE_MODEL_WATCHER', !app()->isProduction()),
+            'events' => ['eloquent.created', 'eloquent.updated', 'eloquent.deleted'],
+            'hydrations' => env('TELESCOPE_MODEL_HYDRATIONS', false),
+        ],
+
+        // Notifications
+        Watchers\NotificationWatcher::class => env('TELESCOPE_NOTIFICATION_WATCHER', true),
+
+        // Database Queries (Optimized for production)
+        Watchers\QueryWatcher::class => [
+            'enabled' => env('TELESCOPE_QUERY_WATCHER', true),
+            'ignore_packages' => true,
+            'ignore_paths' => ['telescope*', 'horizon*'],
+            'slow' => env('TELESCOPE_SLOW_QUERY_THRESHOLD', app()->isProduction() ? 1000 : 100), // 1s in prod, 100ms in dev
+            'location' => env('TELESCOPE_QUERY_LOCATION', !app()->isProduction()),
+        ],
+
+        // Redis Operations
+        Watchers\RedisWatcher::class => [
+            'enabled' => env('TELESCOPE_REDIS_WATCHER', !app()->isProduction()),
+        ],
+
+        // HTTP Requests (Filtered for production)
+        Watchers\RequestWatcher::class => [
+            'enabled' => env('TELESCOPE_REQUEST_WATCHER', true),
+            'size_limit' => env('TELESCOPE_RESPONSE_SIZE_LIMIT', app()->isProduction() ? 32 : 64),
+            'ignore_http_methods' => [],
+            'ignore_status_codes' => app()->isProduction() ? [200, 201, 204, 301, 302] : [],
+            'ignore_paths' => [
+                'telescope*',
+                'horizon*',
+                'api/health',
+                'api/ready',
+                'metrics',
+                'status',
+            ],
+        ],
+
+        // Scheduled Tasks
+        Watchers\ScheduleWatcher::class => env('TELESCOPE_SCHEDULE_WATCHER', true),
+
+        // Views (Disabled in production for performance)
+        Watchers\ViewWatcher::class => [
+            'enabled' => env('TELESCOPE_VIEW_WATCHER', !app()->isProduction()),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | AI Blockchain Analytics Specific Configuration
+    |--------------------------------------------------------------------------
+    */
+    'blockchain_analytics' => [
+        // Monitor specific application events
+        'monitor_analysis_jobs' => env('TELESCOPE_MONITOR_ANALYSIS_JOBS', true),
+        'monitor_verification_requests' => env('TELESCOPE_MONITOR_VERIFICATION', true),
+        'monitor_api_usage' => env('TELESCOPE_MONITOR_API_USAGE', true),
+        
+        // Custom tags for filtering
+        'tags' => [
+            'blockchain_network' => env('BLOCKCHAIN_EXPLORER_DEFAULT', 'etherscan'),
+            'ai_model' => env('OPENAI_MODEL', 'gpt-4'),
+            'environment' => env('APP_ENV', 'production'),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Security Settings
+    |--------------------------------------------------------------------------
+    */
+    'security' => [
+        // Rate limiting for Telescope access
+        'rate_limit' => env('TELESCOPE_RATE_LIMIT', app()->isProduction() ? '60,1' : '120,1'),
+        
+        // Session timeout for Telescope access
+        'session_timeout' => env('TELESCOPE_SESSION_TIMEOUT', 3600), // 1 hour
+        
+        // Require HTTPS in production
+        'require_https' => env('TELESCOPE_REQUIRE_HTTPS', app()->isProduction()),
+        
+        // Log access attempts
+        'log_access' => env('TELESCOPE_LOG_ACCESS', app()->isProduction()),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Auto-Pruning Configuration
+    |--------------------------------------------------------------------------
+    */
+    'auto_prune' => [
+        'enabled' => env('TELESCOPE_AUTO_PRUNE', true),
+        'hours' => env('TELESCOPE_PRUNE_HOURS', app()->isProduction() ? 24 : 168),
+        'schedule' => env('TELESCOPE_PRUNE_SCHEDULE', '0 */6 * * *'), // Every 6 hours
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Export and Backup
+    |--------------------------------------------------------------------------
+    */
+    'export' => [
+        'enabled' => env('TELESCOPE_EXPORT_ENABLED', false),
+        'formats' => ['json', 'csv'],
+        'max_entries' => env('TELESCOPE_EXPORT_MAX_ENTRIES', 10000),
+    ],
+];

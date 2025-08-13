@@ -1,0 +1,317 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: laravel-app-service
+  namespace: ai-blockchain-analytics
+  labels:
+    app: laravel-app
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+      protocol: TCP
+  selector:
+    app: laravel-app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: laravel-app
+  namespace: ai-blockchain-analytics
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: laravel-app
+  template:
+    metadata:
+      labels:
+        app: laravel-app
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      initContainers:
+        - name: migration
+          image: your-registry/ai-blockchain-analytics:latest
+          imagePullPolicy: Always
+          command: ["php", "artisan", "migrate", "--force"]
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+        - name: cache-clear
+          image: your-registry/ai-blockchain-analytics:latest
+          imagePullPolicy: Always
+          command: ["php", "artisan", "config:cache"]
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      containers:
+        - name: laravel-app
+          image: your-registry/ai-blockchain-analytics:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          env:
+            - name: CONTAINER_ROLE
+              value: "app"
+          volumeMounts:
+            - name: storage
+              mountPath: /var/www/html/storage
+            - name: roadrunner-config
+              mountPath: /var/www/html/.rr.yaml
+              subPath: .rr.yaml
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 15"]
+      volumes:
+        - name: storage
+          emptyDir: {}
+        - name: roadrunner-config
+          configMap:
+            name: roadrunner-config
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: roadrunner-config
+  namespace: ai-blockchain-analytics
+data:
+  .rr.yaml: |
+    version: "3"
+    
+    rpc:
+      listen: tcp://127.0.0.1:6001
+      
+    server:
+      command: "php app.php"
+      user: ""
+      group: ""
+      env:
+        - APP_RUNTIME: RoadRunner
+      relay: pipes
+      relay_timeout: 20s
+    
+    http:
+      address: 0.0.0.0:8000
+      middleware: ["headers", "static"]
+      uploads:
+        forbid: [".php", ".exe", ".bat"]
+      trusted_subnets:
+        - "10.0.0.0/8"
+        - "127.0.0.0/8"
+        - "172.16.0.0/12"
+        - "192.168.0.0/16"
+        - "::1/128"
+        - "fc00::/7"
+        - "fe80::/10"
+      headers:
+        cors:
+          allowed_origin: "*"
+          allowed_headers: "*"
+          allowed_methods: "GET,POST,PUT,DELETE,OPTIONS"
+          allow_credentials: true
+          exposed_headers: "Cache-Control,Content-Language,Content-Type,Expires,Last-Modified,Pragma"
+          max_age: 600
+        request:
+          X-Forwarded-Proto: "https"
+      static:
+        dir: "public"
+        forbid: [".htaccess", ".php"]
+        request:
+          "/{file:.*\\.js}": "public/{file}"
+          "/{file:.*\\.css}": "public/{file}"
+          "/{file:.*\\.ico}": "public/{file}"
+    
+    pool:
+      num_workers: 4
+      max_jobs: 64
+      allocate_timeout: 60s
+      destroy_timeout: 60s
+      supervisor:
+        max_worker_memory: 128
+        ttl: 0s
+        idle_ttl: 10s
+        exec_ttl: 60s
+    
+    logs:
+      mode: production
+      level: error
+      encoding: json
+      output: stdout
+      err_output: stderr
+    
+    metrics:
+      address: "0.0.0.0:2112"
+      
+    status:
+      address: "0.0.0.0:2114"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: laravel-queue-worker
+  namespace: ai-blockchain-analytics
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: laravel-queue-worker
+  template:
+    metadata:
+      labels:
+        app: laravel-queue-worker
+    spec:
+      containers:
+        - name: queue-worker
+          image: your-registry/ai-blockchain-analytics:latest
+          imagePullPolicy: Always
+          command: ["php", "artisan", "queue:work", "--verbose", "--tries=3", "--timeout=90", "--memory=512"]
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          env:
+            - name: CONTAINER_ROLE
+              value: "queue"
+          volumeMounts:
+            - name: storage
+              mountPath: /var/www/html/storage
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          livenessProbe:
+            exec:
+              command:
+                - pgrep
+                - -f
+                - "queue:work"
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+      volumes:
+        - name: storage
+          emptyDir: {}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: laravel-scheduler
+  namespace: ai-blockchain-analytics
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: laravel-scheduler
+  template:
+    metadata:
+      labels:
+        app: laravel-scheduler
+    spec:
+      containers:
+        - name: scheduler
+          image: your-registry/ai-blockchain-analytics:latest
+          imagePullPolicy: Always
+          command: ["sh", "-c", "while true; do php artisan schedule:run --verbose --no-interaction && sleep 60; done"]
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          env:
+            - name: CONTAINER_ROLE
+              value: "scheduler"
+          volumeMounts:
+            - name: storage
+              mountPath: /var/www/html/storage
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "512Mi"
+              cpu: "250m"
+      volumes:
+        - name: storage
+          emptyDir: {}
+      restartPolicy: Always

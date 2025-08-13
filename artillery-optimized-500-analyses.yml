@@ -1,0 +1,184 @@
+config:
+  target: 'http://localhost:8003'
+  phases:
+    # Quick warmup to establish connections
+    - duration: 30
+      arrivalRate: 5
+      name: "Initial warmup"
+    
+    # Gradual ramp to avoid overwhelming the system
+    - duration: 60
+      arrivalRate: 25
+      name: "Gentle ramp-up"
+    
+    # Medium load to test system scaling
+    - duration: 90
+      arrivalRate: 100
+      name: "Medium load testing"
+    
+    # Target load - 500 concurrent analyses
+    - duration: 300
+      arrivalRate: 500
+      name: "Peak load - 500 concurrent analyses"
+    
+    # Sustained high load
+    - duration: 180
+      arrivalRate: 400
+      name: "Sustained analysis load"
+    
+    # Cool down phase
+    - duration: 60
+      arrivalRate: 50
+      name: "Cool down"
+
+  payload:
+    path: "./test-data.csv"
+    fields:
+      - "symbol"
+      - "address"  
+      - "keyword"
+
+  processor: "./artillery-processor.js"
+  
+  http:
+    timeout: 45
+    pool: 100
+    maxSockets: 200
+    
+  plugins:
+    metrics-by-endpoint: {}
+    hls:
+      numberOfUsersPerGenerator: 150
+    
+  variables:
+    auth_token: ""
+
+scenarios:
+  # Primary analysis scenarios - 60% of traffic
+  - name: "AI Blockchain Analysis"
+    weight: 60
+    flow:
+      # Test contract analysis endpoint (actual route)
+      - post:
+          url: "/api/contracts/analyze"
+          json:
+            address: "{{ address }}"
+            network: "ethereum"
+            analysis_type: "comprehensive"
+          expect:
+            - statusCode: [200, 201, 202]
+          think: 1
+
+      # Test live analyses endpoint (actual route)
+      - post:
+          url: "/api/analyses"
+          json:
+            contract_address: "{{ address }}"
+            symbol: "{{ symbol }}"
+            analysis_type: "ai_enhanced"
+          expect:
+            - statusCode: [200, 201, 202]
+          think: 0.5
+
+      # Test sentiment chart data (actual route)
+      - get:
+          url: "/api/sentiment-charts/data"
+          qs:
+            symbol: "{{ symbol }}"
+            period: "24h"
+          expect:
+            - statusCode: [200]
+          think: 0.3
+
+  # Real-time monitoring scenarios - 25% of traffic  
+  - name: "Real-time Analysis Monitoring"
+    weight: 25
+    flow:
+      # Test analyses list (actual route)
+      - get:
+          url: "/api/analyses"
+          qs:
+            limit: 10
+            status: "active"
+          expect:
+            - statusCode: [200]
+          think: 0.5
+
+      # Test analysis stats (actual route)
+      - get:
+          url: "/api/analyses/stats"
+          expect:
+            - statusCode: [200]
+          think: 0.3
+
+      # Test sentiment coins search (actual route)
+      - get:
+          url: "/api/sentiment-charts/coins/search"
+          qs:
+            query: "{{ symbol }}"
+          expect:
+            - statusCode: [200]
+          think: 0.2
+
+  # Heavy computational scenarios - 15% of traffic
+  - name: "Intensive AI Analysis"
+    weight: 15
+    flow:
+      # Test load test sentiment (actual route)
+      - post:
+          url: "/api/load-test/sentiment"
+          json:
+            text: "{{ keyword }} analysis for {{ symbol }}"
+            intensity: "high"
+          expect:
+            - statusCode: [200, 202]
+          think: 3
+
+      # Test PDF sentiment chart generation (actual route)
+      - post:
+          url: "/api/pdf/sentiment-chart"
+          json:
+            symbol: "{{ symbol }}"
+            timeframe: "24h"
+            format: "pdf"
+          expect:
+            - statusCode: [200, 202]
+          think: 4
+
+      # Test PDF sentiment generation (actual route)
+      - post:
+          url: "/api/pdf/sentiment"
+          json:
+            keyword: "{{ keyword }}"
+            analysis_type: "comprehensive"
+          expect:
+            - statusCode: [200, 202]
+          think: 2
+
+  # Health and system monitoring - 5% of traffic
+  - name: "System Health Checks"
+    weight: 5
+    flow:
+      # Cache statistics (actual route)
+      - get:
+          url: "/api/cache/stats"
+          expect:
+            - statusCode: [200]
+
+      # PDF statistics (actual route)
+      - get:
+          url: "/api/pdf/statistics"
+          expect:
+            - statusCode: [200]
+
+      # PDF engine info (actual route)
+      - get:
+          url: "/api/pdf/engine-info"
+          expect:
+            - statusCode: [200]
+
+      # Sentiment coins list (actual route)
+      - get:
+          url: "/api/sentiment-charts/coins"
+          expect:
+            - statusCode: [200]

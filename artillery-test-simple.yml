@@ -1,0 +1,25 @@
+config:
+  target: 'http://localhost:8003'
+  phases:
+    - duration: 15
+      arrivalRate: 10
+      name: "Simple test"
+
+  http:
+    timeout: 15
+    
+scenarios:
+  - name: "Basic Pages Test"
+    weight: 100
+    flow:
+      # Test homepage
+      - get:
+          url: "/"
+          expect:
+            - statusCode: [200, 302]
+
+      # Test login page
+      - get:
+          url: "/login"
+          expect:
+            - statusCode: [200]

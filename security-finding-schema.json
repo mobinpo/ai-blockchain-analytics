@@ -1,0 +1,223 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Security Finding Schema",
+  "description": "OWASP-style schema for reporting security vulnerabilities and findings",
+  "type": "object",
+  "required": ["severity", "title", "category", "description"],
+  "properties": {
+    "severity": {
+      "type": "string",
+      "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"],
+      "description": "Severity level based on CVSS or OWASP risk rating"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "Brief title describing the vulnerability"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "A01:2021-Broken Access Control",
+        "A02:2021-Cryptographic Failures",
+        "A03:2021-Injection",
+        "A04:2021-Insecure Design",
+        "A05:2021-Security Misconfiguration",
+        "A06:2021-Vulnerable and Outdated Components",
+        "A07:2021-Identification and Authentication Failures",
+        "A08:2021-Software and Data Integrity Failures",
+        "A09:2021-Security Logging and Monitoring Failures",
+        "A10:2021-Server-Side Request Forgery",
+        "Re-entrancy",
+        "Integer Overflow/Underflow",
+        "Unvalidated Input",
+        "Business Logic Flaw",
+        "Information Disclosure",
+        "Denial of Service",
+        "Other"
+      ],
+      "description": "OWASP Top 10 2021 category or custom security category"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Detailed description of the vulnerability"
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Line number where the vulnerability was found"
+    },
+    "file": {
+      "type": "string",
+      "description": "File path where the vulnerability exists"
+    },
+    "function": {
+      "type": "string",
+      "description": "Function or method name containing the vulnerability"
+    },
+    "recommendation": {
+      "type": "string",
+      "description": "Specific remediation recommendations"
+    },
+    "cwe_id": {
+      "type": "string",
+      "pattern": "^CWE-[0-9]+$",
+      "description": "Common Weakness Enumeration identifier (e.g., CWE-79)"
+    },
+    "cvss_score": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 10.0,
+      "description": "CVSS v3.1 base score"
+    },
+    "impact": {
+      "type": "object",
+      "properties": {
+        "confidentiality": {
+          "type": "string",
+          "enum": ["NONE", "LOW", "HIGH"]
+        },
+        "integrity": {
+          "type": "string",
+          "enum": ["NONE", "LOW", "HIGH"]
+        },
+        "availability": {
+          "type": "string",
+          "enum": ["NONE", "LOW", "HIGH"]
+        }
+      },
+      "description": "CIA triad impact assessment"
+    },
+    "exploitability": {
+      "type": "string",
+      "enum": ["THEORETICAL", "DIFFICULT", "EASY", "AUTOMATED"],
+      "description": "How easily the vulnerability can be exploited"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["title", "url"]
+      },
+      "description": "External references and documentation"
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "code_snippet": {
+          "type": "string",
+          "description": "Vulnerable code snippet"
+        },
+        "proof_of_concept": {
+          "type": "string",
+          "description": "Steps to reproduce or exploit"
+        },
+        "screenshots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Paths to screenshot files"
+        }
+      },
+      "description": "Supporting evidence for the finding"
+    },
+    "remediation": {
+      "type": "object",
+      "properties": {
+        "effort": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH"],
+          "description": "Estimated effort to fix"
+        },
+        "timeline": {
+          "type": "string",
+          "description": "Recommended timeline for remediation"
+        },
+        "code_fix": {
+          "type": "string",
+          "description": "Example secure code implementation"
+        }
+      },
+      "description": "Remediation guidance and examples"
+    },
+    "scanner": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the security scanner or tool"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of the scanner"
+        },
+        "scan_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the scan was performed"
+        }
+      },
+      "description": "Information about the scanning tool"
+    },
+    "false_positive": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this finding is a false positive"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["OPEN", "IN_PROGRESS", "FIXED", "ACCEPTED_RISK", "FALSE_POSITIVE"],
+      "default": "OPEN",
+      "description": "Current status of the finding"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Additional tags for categorization"
+    }
+  },
+  "examples": [
+    {
+      "severity": "HIGH",
+      "title": "Re-entrancy vulnerability in withdraw function",
+      "category": "Re-entrancy",
+      "description": "The withdraw function allows re-entrant calls that can drain contract funds",
+      "line": 125,
+      "file": "contracts/Wallet.sol",
+      "function": "withdraw",
+      "recommendation": "Use the checks-effects-interactions pattern and add re-entrancy guard",
+      "cwe_id": "CWE-841",
+      "cvss_score": 8.1,
+      "impact": {
+        "confidentiality": "NONE",
+        "integrity": "HIGH",
+        "availability": "HIGH"
+      },
+      "exploitability": "EASY",
+      "evidence": {
+        "code_snippet": "function withdraw(uint amount) public {\n    require(balances[msg.sender] >= amount);\n    msg.sender.call{value: amount}(\"\");\n    balances[msg.sender] -= amount;\n}",
+        "proof_of_concept": "1. Deploy malicious contract with fallback function\n2. Call withdraw with amount less than balance\n3. In fallback, call withdraw again before balance is updated"
+      },
+      "remediation": {
+        "effort": "MEDIUM",
+        "timeline": "Within 1 week",
+        "code_fix": "function withdraw(uint amount) public nonReentrant {\n    require(balances[msg.sender] >= amount);\n    balances[msg.sender] -= amount;\n    (bool success, ) = msg.sender.call{value: amount}(\"\");\n    require(success);\n}"
+      },
+      "status": "OPEN"
+    }
+  ]
+}

@@ -1,0 +1,204 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler
+  namespace: ai-blockchain-analytics
+  labels:
+    app: scheduler
+    component: scheduler
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: scheduler
+  template:
+    metadata:
+      labels:
+        app: scheduler
+        component: scheduler
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:15-alpine
+        command: ['sh', '-c']
+        args:
+          - |
+            until pg_isready -h postgres -p 5432; do
+              echo "Waiting for postgres..."
+              sleep 2
+            done
+            echo "PostgreSQL is ready!"
+      - name: wait-for-redis
+        image: redis:7-alpine
+        command: ['sh', '-c']
+        args:
+          - |
+            until redis-cli -h redis -p 6379 -a redis_password ping; do
+              echo "Waiting for redis..."
+              sleep 2
+            done
+            echo "Redis is ready!"
+      containers:
+      - name: scheduler
+        image: ai-blockchain-analytics:latest
+        command: ["/bin/sh"]
+        args:
+          - -c
+          - |
+            echo "Starting Laravel scheduler..."
+            while true; do
+              php artisan schedule:run --verbose --no-interaction
+              sleep 60
+            done
+        env:
+        - name: APP_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: APP_NAME
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: APP_ENV
+        - name: APP_DEBUG
+          value: "false"
+        - name: APP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: APP_KEY
+        - name: DB_CONNECTION
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_CONNECTION
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_PORT
+        - name: DB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_DATABASE
+        - name: DB_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: DB_PASSWORD
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: REDIS_PORT
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: REDIS_PASSWORD
+        - name: CACHE_DRIVER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: CACHE_DRIVER
+        - name: QUEUE_CONNECTION
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: QUEUE_CONNECTION
+        - name: TELESCOPE_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: TELESCOPE_ENABLED
+        - name: TELESCOPE_DRIVER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: TELESCOPE_DRIVER
+        - name: TELESCOPE_QUEUE_CONNECTION
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: TELESCOPE_QUEUE_CONNECTION
+        - name: SENTRY_LARAVEL_DSN
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: SENTRY_LARAVEL_DSN
+        - name: SENTRY_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SENTRY_ENVIRONMENT
+        - name: SENTRY_RELEASE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SENTRY_RELEASE
+        - name: SENTRY_SAMPLE_RATE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SENTRY_SAMPLE_RATE
+        - name: SENTRY_TRACES_SAMPLE_RATE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SENTRY_TRACES_SAMPLE_RATE
+        - name: SENTRY_ENABLE_LOGS
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SENTRY_ENABLE_LOGS
+        - name: SENTRY_SEND_DEFAULT_PII
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SENTRY_SEND_DEFAULT_PII
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          exec:
+            command:
+              - pgrep
+              - -f
+              - "artisan schedule:run"
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+              - pgrep
+              - -f
+              - "artisan schedule:run"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3

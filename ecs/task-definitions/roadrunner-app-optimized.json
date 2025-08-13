@@ -1,0 +1,374 @@
+{
+  "family": "ai-blockchain-roadrunner-app",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "2048",
+  "memory": "4096",
+  "executionRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ai-blockchain-task-role",
+  "placementConstraints": [],
+  "tags": [
+    {
+      "key": "Project",
+      "value": "ai-blockchain-analytics"
+    },
+    {
+      "key": "Component",
+      "value": "roadrunner-app"
+    },
+    {
+      "key": "Environment",
+      "value": "production"
+    }
+  ],
+  "containerDefinitions": [
+    {
+      "name": "roadrunner-app",
+      "image": "YOUR_ACCOUNT_ID.dkr.ecr.YOUR_REGION.amazonaws.com/ai-blockchain-analytics:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp",
+          "name": "http"
+        },
+        {
+          "containerPort": 6001,
+          "protocol": "tcp",
+          "name": "rpc"
+        },
+        {
+          "containerPort": 2112,
+          "protocol": "tcp",
+          "name": "metrics"
+        },
+        {
+          "containerPort": 2114,
+          "protocol": "tcp",
+          "name": "status"
+        }
+      ],
+      "environment": [
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        },
+        {
+          "name": "APP_DEBUG",
+          "value": "false"
+        },
+        {
+          "name": "LOG_CHANNEL",
+          "value": "stack"
+        },
+        {
+          "name": "LOG_LEVEL",
+          "value": "warning"
+        },
+        {
+          "name": "DB_CONNECTION",
+          "value": "pgsql"
+        },
+        {
+          "name": "CACHE_DRIVER",
+          "value": "redis"
+        },
+        {
+          "name": "QUEUE_CONNECTION",
+          "value": "redis"
+        },
+        {
+          "name": "SESSION_DRIVER",
+          "value": "redis"
+        },
+        {
+          "name": "CONTAINER_ROLE",
+          "value": "app"
+        },
+        {
+          "name": "RR_WORKERS",
+          "value": "16"
+        },
+        {
+          "name": "RR_MAX_JOBS",
+          "value": "2000"
+        },
+        {
+          "name": "RR_MEMORY_LIMIT",
+          "value": "512"
+        },
+        {
+          "name": "PHP_OPCACHE_ENABLE",
+          "value": "1"
+        },
+        {
+          "name": "PHP_OPCACHE_VALIDATE_TIMESTAMPS",
+          "value": "0"
+        },
+        {
+          "name": "PHP_MEMORY_LIMIT",
+          "value": "512M"
+        },
+        {
+          "name": "AWS_DEFAULT_REGION",
+          "value": "YOUR_REGION"
+        },
+        {
+          "name": "SENTRY_ENVIRONMENT",
+          "value": "production"
+        },
+        {
+          "name": "SENTRY_SAMPLE_RATE",
+          "value": "0.1"
+        },
+        {
+          "name": "SENTRY_TRACES_SAMPLE_RATE",
+          "value": "0.05"
+        },
+        {
+          "name": "SENTRY_PROFILES_SAMPLE_RATE",
+          "value": "0.01"
+        },
+        {
+          "name": "SENTRY_ENABLE_LOGS",
+          "value": "false"
+        },
+        {
+          "name": "SENTRY_SEND_DEFAULT_PII",
+          "value": "false"
+        },
+        {
+          "name": "SENTRY_AUTO_TAGGING",
+          "value": "true"
+        },
+        {
+          "name": "SENTRY_ENHANCED_CONTEXT",
+          "value": "true"
+        },
+        {
+          "name": "SENTRY_DATA_SCRUBBING",
+          "value": "true"
+        },
+        {
+          "name": "TELESCOPE_ENABLED",
+          "value": "false"
+        },
+        {
+          "name": "TELESCOPE_PRODUCTION_ENABLED",
+          "value": "false"
+        },
+        {
+          "name": "TELESCOPE_DRIVER",
+          "value": "database"
+        },
+        {
+          "name": "TELESCOPE_QUEUE_CONNECTION",
+          "value": "redis"
+        },
+        {
+          "name": "TELESCOPE_SAMPLING_RATE",
+          "value": "0.1"
+        },
+        {
+          "name": "TELESCOPE_RETENTION_HOURS",
+          "value": "24"
+        },
+        {
+          "name": "TELESCOPE_RETENTION_LIMIT",
+          "value": "1000"
+        },
+        {
+          "name": "TELESCOPE_AUTO_DISABLE_HOURS",
+          "value": "24"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "APP_KEY",
+          "valueFrom": "/ai-blockchain/app-key"
+        },
+        {
+          "name": "DB_HOST",
+          "valueFrom": "/ai-blockchain/db-host"
+        },
+        {
+          "name": "DB_PORT",
+          "valueFrom": "/ai-blockchain/db-port"
+        },
+        {
+          "name": "DB_DATABASE",
+          "valueFrom": "/ai-blockchain/db-database"
+        },
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "/ai-blockchain/db-username"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "/ai-blockchain/db-password"
+        },
+        {
+          "name": "REDIS_HOST",
+          "valueFrom": "/ai-blockchain/redis-host"
+        },
+        {
+          "name": "REDIS_PORT",
+          "valueFrom": "/ai-blockchain/redis-port"
+        },
+        {
+          "name": "REDIS_PASSWORD",
+          "valueFrom": "/ai-blockchain/redis-password"
+        },
+        {
+          "name": "STRIPE_SECRET",
+          "valueFrom": "/ai-blockchain/stripe-secret"
+        },
+        {
+          "name": "SENTRY_LARAVEL_DSN",
+          "valueFrom": "/ai-blockchain/sentry-dsn"
+        },
+        {
+          "name": "SENTRY_DSN",
+          "valueFrom": "/ai-blockchain/sentry-dsn"
+        },
+        {
+          "name": "GOOGLE_CREDENTIALS",
+          "valueFrom": "/ai-blockchain/google-credentials"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-blockchain-analytics",
+          "awslogs-region": "YOUR_REGION",
+          "awslogs-stream-prefix": "roadrunner-app",
+          "awslogs-create-group": "true"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:8000/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "mountPoints": [
+        {
+          "sourceVolume": "app-storage",
+          "containerPath": "/var/www/storage",
+          "readOnly": false
+        },
+        {
+          "sourceVolume": "cache-volume",
+          "containerPath": "/var/www/bootstrap/cache",
+          "readOnly": false
+        }
+      ],
+      "ulimits": [
+        {
+          "name": "nofile",
+          "softLimit": 65536,
+          "hardLimit": 65536
+        }
+      ],
+      "systemControls": [],
+      "linuxParameters": {
+        "initProcessEnabled": true
+      },
+      "user": "www-data:www-data",
+      "workingDirectory": "/var/www/html",
+      "stopTimeout": 60,
+      "startTimeout": 300
+    },
+    {
+      "name": "log-router",
+      "image": "public.ecr.aws/aws-observability/aws-for-fluent-bit:stable",
+      "essential": false,
+      "firelensConfiguration": {
+        "type": "fluentbit",
+        "options": {
+          "enable-ecs-log-metadata": "true",
+          "config-file-type": "file",
+          "config-file-value": "/fluent-bit/configs/parse-json.conf"
+        }
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-blockchain-analytics-firelens",
+          "awslogs-region": "YOUR_REGION",
+          "awslogs-stream-prefix": "firelens",
+          "awslogs-create-group": "true"
+        }
+      },
+      "memoryReservation": 128,
+      "cpu": 128
+    },
+    {
+      "name": "cloudwatch-agent",
+      "image": "public.ecr.aws/cloudwatch-agent/cloudwatch-agent:latest",
+      "essential": false,
+      "environment": [
+        {
+          "name": "CW_CONFIG_CONTENT",
+          "value": "{\"agent\":{\"metrics_collection_interval\":60,\"run_as_user\":\"cwagent\"},\"logs\":{\"logs_collected\":{\"files\":{\"collect_list\":[{\"file_path\":\"/var/www/storage/logs/laravel.log\",\"log_group_name\":\"/ecs/ai-blockchain-analytics/application\",\"log_stream_name\":\"{instance_id}/laravel\",\"timezone\":\"UTC\"}]}}},\"metrics\":{\"namespace\":\"ECS/AI-Blockchain\",\"metrics_collected\":{\"cpu\":{\"measurement\":[\"cpu_usage_idle\",\"cpu_usage_iowait\",\"cpu_usage_user\",\"cpu_usage_system\"],\"metrics_collection_interval\":60},\"disk\":{\"measurement\":[\"used_percent\"],\"metrics_collection_interval\":60,\"resources\":[\"*\"]},\"diskio\":{\"measurement\":[\"io_time\"],\"metrics_collection_interval\":60,\"resources\":[\"*\"]},\"mem\":{\"measurement\":[\"mem_used_percent\"],\"metrics_collection_interval\":60},\"netstat\":{\"measurement\":[\"tcp_established\",\"tcp_time_wait\"],\"metrics_collection_interval\":60},\"statsd\":{\"metrics_aggregation_interval\":300,\"metrics_collection_interval\":10,\"service_address\":\":8125\"}}}}"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "app-storage",
+          "containerPath": "/var/www/storage",
+          "readOnly": true
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-blockchain-analytics-monitoring",
+          "awslogs-region": "YOUR_REGION",
+          "awslogs-stream-prefix": "cloudwatch-agent",
+          "awslogs-create-group": "true"
+        }
+      },
+      "memoryReservation": 256,
+      "cpu": 128
+    }
+  ],
+  "volumes": [
+    {
+      "name": "app-storage",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-XXXXXXXX",
+        "rootDirectory": "/",
+        "transitEncryption": "ENABLED",
+        "transitEncryptionPort": 2049,
+        "authorizationConfig": {
+          "accessPointId": "fsap-XXXXXXXXXXXXXXXX",
+          "iam": "ENABLED"
+        }
+      }
+    },
+    {
+      "name": "cache-volume",
+      "dockerVolumeConfiguration": {
+        "scope": "task",
+        "autoprovision": true,
+        "driver": "local"
+      }
+    }
+  ],
+  "pidMode": null,
+  "ipcMode": null,
+  "proxyConfiguration": null,
+  "inferenceAccelerators": [],
+  "ephemeralStorage": {
+    "sizeInGiB": 50
+  },
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  }
+}

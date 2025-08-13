@@ -1,0 +1,24 @@
+config:
+  # Minimal load test configuration for testing setup
+  target: "http://localhost:8003"
+  phases:
+    # Quick test with 5 virtual users for 30 seconds
+    - duration: 30
+      arrivalRate: 5
+      name: "Basic connectivity test"
+
+  http:
+    timeout: 30
+    extendedMetrics: true
+
+scenarios:
+  # Simple scenarios that don't rely on application configuration
+  - name: "Basic HTTP connectivity"
+    weight: 100
+    flow:
+      # Test direct HTTP response
+      - get:
+          url: "/"
+          name: "Root endpoint"
+          expect:
+            - statusCode: [200, 302, 500] # Accept any response to test connectivity

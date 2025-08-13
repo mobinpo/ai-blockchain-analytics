@@ -1,0 +1,761 @@
+# AI Blockchain Analytics - Production Kubernetes Deployment
+# Complete production-ready deployment with RoadRunner, Redis, and PostgreSQL
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-blockchain-analytics-production
+  labels:
+    name: ai-blockchain-analytics-production
+    environment: production
+    app: ai-blockchain-analytics
+
+---
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: ai-blockchain-analytics-production
+data:
+  APP_ENV: "production"
+  APP_DEBUG: "false"
+  APP_URL: "https://ai-blockchain-analytics.example.com"
+  LOG_CHANNEL: "stack"
+  LOG_LEVEL: "warning"
+  DB_CONNECTION: "pgsql"
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  DB_DATABASE: "ai_blockchain_analytics"
+  CACHE_DRIVER: "redis"
+  QUEUE_CONNECTION: "redis"
+  SESSION_DRIVER: "redis"
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  BROADCAST_DRIVER: "redis"
+  MAIL_MAILER: "smtp"
+  AWS_DEFAULT_REGION: "us-east-1"
+  # RoadRunner specific
+  RR_HTTP_ADDRESS: ":8080"
+  RR_HTTP_NUM_WORKERS: "4"
+  RR_HTTP_MAX_JOBS: "64"
+
+---
+# Secret for sensitive data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: ai-blockchain-analytics-production
+type: Opaque
+data:
+  APP_KEY: # Base64 encoded Laravel app key
+  DB_USERNAME: cG9zdGdyZXM=  # postgres
+  DB_PASSWORD: c2VjdXJlX3Bhc3N3b3Jk  # secure_password
+  REDIS_PASSWORD: ""
+  JWT_SECRET: # Base64 encoded JWT secret
+  GOOGLE_CLOUD_API_KEY: # Base64 encoded Google Cloud API key
+  ETHERSCAN_API_KEY: # Base64 encoded Etherscan API key
+  BSCSCAN_API_KEY: # Base64 encoded BSC API key
+
+---
+# PostgreSQL PersistentVolume
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+  namespace: ai-blockchain-analytics-production
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: fast-ssd
+  hostPath:
+    path: /data/postgres
+
+---
+# PostgreSQL PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: ai-blockchain-analytics-production
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd
+
+---
+# Redis PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: ai-blockchain-analytics-production
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: fast-ssd
+
+---
+# PostgreSQL Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: ai-blockchain-analytics-production
+  labels:
+    app: postgres
+    component: database
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: postgres
+      component: database
+  template:
+    metadata:
+      labels:
+        app: postgres
+        component: database
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_DATABASE
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DB_USERNAME
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DB_PASSWORD
+        - name: POSTGRES_INITDB_ARGS
+          value: "--auth-host=scram-sha-256"
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        ports:
+        - containerPort: 5432
+          name: postgres
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            memory: 1Gi
+            cpu: 500m
+          limits:
+            memory: 4Gi
+            cpu: 2000m
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: ai-blockchain-analytics-production
+  labels:
+    app: postgres
+    component: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgres
+  selector:
+    app: postgres
+    component: database
+
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: ai-blockchain-analytics-production
+  labels:
+    app: redis
+    component: cache
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: redis
+      component: cache
+  template:
+    metadata:
+      labels:
+        app: redis
+        component: cache
+    spec:
+      containers:
+      - name: redis
+        image: redis:7.2-alpine
+        command:
+        - redis-server
+        - --appendonly
+        - "yes"
+        - --maxmemory
+        - "2gb"
+        - --maxmemory-policy
+        - "allkeys-lru"
+        - --tcp-keepalive
+        - "60"
+        - --timeout
+        - "300"
+        - --save
+        - "900 1"
+        - --save
+        - "300 10"
+        - --save
+        - "60 10000"
+        ports:
+        - containerPort: 6379
+          name: redis
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 250m
+          limits:
+            memory: 2Gi
+            cpu: 1000m
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+      volumes:
+      - name: redis-storage
+        persistentVolumeClaim:
+          claimName: redis-pvc
+
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: ai-blockchain-analytics-production
+  labels:
+    app: redis
+    component: cache
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  selector:
+    app: redis
+    component: cache
+
+---
+# Main Application Deployment with RoadRunner
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: ai-blockchain-analytics-production
+  labels:
+    app: ai-blockchain-analytics
+    component: web
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: ai-blockchain-analytics
+      component: web
+  template:
+    metadata:
+      labels:
+        app: ai-blockchain-analytics
+        component: web
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "2112"
+        prometheus.io/path: "/metrics"
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:15-alpine
+        command:
+        - sh
+        - -c
+        - "until pg_isready -h postgres-service -p 5432; do echo waiting for postgres; sleep 2; done;"
+      - name: wait-for-redis
+        image: redis:7.2-alpine
+        command:
+        - sh
+        - -c
+        - "until redis-cli -h redis-service ping; do echo waiting for redis; sleep 2; done;"
+      - name: migrate
+        image: your-registry/ai-blockchain-analytics:latest
+        command:
+        - php
+        - artisan
+        - migrate
+        - --force
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+      containers:
+      - name: app
+        image: your-registry/ai-blockchain-analytics:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        - containerPort: 2112
+          name: metrics
+        - containerPort: 2114
+          name: status
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        resources:
+          requests:
+            memory: 1Gi
+            cpu: 500m
+          limits:
+            memory: 2Gi
+            cpu: 1500m
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 10
+        volumeMounts:
+        - name: storage
+          mountPath: /app/storage
+        - name: cache
+          mountPath: /app/bootstrap/cache
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: storage
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}
+      securityContext:
+        fsGroup: 1000
+
+---
+# Application Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  namespace: ai-blockchain-analytics-production
+  labels:
+    app: ai-blockchain-analytics
+    component: web
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  - port: 2112
+    targetPort: 2112
+    protocol: TCP
+    name: metrics
+  selector:
+    app: ai-blockchain-analytics
+    component: web
+
+---
+# Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app-hpa
+  namespace: ai-blockchain-analytics-production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: app
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+
+---
+# Worker Deployment (Horizon)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: ai-blockchain-analytics-production
+  labels:
+    app: ai-blockchain-analytics
+    component: worker
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: ai-blockchain-analytics
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: ai-blockchain-analytics
+        component: worker
+    spec:
+      containers:
+      - name: worker
+        image: your-registry/ai-blockchain-analytics-worker:latest
+        command:
+        - php
+        - artisan
+        - horizon
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 250m
+          limits:
+            memory: 1Gi
+            cpu: 750m
+        livenessProbe:
+          exec:
+            command:
+            - php
+            - artisan
+            - horizon:status
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        volumeMounts:
+        - name: storage
+          mountPath: /app/storage
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: storage
+        emptyDir: {}
+      securityContext:
+        fsGroup: 1000
+
+---
+# Scheduler Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler
+  namespace: ai-blockchain-analytics-production
+  labels:
+    app: ai-blockchain-analytics
+    component: scheduler
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ai-blockchain-analytics
+      component: scheduler
+  template:
+    metadata:
+      labels:
+        app: ai-blockchain-analytics
+        component: scheduler
+    spec:
+      containers:
+      - name: scheduler
+        image: your-registry/ai-blockchain-analytics-scheduler:latest
+        command:
+        - php
+        - artisan
+        - schedule:work
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 100m
+          limits:
+            memory: 512Mi
+            cpu: 300m
+        volumeMounts:
+        - name: storage
+          mountPath: /app/storage
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: storage
+        emptyDir: {}
+      securityContext:
+        fsGroup: 1000
+
+---
+# Ingress for external access
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: ai-blockchain-analytics-production
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  tls:
+  - hosts:
+    - ai-blockchain-analytics.example.com
+    secretName: app-tls
+  rules:
+  - host: ai-blockchain-analytics.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-service
+            port:
+              number: 80
+
+---
+# Network Policy for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-network-policy
+  namespace: ai-blockchain-analytics-production
+spec:
+  podSelector:
+    matchLabels:
+      app: ai-blockchain-analytics
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8080
+  - from:
+    - podSelector:
+        matchLabels:
+          app: ai-blockchain-analytics
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 2112
+    - protocol: TCP
+      port: 2114
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 443
+
+---
+# PodDisruptionBudget for high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-pdb
+  namespace: ai-blockchain-analytics-production
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: ai-blockchain-analytics
+      component: web
+
+---
+# ServiceMonitor for Prometheus monitoring
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: app-metrics
+  namespace: ai-blockchain-analytics-production
+  labels:
+    app: ai-blockchain-analytics
+spec:
+  selector:
+    matchLabels:
+      app: ai-blockchain-analytics
+      component: web
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics

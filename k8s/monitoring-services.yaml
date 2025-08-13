@@ -1,0 +1,257 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telescope-worker
+  namespace: ai-blockchain-analytics
+  labels:
+    app: telescope-worker
+    component: monitoring
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: telescope-worker
+  template:
+    metadata:
+      labels:
+        app: telescope-worker
+        component: monitoring
+    spec:
+      containers:
+      - name: telescope-worker
+        image: your-registry/ai-blockchain-analytics:latest
+        command: ['php', 'artisan', 'telescope:work']
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        - secretRef:
+            name: telescope-secrets
+        env:
+        - name: CONTAINER_ROLE
+          value: telescope-worker
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: DB_HOST
+          value: "postgres-service"
+        volumeMounts:
+        - name: app-storage
+          mountPath: /var/www/storage
+        - name: telescope-config-volume
+          mountPath: /var/www/config/telescope.php
+          subPath: telescope.php
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "ps aux | grep '[t]elescope:work' || exit 1"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "ps aux | grep '[t]elescope:work' || exit 1"
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: app-storage
+        persistentVolumeClaim:
+          claimName: app-storage-pvc
+      - name: telescope-config-volume
+        configMap:
+          name: telescope-config
+      restartPolicy: Always
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: telescope-service
+  namespace: ai-blockchain-analytics
+  labels:
+    app: telescope
+    component: monitoring
+spec:
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: roadrunner-app
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sentry-config
+  namespace: ai-blockchain-analytics
+data:
+  sentry.php: |
+    <?php
+    return [
+        'dsn' => env('SENTRY_LARAVEL_DSN') ?: env('SENTRY_DSN'),
+        'release' => env('SENTRY_RELEASE'),
+        'environment' => env('SENTRY_ENVIRONMENT', 'production'),
+        
+        'breadcrumbs' => [
+            'logs' => true,
+            'cache' => true,
+            'livewire' => true,
+        ],
+        
+        'tracing' => [
+            'default_integrations' => true,
+            'queue_job_transactions' => true,
+            'queue_jobs' => true,
+            'sql_queries' => true,
+            'redis_commands' => true,
+            'http_client_requests' => true,
+        ],
+        
+        'traces_sample_rate' => (float) env('SENTRY_TRACES_SAMPLE_RATE', 0.0),
+        'profiles_sample_rate' => (float) env('SENTRY_PROFILES_SAMPLE_RATE', 0.0),
+        
+        'send_default_pii' => env('SENTRY_SEND_DEFAULT_PII', false),
+        
+        'error_types' => E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED & ~E_NOTICE,
+        
+        'before_send' => function (\Sentry\Event $event): ?\Sentry\Event {
+            // Filter out sensitive data
+            if ($event->getLevel() === \Sentry\Severity::debug()) {
+                return null;
+            }
+            
+            // Don't send telescope routes
+            if ($event->getRequest() && str_contains($event->getRequest()->getUri(), 'telescope')) {
+                return null;
+            }
+            
+            return $event;
+        },
+        
+        'integrations' => [
+            new \Sentry\Integration\IgnoreErrorsIntegration([
+                'ignore_exceptions' => [
+                    \Illuminate\Http\Exceptions\ThrottleRequestsException::class,
+                    \Illuminate\Auth\AuthenticationException::class,
+                    \Illuminate\Validation\ValidationException::class,
+                ],
+            ]),
+        ],
+        
+        'context' => [
+            'server_name' => env('APP_NAME', 'AI-Blockchain-Analytics'),
+            'environment' => env('APP_ENV', 'production'),
+            'release' => env('SENTRY_RELEASE', 'unknown'),
+        ],
+        
+        'tags' => [
+            'deployment' => 'kubernetes',
+            'server' => 'roadrunner',
+        ],
+    ];
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: monitoring-middleware
+  namespace: ai-blockchain-analytics
+data:
+  SentryContext.php: |
+    <?php
+    namespace App\Http\Middleware;
+    
+    use Closure;
+    use Illuminate\Http\Request;
+    use Sentry\State\Scope;
+    
+    class SentryContext
+    {
+        public function handle(Request $request, Closure $next)
+        {
+            if (app()->bound('sentry')) {
+                \Sentry\configureScope(function (Scope $scope) use ($request): void {
+                    $scope->setTag('endpoint', $request->path());
+                    $scope->setTag('method', $request->method());
+                    
+                    if ($user = $request->user()) {
+                        $scope->setUser([
+                            'id' => $user->id,
+                            'username' => $user->username ?? $user->email,
+                        ]);
+                    }
+                    
+                    $scope->setContext('request', [
+                        'url' => $request->url(),
+                        'method' => $request->method(),
+                        'user_agent' => $request->userAgent(),
+                        'ip' => $request->getClientIp(),
+                    ]);
+                });
+            }
+            
+            return $next($request);
+        }
+    }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: telescope-access-policy
+  namespace: ai-blockchain-analytics
+spec:
+  podSelector:
+    matchLabels:
+      app: roadrunner-app
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ai-blockchain-analytics
+    - podSelector:
+        matchLabels:
+          component: monitoring
+    ports:
+    - protocol: TCP
+      port: 8000
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS for Sentry
+    - protocol: TCP
+      port: 53   # DNS
+    - protocol: UDP
+      port: 53   # DNS

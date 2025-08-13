@@ -1,0 +1,123 @@
+config:
+  target: 'http://localhost:8003'
+  phases:
+    # Warmup phase
+    - duration: 30
+      arrivalRate: 10
+      name: "Warmup"
+    
+    # Ramp to 100
+    - duration: 60
+      arrivalRate: 50
+      name: "Ramp to 100"
+    
+    # Ramp to 300
+    - duration: 90
+      arrivalRate: 150
+      name: "Ramp to 300"
+    
+    # Peak load - 500 concurrent analyses
+    - duration: 300
+      arrivalRate: 500
+      name: "Peak 500 concurrent analyses"
+    
+    # Sustained moderate load
+    - duration: 180
+      arrivalRate: 300
+      name: "Sustained load"
+    
+    # Cool down
+    - duration: 60
+      arrivalRate: 50
+      name: "Cool down"
+
+  http:
+    timeout: 30
+    pool: 150
+    maxSockets: 200
+    
+  plugins:
+    metrics-by-endpoint: {}
+
+scenarios:
+  # Main application load testing - 40% of traffic
+  - name: "Frontend Application Load"
+    weight: 40
+    flow:
+      # Test main homepage
+      - get:
+          url: "/"
+          think: 1
+
+      # Test dashboard (may redirect to login)
+      - get:
+          url: "/dashboard"
+          think: 0.5
+
+      # Test sentiment analysis page
+      - get:
+          url: "/sentiment"
+          think: 0.3
+
+      # Test login page  
+      - get:
+          url: "/login"
+          think: 0.2
+
+  # API endpoint testing - 30% of traffic
+  - name: "API Load Testing"
+    weight: 30
+    flow:
+      # Test API endpoints that exist
+      - post:
+          url: "/api/load-test/sentiment"
+          json:
+            text: "Bitcoin market analysis showing bullish sentiment trends"
+            intensity: "medium"
+          think: 2
+
+      # Test another sentiment request
+      - post:
+          url: "/api/load-test/sentiment"
+          json:
+            text: "Ethereum technical analysis with positive market indicators"
+            intensity: "high"
+          think: 3
+
+  # PDF and verification testing - 20% of traffic
+  - name: "PDF Generation Load"
+    weight: 20
+    flow:
+      # Test PDF engine info
+      - get:
+          url: "/pdf/engine-info"
+          think: 0.5
+
+      # Test verification badge demo
+      - get:
+          url: "/verification/badge-demo"
+          think: 1
+
+      # Test PDF test endpoint
+      - get:
+          url: "/pdf/test"
+          think: 2
+
+  # Static resources and health checks - 10% of traffic
+  - name: "System Health Checks"
+    weight: 10
+    flow:
+      # Test homepage repeatedly for baseline
+      - get:
+          url: "/"
+          think: 0.1
+
+      # Test pricing page
+      - get:
+          url: "/pricing"
+          think: 0.2
+
+      # Test welcome again
+      - get:
+          url: "/"
+          think: 0.1

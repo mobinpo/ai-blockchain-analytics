@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root{
+    --brand-rgb: 0 231 255;    /* for rgba(var(--brand-rgb)/x) */
+  }
+  html, body { @apply bg-ink text-cyan-50 antialiased; }
+}
+
+@layer utilities {
+  .text-glow { text-shadow: 0 0 12px rgba(var(--brand-rgb)/.85); }
+  .ring-glow { box-shadow:
+      0 0 0 1px rgba(var(--brand-rgb)/.55),
+      0 0 14px rgba(var(--brand-rgb)/.45),
+      inset 0 0 10px rgba(var(--brand-rgb)/.18); }
+  .btn-base { @apply inline-flex items-center justify-center rounded-lg px-4 py-2 font-semibold transition; }
+  .btn-primary { @apply btn-base bg-brand text-gray-900 hover:bg-brand/90 shadow-glow; }
+  .btn-ghost { @apply btn-base border border-brand/50 bg-panel text-cyan-100 hover:border-brand shadow-inset-glow; }
+}

@@ -1,0 +1,322 @@
+# Performance Monitoring During Load Tests
+# Specialized configuration for monitoring system performance under load
+
+config:
+  target: 'http://localhost:8000'
+  plugins:
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+      stripQueryString: true
+    publish-metrics:
+      type: cloudwatch
+      region: us-east-1
+      namespace: "AIBlockchainAnalytics/Performance"
+      dimensions:
+        - name: "Environment"
+          value: "load-test"
+        - name: "Component"
+          value: "{{ $env.COMPONENT_NAME }}"
+  
+  # Performance-focused load pattern
+  phases:
+    # Baseline measurement
+    - duration: 60
+      arrivalRate: 1
+      name: "Baseline Performance"
+    
+    # Light load measurement
+    - duration: 120
+      arrivalRate: 10
+      name: "Light Load"
+    
+    # Medium load measurement
+    - duration: 180
+      arrivalRate: 50
+      name: "Medium Load"
+    
+    # Heavy load measurement
+    - duration: 240
+      arrivalRate: 100
+      name: "Heavy Load"
+    
+    # Peak performance test
+    - duration: 300
+      arrivalRate: 200
+      name: "Peak Load"
+    
+    # Stress test beyond capacity
+    - duration: 120
+      arrivalRate: 400
+      name: "Stress Test"
+
+  http:
+    timeout: 60
+    pool: 300
+    
+  # Performance thresholds
+  ensure:
+    p50: 1000   # 50th percentile under 1 second
+    p95: 3000   # 95th percentile under 3 seconds
+    p99: 5000   # 99th percentile under 5 seconds
+    maxErrorRate: 2  # Max 2% error rate
+    
+  # Detailed monitoring variables
+  variables:
+    # Monitor different components
+    components:
+      - "api"
+      - "web"
+      - "pdf"
+      - "sentiment"
+      - "blockchain"
+      - "verification"
+    
+    # Performance test scenarios
+    test_scenarios:
+      - name: "cpu_intensive"
+        operations: ["blockchain_analysis", "ai_processing"]
+      - name: "memory_intensive"
+        operations: ["pdf_generation", "large_dataset_processing"]
+      - name: "io_intensive"
+        operations: ["database_queries", "file_operations"]
+      - name: "network_intensive"
+        operations: ["api_calls", "external_integrations"]
+
+scenarios:
+  # Database Performance Testing
+  - name: "Database Performance"
+    weight: 25
+    flow:
+      - post:
+          url: "/login"
+          headers:
+            Content-Type: "application/json"
+          json:
+            email: "loadtest@ai-blockchain-analytics.com"
+            password: "LoadTest123!"
+          capture:
+            - json: "$.token"
+              as: "auth_token"
+              
+      # Complex database queries
+      - get:
+          url: "/api/analytics/complex-query"
+          name: "Complex Database Query"
+          headers:
+            Authorization: "Bearer {{ auth_token }}"
+          qs:
+            date_range: "30d"
+            aggregation_level: "detailed"
+            include_relationships: "true"
+          expect:
+            - statusCode: 200
+            
+      # Large dataset retrieval
+      - get:
+          url: "/api/analytics/large-dataset"
+          name: "Large Dataset Query"
+          headers:
+            Authorization: "Bearer {{ auth_token }}"
+          qs:
+            limit: "10000"
+            include_metadata: "true"
+          expect:
+            - statusCode: 200
+
+  # Memory Usage Testing
+  - name: "Memory Performance"
+    weight: 20
+    flow:
+      - post:
+          url: "/login"
+          headers:
+            Content-Type: "application/json"
+          json:
+            email: "loadtest@ai-blockchain-analytics.com"
+            password: "LoadTest123!"
+          capture:
+            - json: "$.token"
+              as: "auth_token"
+              
+      # Memory-intensive PDF generation
+      - post:
+          url: "/pdf/comprehensive-report"
+          name: "Memory Intensive PDF"
+          headers:
+            Authorization: "Bearer {{ auth_token }}"
+            Content-Type: "application/json"
+          json:
+            data_size: "large"
+            include_charts: true
+            resolution: "high"
+            pages: 50
+          expect:
+            - statusCode: [200, 202]
+            
+      # Large sentiment analysis
+      - post:
+          url: "/api/sentiment/bulk-analysis"
+          name: "Bulk Sentiment Analysis"
+          headers:
+            Authorization: "Bearer {{ auth_token }}"
+            Content-Type: "application/json"
+          json:
+            text_count: 1000
+            analysis_depth: "comprehensive"
+          expect:
+            - statusCode: [200, 202]
+
+  # CPU Performance Testing
+  - name: "CPU Performance"
+    weight: 25
+    flow:
+      - post:
+          url: "/login"
+          headers:
+            Content-Type: "application/json"
+          json:
+            email: "loadtest@ai-blockchain-analytics.com"
+            password: "LoadTest123!"
+          capture:
+            - json: "$.token"
+              as: "auth_token"
+              
+      # CPU-intensive blockchain analysis
+      - post:
+          url: "/api/blockchain/deep-analysis"
+          name: "CPU Intensive Analysis"
+          headers:
+            Authorization: "Bearer {{ auth_token }}"
+            Content-Type: "application/json"
+          json:
+            contract_address: "0x1234567890123456789012345678901234567890"
+            analysis_depth: "maximum"
+            include_ml_processing: true
+            complexity_level: "enterprise"
+          expect:
+            - statusCode: [200, 202]
+            
+      # Complex mathematical operations
+      - post:
+          url: "/api/analytics/complex-calculations"
+          name: "Complex Calculations"
+          headers:
+            Authorization: "Bearer {{ auth_token }}"
+            Content-Type: "application/json"
+          json:
+            calculation_type: "correlation_matrix"
+            dataset_size: "large"
+            precision: "high"
+          expect:
+            - statusCode: [200, 202]
+
+  # Network I/O Performance Testing
+  - name: "Network I/O Performance"
+    weight: 15
+    flow:
+      - post:
+          url: "/login"
+          headers:
+            Content-Type: "application/json"
+          json:
+            email: "loadtest@ai-blockchain-analytics.com"
+            password: "LoadTest123!"
+          capture:
+            - json: "$.token"
+              as: "auth_token"
+              
+      # External API integrations
+      - post:
+          url: "/api/integrations/external-data"
+          name: "External API Calls"
+          headers:
+            Authorization: "Bearer {{ auth_token }}"
+            Content-Type: "application/json"
+          json:
+            sources: ["coingecko", "etherscan", "social_media"]
+            data_points: 100
+          expect:
+            - statusCode: [200, 202]
+            
+      # File upload performance
+      - post:
+          url: "/api/upload/contract-source"
+          name: "File Upload Performance"
+          headers:
+            Authorization: "Bearer {{ auth_token }}"
+            Content-Type: "multipart/form-data"
+          formData:
+            file: "@load-tests/sample-contract.sol"
+            analysis_type: "immediate"
+          expect:
+            - statusCode: [200, 201]
+
+  # Cache Performance Testing
+  - name: "Cache Performance"
+    weight: 10
+    flow:
+      - post:
+          url: "/login"
+          headers:
+            Content-Type: "application/json"
+          json:
+            email: "loadtest@ai-blockchain-analytics.com"
+            password: "LoadTest123!"
+          capture:
+            - json: "$.token"
+              as: "auth_token"
+              
+      # Cache hit testing
+      - get:
+          url: "/api/cache-test/frequent-data"
+          name: "Cache Hit Test"
+          headers:
+            Authorization: "Bearer {{ auth_token }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: cached
+            
+      # Cache miss testing
+      - get:
+          url: "/api/cache-test/unique-data/{{ $uuid() }}"
+          name: "Cache Miss Test"
+          headers:
+            Authorization: "Bearer {{ auth_token }}"
+          expect:
+            - statusCode: 200
+
+  # System Health Monitoring
+  - name: "System Health"
+    weight: 5
+    flow:
+      # Health endpoints
+      - get:
+          url: "/health"
+          name: "Application Health"
+          expect:
+            - statusCode: 200
+            
+      - get:
+          url: "/health/database"
+          name: "Database Health"
+          expect:
+            - statusCode: 200
+            
+      - get:
+          url: "/health/redis"
+          name: "Redis Health"
+          expect:
+            - statusCode: 200
+            
+      - get:
+          url: "/health/storage"
+          name: "Storage Health"
+          expect:
+            - statusCode: 200
+            
+      # Queue status
+      - get:
+          url: "/horizon/api/stats"
+          name: "Queue Health"
+          expect:
+            - statusCode: [200, 401]

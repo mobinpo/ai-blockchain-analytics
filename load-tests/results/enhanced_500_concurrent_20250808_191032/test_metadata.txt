@@ -1,0 +1,3 @@
+START_TIME=2025-08-08 19:10:42
+TARGET_URL=http://localhost:8003
+CONFIG_FILE=/home/mobin/PhpstormProjects/ai_blockchain_analytics/load-tests/enhanced-500-concurrent-analysis.yml

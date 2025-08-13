@@ -1,0 +1,62 @@
+config:
+  target: 'http://localhost:8000'
+  phases:
+    - duration: 30
+      arrivalRate: 50
+      name: "Warm up phase"
+    - duration: 60
+      arrivalRate: 200
+      name: "Ramp up to 500 concurrent"
+    - duration: 120
+      arrivalRate: 500
+      name: "Sustained load - 500 concurrent analyses"
+    - duration: 30
+      arrivalRate: 100
+      name: "Cool down phase"
+  http:
+    timeout: 30
+    pool: 50
+
+scenarios:
+  - name: "Load Test API Endpoints"
+    weight: 100
+    flow:
+      # Test basic API endpoints
+      - get:
+          url: "/api/health"
+          expect:
+            - statusCode: 200
+      
+      # Test load test endpoint
+      - post:
+          url: "/api/load-test/sentiment"
+          json:
+            text: "Bitcoin market analysis showing strong bullish momentum"
+            intensity: "high"
+          expect:
+            - statusCode: [200, 201]
+      
+      # Test another endpoint
+      - get:
+          url: "/api/load-test/health"
+          expect:
+            - statusCode: [200, 404]
+      
+      # Add some delay between requests
+      - think: 1
+      
+      # Test multiple concurrent requests
+      - post:
+          url: "/api/load-test/cpu-intensive"
+          json:
+            operation: "analysis"
+            complexity: "high"
+          expect:
+            - statusCode: [200, 404, 500]
+      
+      - get:
+          url: "/api/load-test/analysis"
+          qs:
+            contract: "0x742d35Cc60C0b69C9B0F11B4E32D1E4ad5c32"
+          expect:
+            - statusCode: [200, 404]

@@ -1,0 +1,221 @@
+config:
+  target: "http://localhost:8000"
+  phases:
+    # Warm-up phase
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm-up"
+    
+    # Ramp-up phase
+    - duration: 120
+      arrivalRate: 25
+      rampTo: 100
+      name: "Ramp-up"
+    
+    # Target load phase - 500 concurrent analyses
+    - duration: 300
+      arrivalRate: 100
+      name: "High Load - 500 concurrent"
+    
+    # Peak burst phase
+    - duration: 60
+      arrivalRate: 150
+      name: "Peak Burst"
+    
+    # Ramp-down phase
+    - duration: 120
+      arrivalRate: 50
+      rampTo: 10
+      name: "Ramp-down"
+
+  # Performance thresholds
+  ensure:
+    thresholds:
+      - http.response_time.p95: 3000  # 95% of requests under 3s
+      - http.response_time.p99: 5000  # 99% of requests under 5s
+      - http.response_time.median: 1000  # Median under 1s
+      - http.request_rate: 80  # Minimum 80 requests/sec
+    maxVusers: 600  # Maximum virtual users
+
+  # Payload configuration
+  payload:
+    - path: "./test-data/blockchain-addresses.csv"
+      fields:
+        - address
+        - chain
+        - type
+    - path: "./test-data/sentiment-keywords.csv" 
+      fields:
+        - keyword
+        - category
+        - context
+
+  # Variables for dynamic testing
+  variables:
+    api_key: "test-api-key-for-load-testing"
+    user_agent: "Artillery Load Test v1.0"
+    
+  # Custom plugins
+  plugins:
+    expect: {}
+    metrics-by-endpoint:
+      useOnlyRequestNames: true
+
+scenarios:
+  # Main blockchain analysis scenario
+  - name: "Blockchain Address Analysis"
+    weight: 40
+    flow:
+      - post:
+          url: "/api/blockchain/analyze"
+          headers:
+            Content-Type: "application/json"
+            Authorization: "Bearer {{ api_key }}"
+            User-Agent: "{{ user_agent }}"
+          json:
+            address: "{{ address }}"
+            chain: "{{ chain }}"
+            analysis_type: "full"
+            include_sentiment: true
+            include_risk_score: true
+          capture:
+            - json: "$.analysis_id"
+              as: "analysis_id"
+            - json: "$.status"
+              as: "analysis_status"
+          expect:
+            - statusCode: [200, 202]
+            - contentType: "application/json"
+            - hasProperty: "analysis_id"
+
+      # Poll for analysis completion
+      - loop:
+          - get:
+              url: "/api/blockchain/analysis/{{ analysis_id }}"
+              headers:
+                Authorization: "Bearer {{ api_key }}"
+              capture:
+                - json: "$.status"
+                  as: "current_status"
+              expect:
+                - statusCode: 200
+                - contentType: "application/json"
+          - think: 2
+          count: 10
+          whileTrue: "current_status == 'processing'"
+
+  # Sentiment analysis scenario
+  - name: "Sentiment Analysis"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/sentiment/analyze"
+          headers:
+            Content-Type: "application/json"
+            Authorization: "Bearer {{ api_key }}"
+          json:
+            text: "{{ keyword }} analysis for {{ chain }} blockchain"
+            category: "{{ category }}"
+            context: "{{ context }}"
+            language: "en"
+          expect:
+            - statusCode: 200
+            - contentType: "application/json"
+            - hasProperty: "sentiment_score"
+            - hasProperty: "confidence"
+
+  # Multi-chain analysis scenario  
+  - name: "Multi-Chain Analysis"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/blockchain/multi-chain-analyze"
+          headers:
+            Content-Type: "application/json"
+            Authorization: "Bearer {{ api_key }}"
+          json:
+            addresses:
+              - address: "{{ address }}"
+                chain: "ethereum"
+              - address: "{{ address }}"
+                chain: "polygon"
+              - address: "{{ address }}"
+                chain: "bsc"
+            analysis_depth: "standard"
+            correlation_analysis: true
+          capture:
+            - json: "$.batch_id" 
+              as: "batch_id"
+          expect:
+            - statusCode: [200, 202]
+            - contentType: "application/json"
+
+      # Check batch status
+      - get:
+          url: "/api/blockchain/batch/{{ batch_id }}/status"
+          headers:
+            Authorization: "Bearer {{ api_key }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: "progress"
+            - hasProperty: "completed_analyses"
+
+  # Real-time sentiment streaming
+  - name: "Sentiment Streaming"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/sentiment/stream/start"
+          headers:
+            Content-Type: "application/json"
+            Authorization: "Bearer {{ api_key }}"
+          json:
+            keywords: ["{{ keyword }}"]
+            chains: ["ethereum", "bitcoin", "polygon"]
+            stream_duration: 30
+          capture:
+            - json: "$.stream_id"
+              as: "stream_id"
+          expect:
+            - statusCode: 201
+            - hasProperty: "stream_id"
+
+      # Get streaming data
+      - get:
+          url: "/api/sentiment/stream/{{ stream_id }}/data"
+          headers:
+            Authorization: "Bearer {{ api_key }}"
+          expect:
+            - statusCode: 200
+            - contentType: "application/json"
+
+      - think: 5
+
+      # Stop stream
+      - delete:
+          url: "/api/sentiment/stream/{{ stream_id }}"
+          headers:
+            Authorization: "Bearer {{ api_key }}"
+          expect:
+            - statusCode: 200
+
+# Custom functions for complex scenarios
+before:
+  flow:
+    # Authentication and setup
+    - post:
+        url: "/api/auth/test-token"
+        json:
+          test_mode: true
+          load_test: true
+        capture:
+          - json: "$.token"
+            as: "api_key"
+
+after:
+  flow:
+    # Cleanup
+    - delete:
+        url: "/api/auth/test-token/{{ api_key }}"
+        expect:
+          - statusCode: [200, 204]

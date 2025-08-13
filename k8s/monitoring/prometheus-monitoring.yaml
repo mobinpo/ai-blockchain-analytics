@@ -1,0 +1,196 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ai-blockchain-analytics
+  namespace: monitoring
+  labels:
+    app: ai-blockchain-analytics
+    tier: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: ai-blockchain-analytics
+      component: web
+  endpoints:
+  - port: metrics
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+  - port: status
+    path: /status
+    interval: 30s
+    scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+    - ai-blockchain-analytics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ai-blockchain-analytics-alerts
+  namespace: monitoring
+  labels:
+    app: ai-blockchain-analytics
+    tier: monitoring
+spec:
+  groups:
+  - name: ai-blockchain-analytics.rules
+    interval: 30s
+    rules:
+    - alert: AIBlockchainAnalyticsDown
+      expr: up{job="ai-blockchain-analytics"} == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "AI Blockchain Analytics is down"
+        description: "AI Blockchain Analytics has been down for more than 1 minute."
+    
+    - alert: AIBlockchainAnalyticsHighLatency
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="ai-blockchain-analytics"}[5m])) > 1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High latency on AI Blockchain Analytics"
+        description: "95th percentile latency is {{ $value }}s"
+    
+    - alert: AIBlockchainAnalyticsHighErrorRate
+      expr: rate(http_requests_total{job="ai-blockchain-analytics",status=~"5.."}[5m]) / rate(http_requests_total{job="ai-blockchain-analytics"}[5m]) > 0.1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High error rate on AI Blockchain Analytics"
+        description: "Error rate is {{ $value | humanizePercentage }}"
+    
+    - alert: AIBlockchainAnalyticsHighCPU
+      expr: rate(container_cpu_usage_seconds_total{pod=~"ai-blockchain-analytics-app-.*"}[5m]) > 0.8
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage on AI Blockchain Analytics"
+        description: "CPU usage is {{ $value | humanizePercentage }}"
+    
+    - alert: AIBlockchainAnalyticsHighMemory
+      expr: container_memory_usage_bytes{pod=~"ai-blockchain-analytics-app-.*"} / container_spec_memory_limit_bytes > 0.9
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High memory usage on AI Blockchain Analytics"
+        description: "Memory usage is {{ $value | humanizePercentage }}"
+    
+    - alert: AIBlockchainAnalyticsQueueBacklog
+      expr: redis_queue_length{queue="default"} > 100
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High queue backlog in AI Blockchain Analytics"
+        description: "Queue length is {{ $value }}"
+    
+    - alert: PostgreSQLDown
+      expr: up{job="postgres"} == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "PostgreSQL is down"
+        description: "PostgreSQL database has been down for more than 1 minute."
+    
+    - alert: RedisDown
+      expr: up{job="redis"} == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Redis is down"
+        description: "Redis cache has been down for more than 1 minute."
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-ai-blockchain-analytics
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  ai-blockchain-analytics.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "AI Blockchain Analytics Dashboard",
+        "tags": ["ai-blockchain-analytics"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "HTTP Requests Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{job=\"ai-blockchain-analytics\"}[5m])",
+                "legendFormat": "{{status}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Response Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"ai-blockchain-analytics\"}[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"ai-blockchain-analytics\"}[5m]))",
+                "legendFormat": "50th percentile"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "CPU Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{pod=~\"ai-blockchain-analytics-app-.*\"}[5m])",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Memory Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "container_memory_usage_bytes{pod=~\"ai-blockchain-analytics-app-.*\"}",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "Queue Length",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "redis_queue_length",
+                "legendFormat": "{{queue}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+          }
+        ],
+        "time": {"from": "now-1h", "to": "now"},
+        "refresh": "10s"
+      }
+    }

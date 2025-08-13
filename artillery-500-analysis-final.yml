@@ -1,0 +1,150 @@
+config:
+  target: 'http://localhost:8003'
+  phases:
+    # Warmup phase
+    - duration: 30
+      arrivalRate: 10
+      name: "Warmup"
+    
+    # Gradual ramp to 100
+    - duration: 60
+      arrivalRate: 50
+      name: "Ramp up to 100"
+    
+    # Ramp to 300
+    - duration: 90
+      arrivalRate: 150
+      name: "Ramp to 300"
+    
+    # Peak load - 500 concurrent
+    - duration: 300
+      arrivalRate: 500
+      name: "Peak 500 concurrent analyses"
+    
+    # Sustained moderate load
+    - duration: 180
+      arrivalRate: 300
+      name: "Sustained load"
+    
+    # Cool down
+    - duration: 60
+      arrivalRate: 50
+      name: "Cool down"
+
+  payload:
+    path: "./test-data.csv"
+    fields:
+      - "symbol"
+      - "address"  
+      - "keyword"
+
+  processor: "./artillery-processor.js"
+  
+  http:
+    timeout: 30
+    pool: 100
+    maxSockets: 150
+    
+  plugins:
+    metrics-by-endpoint: {}
+    expect: {}
+
+scenarios:
+  # Main application load testing - 40% of traffic
+  - name: "Frontend Application Load"
+    weight: 40
+    flow:
+      # Test main homepage
+      - get:
+          url: "/"
+          expect:
+            - statusCode: [200, 302]
+          think: 1
+
+      # Test dashboard (may redirect to login)
+      - get:
+          url: "/dashboard"
+          expect:
+            - statusCode: [200, 302]
+          think: 0.5
+
+      # Test analysis page
+      - get:
+          url: "/analyses"
+          expect:
+            - statusCode: [200, 302]
+          think: 0.3
+
+  # Load test specific endpoints - 30% of traffic
+  - name: "Load Test Endpoints"
+    weight: 30
+    flow:
+      # Test load test sentiment endpoint
+      - post:
+          url: "/api/load-test/sentiment"
+          json:
+            text: "{{ keyword }} analysis for {{ symbol }} cryptocurrency market sentiment"
+            intensity: "medium"
+          expect:
+            - statusCode: [200, 201, 422]
+          afterResponse: "logResponse"
+          think: 2
+
+      # Test with different intensities
+      - post:
+          url: "/api/load-test/sentiment"
+          json:
+            text: "Technical analysis of {{ symbol }} showing {{ keyword }} trends"
+            intensity: "high"
+          expect:
+            - statusCode: [200, 201, 422]
+          afterResponse: "logResponse"
+          think: 3
+
+  # PDF generation testing - 20% of traffic
+  - name: "PDF Generation Load"
+    weight: 20
+    flow:
+      # Test PDF sentiment chart (may require auth)
+      - post:
+          url: "/api/pdf/sentiment-chart"
+          json:
+            symbol: "{{ symbol }}"
+            timeframe: "24h"
+            format: "pdf"
+          expect:
+            - statusCode: [200, 201, 401, 422]
+          afterResponse: "logResponse"
+          think: 4
+
+      # Test PDF engine info (lighter endpoint)
+      - get:
+          url: "/api/pdf/engine-info"
+          expect:
+            - statusCode: [200, 401]
+          think: 0.2
+
+  # Cache and statistics testing - 10% of traffic
+  - name: "System Statistics"
+    weight: 10
+    flow:
+      # Test cache stats (may require auth)
+      - get:
+          url: "/api/cache/stats"
+          expect:
+            - statusCode: [200, 401, 302]
+          think: 0.3
+
+      # Test PDF statistics (may require auth)
+      - get:
+          url: "/api/pdf/statistics"
+          expect:
+            - statusCode: [200, 401, 302]
+          think: 0.2
+
+      # Test root again for comparison
+      - get:
+          url: "/"
+          expect:
+            - statusCode: [200]
+          think: 0.1

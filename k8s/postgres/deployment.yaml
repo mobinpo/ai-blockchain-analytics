@@ -1,0 +1,157 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: ai-blockchain-analytics
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/version: "15.4"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate  # PostgreSQL requires single instance for primary
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+      app.kubernetes.io/component: database
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/component: database
+        app.kubernetes.io/version: "15.4"
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15.4-alpine
+        ports:
+        - name: postgres
+          containerPort: 5432
+          protocol: TCP
+        
+        env:
+        - name: POSTGRES_DB
+          value: "ai_blockchain_analytics"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: ai-blockchain-analytics-secrets
+              key: DB_USERNAME
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ai-blockchain-analytics-secrets
+              key: DB_PASSWORD
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        
+        # PostgreSQL configuration for production
+        args:
+        - -c
+        - shared_preload_libraries=pg_stat_statements
+        - -c
+        - pg_stat_statements.track=all
+        - -c
+        - max_connections=200
+        - -c
+        - shared_buffers=256MB
+        - -c
+        - effective_cache_size=1GB
+        - -c
+        - maintenance_work_mem=64MB
+        - -c
+        - checkpoint_completion_target=0.9
+        - -c
+        - wal_buffers=16MB
+        - -c
+        - default_statistics_target=100
+        - -c
+        - random_page_cost=1.1
+        - -c
+        - effective_io_concurrency=200
+        - -c
+        - work_mem=4MB
+        - -c
+        - min_wal_size=1GB
+        - -c
+        - max_wal_size=4GB
+        - -c
+        - max_worker_processes=8
+        - -c
+        - max_parallel_workers_per_gather=4
+        - -c
+        - max_parallel_workers=8
+        - -c
+        - max_parallel_maintenance_workers=4
+        
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+          successThreshold: 1
+        
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+          successThreshold: 1
+        
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+        
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-config
+          mountPath: /docker-entrypoint-initdb.d/
+        - name: postgres-backup
+          mountPath: /backup
+        
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 999  # postgres user
+          runAsGroup: 999
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+      
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+      - name: postgres-config
+        configMap:
+          name: postgres-config
+          defaultMode: 0755
+      - name: postgres-backup
+        persistentVolumeClaim:
+          claimName: postgres-backup-pvc
+      
+      securityContext:
+        fsGroup: 999  # postgres group
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30

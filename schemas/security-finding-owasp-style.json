@@ -1,0 +1,385 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OWASP-Style Security Finding Schema",
+  "description": "Streamlined OWASP-compliant schema for blockchain security findings with prompt engineering optimization",
+  "type": "object",
+  "required": ["severity", "title", "line", "recommendation"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the finding"
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"],
+      "description": "OWASP risk severity level"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 100,
+      "description": "Concise vulnerability title (e.g., 'Re-entrancy', 'Integer Overflow')"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Re-entrancy",
+        "Integer Overflow/Underflow", 
+        "Access Control",
+        "Input Validation",
+        "Business Logic",
+        "Cryptographic Issues",
+        "Information Disclosure",
+        "Denial of Service",
+        "Front-running/MEV",
+        "Oracle Manipulation",
+        "Flash Loan Attack",
+        "Gas Optimization",
+        "Code Quality",
+        "Upgrade Pattern Issue",
+        "Proxy Vulnerability",
+        "Timelock Bypass",
+        "Governance Attack",
+        "Cross-Chain Issue",
+        "NFT Vulnerability",
+        "DeFi Protocol Issue",
+        "Other"
+      ],
+      "description": "OWASP/blockchain security category"
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Line number where vulnerability was detected"
+    },
+    "end_line": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "End line number for multi-line vulnerabilities"
+    },
+    "function": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Function name containing the vulnerability"
+    },
+    "contract": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Contract name containing the vulnerability"
+    },
+    "file": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "File path where vulnerability exists"
+    },
+    "recommendation": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 1000,
+      "description": "Clear, actionable remediation guidance"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 800,
+      "description": "Technical description of the vulnerability"
+    },
+    "impact": {
+      "type": "string",
+      "enum": ["FINANCIAL_LOSS", "FUND_DRAINAGE", "UNAUTHORIZED_ACCESS", "SERVICE_DISRUPTION", "DATA_EXPOSURE", "REPUTATION_DAMAGE", "GOVERNANCE_COMPROMISE", "MINIMAL"],
+      "description": "Primary impact type"
+    },
+    "exploitability": {
+      "type": "string",
+      "enum": ["TRIVIAL", "EASY", "MODERATE", "DIFFICULT", "THEORETICAL"],
+      "description": "How easily exploitable the vulnerability is"
+    },
+    "code_snippet": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Vulnerable code excerpt"
+    },
+    "fix_example": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Example of secure code implementation"
+    },
+    "gas_impact": {
+      "type": "object",
+      "properties": {
+        "gas_cost": {
+          "type": "integer",
+          "description": "Estimated gas cost for exploitation"
+        },
+        "gas_savings": {
+          "type": "integer",
+          "description": "Potential gas savings from fix"
+        },
+        "optimization": {
+          "type": "boolean",
+          "description": "Whether this is a gas optimization issue"
+        }
+      },
+      "description": "Gas-related impact information"
+    },
+    "attack_vector": {
+      "type": "string",
+      "maxLength": 300,
+      "description": "Brief description of how the vulnerability can be exploited"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["title", "url"]
+      },
+      "maxItems": 5,
+      "description": "Relevant security references"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["HIGH", "MEDIUM", "LOW"],
+      "description": "AI confidence in finding accuracy"
+    },
+    "false_positive_risk": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH"],
+      "description": "Risk of this being a false positive"
+    },
+    "cvss_score": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 10.0,
+      "description": "CVSS v3.1 base score"
+    },
+    "owasp_category": {
+      "type": "string",
+      "enum": [
+        "A01:2021-Broken Access Control",
+        "A02:2021-Cryptographic Failures", 
+        "A03:2021-Injection",
+        "A04:2021-Insecure Design",
+        "A05:2021-Security Misconfiguration",
+        "A06:2021-Vulnerable and Outdated Components",
+        "A07:2021-Identification and Authentication Failures",
+        "A08:2021-Software and Data Integrity Failures",
+        "A09:2021-Security Logging and Monitoring Failures",
+        "A10:2021-Server-Side Request Forgery"
+      ],
+      "description": "OWASP Top 10 2021 category if applicable"
+    },
+    "swc_id": {
+      "type": "string",
+      "pattern": "^SWC-\\d{3}$",
+      "description": "Smart Contract Weakness Classification ID (e.g., SWC-107)"
+    },
+    "blockchain_networks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["ETHEREUM", "POLYGON", "BSC", "ARBITRUM", "OPTIMISM", "AVALANCHE", "FANTOM", "ALL_EVM"]
+      },
+      "description": "Applicable blockchain networks"
+    },
+    "token_standard": {
+      "type": "string",
+      "enum": ["ERC20", "ERC721", "ERC1155", "ERC777", "ERC4626", "BEP20", "N/A"],
+      "description": "Relevant token standard"
+    },
+    "defi_category": {
+      "type": "string",
+      "enum": ["AMM", "LENDING", "YIELD_FARMING", "STAKING", "DERIVATIVES", "DAO", "BRIDGE", "N/A"],
+      "description": "DeFi protocol category"
+    },
+    "remediation_effort": {
+      "type": "string",
+      "enum": ["TRIVIAL", "LOW", "MEDIUM", "HIGH", "EXTENSIVE"],
+      "description": "Estimated effort to fix"
+    },
+    "remediation_priority": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Remediation priority (1=highest, 5=lowest)"
+    },
+    "similar_cve": {
+      "type": "string",
+      "pattern": "^CVE-\\d{4}-\\d{4,}$",
+      "description": "Similar CVE identifier if known"
+    },
+    "historical_incidents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "amount_lost": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 2009,
+            "maximum": 2030
+          }
+        }
+      },
+      "maxItems": 3,
+      "description": "Notable historical incidents"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_-]+$",
+        "maxLength": 30
+      },
+      "maxItems": 10,
+      "uniqueItems": true,
+      "description": "Classification tags"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["OPEN", "REVIEWING", "CONFIRMED", "FALSE_POSITIVE", "FIXED", "ACCEPTED", "DUPLICATE"],
+      "default": "OPEN",
+      "description": "Finding status"
+    },
+    "assignee": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Assigned developer/team"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Creation timestamp"
+    },
+    "ai_model": {
+      "type": "string",
+      "description": "AI model used (e.g., gpt-4, claude-3)"
+    },
+    "analysis_version": {
+      "type": "string",
+      "description": "Analysis engine version"
+    },
+    "tokens_used": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Tokens consumed for analysis"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "severity": "HIGH",
+      "title": "Re-entrancy",
+      "line": 125,
+      "recommendation": "Implement checks-effects-interactions pattern by moving state changes before external calls. Add OpenZeppelin's ReentrancyGuard modifier to prevent recursive calls.",
+      "category": "Re-entrancy",
+      "function": "withdraw",
+      "contract": "VulnerableBank",
+      "file": "contracts/VulnerableBank.sol",
+      "description": "The withdraw function performs external call before updating balance, allowing recursive calls to drain contract funds.",
+      "impact": "FUND_DRAINAGE",
+      "exploitability": "EASY",
+      "code_snippet": "function withdraw(uint amount) public {\n    require(balances[msg.sender] >= amount);\n    msg.sender.call{value: amount}(\"\");\n    balances[msg.sender] -= amount;\n}",
+      "fix_example": "function withdraw(uint amount) public nonReentrant {\n    require(balances[msg.sender] >= amount);\n    balances[msg.sender] -= amount;\n    (bool success, ) = msg.sender.call{value: amount}(\"\");\n    require(success);\n}",
+      "attack_vector": "Attacker creates malicious contract with fallback function that recursively calls withdraw during external call execution",
+      "confidence": "HIGH",
+      "cvss_score": 8.1,
+      "swc_id": "SWC-107",
+      "blockchain_networks": ["ALL_EVM"],
+      "remediation_effort": "LOW",
+      "remediation_priority": 1,
+      "historical_incidents": [
+        {
+          "name": "The DAO Hack",
+          "amount_lost": "$50 million",
+          "year": 2016
+        }
+      ],
+      "tags": ["reentrancy", "external-call", "critical", "defi"],
+      "status": "OPEN"
+    },
+    {
+      "severity": "MEDIUM",
+      "title": "Integer Overflow",
+      "line": 45,
+      "recommendation": "Use SafeMath library or Solidity 0.8+ built-in overflow protection. Add explicit range checks for user inputs.",
+      "category": "Integer Overflow/Underflow",
+      "function": "calculateReward",
+      "contract": "StakingPool",
+      "description": "Multiplication operation can overflow when calculating large rewards, potentially causing incorrect reward distributions.",
+      "impact": "FINANCIAL_LOSS",
+      "exploitability": "MODERATE",
+      "confidence": "HIGH",
+      "cvss_score": 5.3,
+      "swc_id": "SWC-101",
+      "blockchain_networks": ["ETHEREUM", "POLYGON"],
+      "defi_category": "STAKING",
+      "remediation_effort": "LOW",
+      "remediation_priority": 2,
+      "tags": ["overflow", "math", "staking"],
+      "status": "OPEN"
+    },
+    {
+      "severity": "LOW",
+      "title": "Gas Optimization",
+      "line": 78,
+      "recommendation": "Use ++i instead of i++ in loops to save gas. Consider using unchecked blocks for counter increments in Solidity 0.8+.",
+      "category": "Gas Optimization",
+      "function": "distributeRewards",
+      "gas_impact": {
+        "gas_savings": 5000,
+        "optimization": true
+      },
+      "impact": "MINIMAL",
+      "exploitability": "THEORETICAL",
+      "confidence": "HIGH",
+      "remediation_effort": "TRIVIAL",
+      "remediation_priority": 5,
+      "tags": ["gas", "optimization", "loops"],
+      "status": "OPEN"
+    },
+    {
+      "severity": "CRITICAL",
+      "title": "Flash Loan Attack Vector",
+      "line": 156,
+      "recommendation": "Implement flash loan protection by checking that liquidation doesn't occur in the same transaction as borrowing. Add minimum time delays for large operations.",
+      "category": "Flash Loan Attack",
+      "function": "liquidate",
+      "contract": "LendingProtocol",
+      "description": "Protocol allows flash loan borrowing and immediate liquidation in same transaction, enabling price manipulation attacks.",
+      "impact": "FUND_DRAINAGE",
+      "exploitability": "EASY",
+      "attack_vector": "Attacker uses flash loan to manipulate oracle price and trigger profitable liquidations",
+      "confidence": "HIGH",
+      "cvss_score": 9.2,
+      "blockchain_networks": ["ETHEREUM", "POLYGON", "ARBITRUM"],
+      "defi_category": "LENDING",
+      "remediation_effort": "HIGH",
+      "remediation_priority": 1,
+      "historical_incidents": [
+        {
+          "name": "bZx Flash Loan Attack",
+          "amount_lost": "$1 million",
+          "year": 2020
+        }
+      ],
+      "tags": ["flashloan", "oracle", "lending", "critical"],
+      "status": "OPEN"
+    }
+  ]
+}

@@ -1,0 +1,1114 @@
+# Complete Production Kubernetes Deployment
+# AI Blockchain Analytics - RoadRunner, Redis, PostgreSQL
+# Optimized for High Performance and Scalability
+
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-blockchain-analytics
+  labels:
+    name: ai-blockchain-analytics
+    env: production
+    app: ai-blockchain-analytics
+
+---
+# PostgreSQL Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: ai-blockchain-analytics
+type: Opaque
+data:
+  # Base64 encoded values - replace with your actual values
+  postgres-db: YWlfYmxvY2tjaGFpbl9hbmFseXRpY3M=  # ai_blockchain_analytics
+  postgres-user: cG9zdGdyZXM=  # postgres
+  postgres-password: cGFzc3dvcmQ=  # password
+
+---
+# Application Secrets
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: ai-blockchain-analytics
+type: Opaque
+data:
+  app-key: YmFzZTY0OmFJQk1hUmVEbFhVcEJzUFZOOGI3NXY4eTJUcGk=  # base64:aIBMaReDlXUpBsPVN8b75v8y2Tpi
+  db-username: cG9zdGdyZXM=  # postgres
+  db-password: cGFzc3dvcmQ=  # password
+  redis-password: ""  # empty for no auth
+  openai-api-key: c2stWW91ck9wZW5BSUtleQ==  # sk-YourOpenAIKey
+  etherscan-api-key: WW91ckV0aGVyc2NhbkFQSUtleQ==  # YourEtherscanAPIKey
+  bscscan-api-key: WW91ckJTQ1NjYW5BUElLZXk=  # YourBSCScanAPIKey
+  polygonscan-api-key: WW91clBvbHlnb25TY2FuQVBJS2V5  # YourPolygonScanAPIKey
+  verification-secret-key: WW91clZlcmlmaWNhdGlvblNlY3JldA==  # YourVerificationSecret
+  verification-hmac-key: WW91clZlcmlmaWNhdGlvbkhNQUNLZXk=  # YourVerificationHMACKey
+  sentry-dsn: aHR0cHM6Ly95b3VyLXNlbnRyeS1kc24=  # https://your-sentry-dsn
+  sentry-laravel-dsn: aHR0cHM6Ly95b3VyLXNlbnRyeS1kc24=  # https://your-sentry-dsn
+  telescope-admin-token: WW91clRlbGVzY29wZUFkbWluVG9rZW4=  # YourTelescopeAdminToken
+  telescope-allowed-emails: YWRtaW5AeW91cmRvbWFpbi5jb20=  # admin@yourdomain.com
+  telescope-allowed-ips: MTI3LjAuMC4xLDo6MQ==  # 127.0.0.1,::1
+
+---
+# Application ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: ai-blockchain-analytics
+data:
+  APP_NAME: "AI Blockchain Analytics"
+  APP_ENV: "production"
+  APP_DEBUG: "false"
+  APP_URL: "https://analytics.yourdomain.com"
+  
+  # Database Configuration
+  DB_CONNECTION: "pgsql"
+  DB_HOST: "postgres-service.ai-blockchain-analytics.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_DATABASE: "ai_blockchain_analytics"
+  
+  # Redis Configuration
+  REDIS_HOST: "redis-service.ai-blockchain-analytics.svc.cluster.local"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  
+  # Cache Configuration
+  CACHE_DRIVER: "redis"
+  SESSION_DRIVER: "redis"
+  QUEUE_CONNECTION: "redis"
+  BROADCAST_DRIVER: "redis"
+  
+  # RoadRunner Configuration
+  OCTANE_SERVER: "roadrunner"
+  RR_WORKERS: "16"
+  RR_MAX_JOBS: "4000"
+  RR_MEMORY_LIMIT: "512"
+  
+  # Application Features
+  BLOCKCHAIN_EXPLORER_DEFAULT: "etherscan"
+  DOMPDF_ENABLED: "true"
+  BROWSERLESS_ENABLED: "false"
+  VERIFICATION_URL_LIFETIME: "3600"
+  VERIFICATION_RATE_LIMIT: "10"
+  OPENAI_MODEL: "gpt-4"
+  
+  # Monitoring Configuration
+  SENTRY_ENVIRONMENT: "production"
+  SENTRY_TRACES_SAMPLE_RATE: "0.1"
+  SENTRY_PROFILES_SAMPLE_RATE: "0.05"
+  TELESCOPE_ENABLED: "false"
+  TELESCOPE_PRODUCTION_ENABLED: "false"
+  
+  # Performance Settings
+  LOG_CHANNEL: "stack"
+  LOG_LEVEL: "warning"
+  SESSION_LIFETIME: "120"
+  
+  # Security Settings
+  VERIFICATION_REQUIRE_IP_BINDING: "true"
+  VERIFICATION_REQUIRE_USER_AGENT_BINDING: "true"
+  VERIFICATION_ENABLE_RATE_LIMITING: "true"
+  
+  # Sentry Configuration
+  SENTRY_ENVIRONMENT: "production"
+  SENTRY_SAMPLE_RATE: "0.1"
+  SENTRY_TRACES_SAMPLE_RATE: "0.05"
+  SENTRY_PROFILES_SAMPLE_RATE: "0.01"
+  SENTRY_SEND_DEFAULT_PII: "false"
+  SENTRY_ENABLE_LOGS: "false"
+  SENTRY_BREADCRUMBS_SQL_BINDINGS_ENABLED: "false"
+  SENTRY_TRACE_SQL_BINDINGS_ENABLED: "false"
+  
+  # Telescope Configuration (Production Restricted)
+  TELESCOPE_ENABLED: "false"
+  TELESCOPE_PRODUCTION_ENABLED: "false"
+  TELESCOPE_DRIVER: "database"
+  TELESCOPE_QUEUE_CONNECTION: "redis"
+  TELESCOPE_QUEUE: "telescope"
+  TELESCOPE_REQUIRE_AUTH: "true"
+  TELESCOPE_REQUIRE_HTTPS: "true"
+  TELESCOPE_LOG_ACCESS: "true"
+  TELESCOPE_RETENTION_HOURS: "24"
+  TELESCOPE_RETENTION_LIMIT: "1000"
+  TELESCOPE_SAMPLING_RATE: "0.1"
+  TELESCOPE_LOG_LEVEL: "error"
+  TELESCOPE_SLOW_QUERY_THRESHOLD: "1000"
+  TELESCOPE_RESPONSE_SIZE_LIMIT: "32"
+  
+  # Monitoring Settings
+  MONITORING_ENABLED: "true"
+  ERROR_TRACKING_ENABLED: "true"
+  PERFORMANCE_MONITORING_ENABLED: "true"
+
+---
+# PostgreSQL Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: ai-blockchain-analytics
+  labels:
+    app: postgres
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3-csi
+  resources:
+    requests:
+      storage: 100Gi
+
+---
+# Redis Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: ai-blockchain-analytics
+  labels:
+    app: redis
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3-csi
+  resources:
+    requests:
+      storage: 50Gi
+
+---
+# App Storage Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-storage-pvc
+  namespace: ai-blockchain-analytics
+  labels:
+    app: roadrunner-app
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: efs-csi
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+# PostgreSQL Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: ai-blockchain-analytics
+  labels:
+    app: postgres
+    tier: database
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+        tier: database
+    spec:
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-db
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-password
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        - name: POSTGRES_INITDB_ARGS
+          value: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-config
+          mountPath: /etc/postgresql/postgresql.conf
+          subPath: postgresql.conf
+        - name: postgres-config
+          mountPath: /docker-entrypoint-initdb.d/init-db.sql
+          subPath: init-db.sql
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+            - -d
+            - $(POSTGRES_DB)
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+      - name: postgres-config
+        configMap:
+          name: postgres-config
+
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: ai-blockchain-analytics
+  labels:
+    app: postgres
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+  selector:
+    app: postgres
+
+---
+# PostgreSQL ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: ai-blockchain-analytics
+data:
+  postgresql.conf: |
+    # PostgreSQL Configuration for Production
+    listen_addresses = '*'
+    port = 5432
+    max_connections = 200
+    
+    # Memory Settings
+    shared_buffers = 1GB
+    effective_cache_size = 3GB
+    work_mem = 16MB
+    maintenance_work_mem = 256MB
+    
+    # WAL Settings
+    wal_buffers = 16MB
+    checkpoint_completion_target = 0.9
+    wal_compression = on
+    
+    # Query Tuning
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    
+    # Logging
+    log_destination = 'stderr'
+    logging_collector = on
+    log_directory = 'log'
+    log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+    log_min_duration_statement = 1000
+    log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+    
+    # Performance
+    autovacuum = on
+    autovacuum_max_workers = 3
+    autovacuum_naptime = 10s
+  
+  init-db.sql: |
+    -- Create additional databases and extensions
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
+    
+    -- Create indexes for better performance
+    CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+    CREATE INDEX IF NOT EXISTS idx_analyses_user_id ON analyses(user_id);
+    CREATE INDEX IF NOT EXISTS idx_analyses_contract_address ON analyses(contract_address);
+    CREATE INDEX IF NOT EXISTS idx_telescope_entries_created_at ON telescope_entries(created_at);
+
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: ai-blockchain-analytics
+  labels:
+    app: redis
+    tier: cache
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+        tier: cache
+    spec:
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        command:
+        - redis-server
+        - /etc/redis/redis.conf
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data
+        - name: redis-config
+          mountPath: /etc/redis
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: redis-storage
+        persistentVolumeClaim:
+          claimName: redis-pvc
+      - name: redis-config
+        configMap:
+          name: redis-config
+
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: ai-blockchain-analytics
+  labels:
+    app: redis
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+  selector:
+    app: redis
+
+---
+# Redis ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: ai-blockchain-analytics
+data:
+  redis.conf: |
+    # Redis Configuration for Production
+    bind 0.0.0.0
+    port 6379
+    protected-mode no
+    
+    # Memory Management
+    maxmemory 1.5gb
+    maxmemory-policy allkeys-lru
+    
+    # Persistence
+    save 900 1
+    save 300 10
+    save 60 10000
+    
+    # AOF
+    appendonly yes
+    appendfsync everysec
+    no-appendfsync-on-rewrite no
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 64mb
+    
+    # Performance
+    tcp-keepalive 300
+    timeout 0
+    tcp-backlog 511
+    
+    # Logging
+    loglevel notice
+    logfile /data/redis.log
+    
+    # Security
+    rename-command FLUSHDB ""
+    rename-command FLUSHALL ""
+    rename-command EVAL ""
+    rename-command DEBUG ""
+
+---
+# RoadRunner App Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: roadrunner-app
+  namespace: ai-blockchain-analytics
+  labels:
+    app: roadrunner-app
+    tier: application
+    version: production
+spec:
+  replicas: 4
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: roadrunner-app
+  template:
+    metadata:
+      labels:
+        app: roadrunner-app
+        tier: application
+        version: production
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "2112"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      
+      # Node Selection
+      nodeSelector:
+        kubernetes.io/arch: amd64
+        node-type: application
+      
+      # Pod Anti-Affinity
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - roadrunner-app
+              topologyKey: kubernetes.io/hostname
+      
+      # Init Containers
+      initContainers:
+      - name: migration
+        image: your-registry/ai-blockchain-analytics:latest
+        command: ['php', 'artisan', 'migrate', '--force']
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        volumeMounts:
+        - name: app-storage
+          mountPath: /var/www/storage
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+      
+      - name: cache-warmup
+        image: your-registry/ai-blockchain-analytics:latest
+        command: 
+        - /bin/sh
+        - -c
+        - |
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          php artisan event:cache
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        volumeMounts:
+        - name: app-storage
+          mountPath: /var/www/storage
+        - name: cache-volume
+          mountPath: /var/www/bootstrap/cache
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "100m"
+      
+      # Main Container
+      containers:
+      - name: roadrunner
+        image: your-registry/ai-blockchain-analytics:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 6001
+          name: websocket
+        - containerPort: 2112
+          name: metrics
+        
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        
+        env:
+        - name: CONTAINER_ROLE
+          value: "app"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        
+        volumeMounts:
+        - name: app-storage
+          mountPath: /var/www/storage
+        - name: cache-volume
+          mountPath: /var/www/bootstrap/cache
+        - name: roadrunner-config
+          mountPath: /var/www/.rr.yaml
+          subPath: rr.yaml
+        
+        resources:
+          requests:
+            memory: "3Gi"
+            cpu: "1500m"
+            ephemeral-storage: "2Gi"
+          limits:
+            memory: "6Gi"
+            cpu: "3000m"
+            ephemeral-storage: "10Gi"
+        
+        startupProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+        
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /api/ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        lifecycle:
+          preStop:
+            exec:
+              command: 
+              - /bin/sh
+              - -c
+              - "sleep 15"
+        
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_BIND_SERVICE
+      
+      volumes:
+      - name: app-storage
+        persistentVolumeClaim:
+          claimName: app-storage-pvc
+      - name: cache-volume
+        emptyDir:
+          sizeLimit: 2Gi
+      - name: roadrunner-config
+        configMap:
+          name: roadrunner-config-production
+      
+      terminationGracePeriodSeconds: 60
+
+---
+# RoadRunner App Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: roadrunner-app-service
+  namespace: ai-blockchain-analytics
+  labels:
+    app: roadrunner-app
+spec:
+  type: ClusterIP
+  sessionAffinity: None
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8000
+    protocol: TCP
+  - name: websocket
+    port: 6001
+    targetPort: 6001
+    protocol: TCP
+  - name: metrics
+    port: 2112
+    targetPort: 2112
+    protocol: TCP
+  selector:
+    app: roadrunner-app
+
+---
+# Horizon Worker Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: horizon-worker
+  namespace: ai-blockchain-analytics
+  labels:
+    app: horizon-worker
+    tier: worker
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: horizon-worker
+  template:
+    metadata:
+      labels:
+        app: horizon-worker
+        tier: worker
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      
+      containers:
+      - name: horizon
+        image: your-registry/ai-blockchain-analytics:latest
+        command: ['php', 'artisan', 'horizon']
+        
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        
+        env:
+        - name: CONTAINER_ROLE
+          value: "worker"
+        
+        volumeMounts:
+        - name: app-storage
+          mountPath: /var/www/storage
+        
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        
+        livenessProbe:
+          exec:
+            command:
+            - php
+            - artisan
+            - horizon:status
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      
+      volumes:
+      - name: app-storage
+        persistentVolumeClaim:
+          claimName: app-storage-pvc
+      
+      terminationGracePeriodSeconds: 120
+
+---
+# Scheduler Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler
+  namespace: ai-blockchain-analytics
+  labels:
+    app: scheduler
+    tier: scheduler
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: scheduler
+  template:
+    metadata:
+      labels:
+        app: scheduler
+        tier: scheduler
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      
+      containers:
+      - name: scheduler
+        image: your-registry/ai-blockchain-analytics:latest
+        command: 
+        - /bin/sh
+        - -c
+        - |
+          while true; do
+            php artisan schedule:run --verbose --no-interaction &
+            sleep 60
+          done
+        
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        
+        env:
+        - name: CONTAINER_ROLE
+          value: "scheduler"
+        
+        volumeMounts:
+        - name: app-storage
+          mountPath: /var/www/storage
+        
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+        
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      
+      volumes:
+      - name: app-storage
+        persistentVolumeClaim:
+          claimName: app-storage-pvc
+
+---
+# RoadRunner ConfigMap for Production
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: roadrunner-config-production
+  namespace: ai-blockchain-analytics
+data:
+  rr.yaml: |
+    version: '3'
+    
+    rpc:
+      listen: tcp://0.0.0.0:6001
+    
+    server:
+      command: "php worker.php"
+      user: "www"
+      group: "www"
+      env:
+        - RR_MODE=http
+    
+    http:
+      address: 0.0.0.0:8000
+      max_request_size: 200MB
+      middleware: ["gzip", "headers", "static"]
+      uploads:
+        forbid: [".php", ".exe", ".bat", ".sh"]
+        allow: [".jpg", ".jpeg", ".png", ".gif", ".svg", ".pdf", ".txt", ".csv", ".json"]
+      headers:
+        cors:
+          allowed_origin: "*"
+          allowed_headers: "Origin, Content-Type, Accept, Authorization, X-Requested-With, X-CSRF-TOKEN"
+          allowed_methods: "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+          allow_credentials: true
+          max_age: 86400
+        response:
+          X-Powered-By: "RoadRunner/3.0"
+          Server: "AI-Blockchain-Analytics"
+          X-Frame-Options: "SAMEORIGIN"
+          X-Content-Type-Options: "nosniff"
+          X-XSS-Protection: "1; mode=block"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+      trusted_subnets: 
+        - "10.0.0.0/8"
+        - "127.0.0.0/8" 
+        - "172.16.0.0/12"
+        - "192.168.0.0/16"
+      static:
+        dir: "/var/www/public"
+        forbid: [".htaccess", ".env"]
+        calculate_etag: true
+    
+    logs:
+      mode: production
+      level: warn
+      output: stdout
+      err_output: stderr
+      encoding: json
+    
+    pool:
+      num_workers: ${RR_WORKERS:-16}
+      max_jobs: ${RR_MAX_JOBS:-4000}
+      allocate_timeout: 60s
+      destroy_timeout: 60s
+      supervisor:
+        max_worker_memory: ${RR_MEMORY_LIMIT:-512}
+        ttl: 3600s
+        idle_ttl: 600s
+        exec_ttl: 120s
+    
+    metrics:
+      address: 0.0.0.0:2112
+      path: "/metrics"
+    
+    status:
+      address: 0.0.0.0:2114
+      path: "/status"
+
+---
+# Horizontal Pod Autoscaler for RoadRunner App
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: roadrunner-app-hpa
+  namespace: ai-blockchain-analytics
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: roadrunner-app
+  minReplicas: 4
+  maxReplicas: 50
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+      - type: Pods
+        value: 5
+        periodSeconds: 30
+      selectPolicy: Max
+
+---
+# Pod Disruption Budget
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: roadrunner-app-pdb
+  namespace: ai-blockchain-analytics
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: roadrunner-app
+
+---
+# Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: roadrunner-app-ingress
+  namespace: ai-blockchain-analytics
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "200m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/client-max-body-size: "200m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  tls:
+  - hosts:
+    - analytics.yourdomain.com
+    secretName: app-tls-secret
+  rules:
+  - host: analytics.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: roadrunner-app-service
+            port:
+              number: 80
+
+---
+# Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-network-policy
+  namespace: ai-blockchain-analytics
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+  egress:
+  - {}  # Allow all egress traffic for external API calls

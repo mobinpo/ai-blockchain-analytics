@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ai-blockchain-analytics-storage
+  namespace: ai-blockchain-analytics
+  labels:
+    app.kubernetes.io/name: ai-blockchain-analytics
+    app.kubernetes.io/component: storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: efs-sc  # Use EFS for shared storage across pods
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: efs-sc
+  namespace: ai-blockchain-analytics
+provisioner: efs.csi.aws.com
+parameters:
+  provisioningMode: efs-ap
+  fileSystemId: fs-xxxxxxxxx  # Replace with your EFS filesystem ID
+  directoryPerms: "0755"
+  gidRangeStart: "1000"
+  gidRangeEnd: "2000"
+  basePath: "/ai-blockchain-analytics"
+mountOptions:
+  - tls
+  - regional

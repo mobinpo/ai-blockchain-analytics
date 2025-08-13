@@ -1,0 +1,249 @@
+{
+  "family": "ai-blockchain-roadrunner-app",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "2048",
+  "memory": "4096",
+  "executionRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ai-blockchain-task-role",
+  "containerDefinitions": [
+    {
+      "name": "roadrunner-app",
+      "image": "YOUR_ACCOUNT_ID.dkr.ecr.YOUR_REGION.amazonaws.com/ai-blockchain-analytics:latest",
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp",
+          "name": "http"
+        },
+        {
+          "containerPort": 6001,
+          "protocol": "tcp",
+          "name": "websocket"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        },
+        {
+          "name": "APP_DEBUG",
+          "value": "false"
+        },
+        {
+          "name": "OCTANE_SERVER",
+          "value": "roadrunner"
+        },
+        {
+          "name": "OCTANE_HOST",
+          "value": "0.0.0.0"
+        },
+        {
+          "name": "OCTANE_PORT",
+          "value": "8000"
+        },
+        {
+          "name": "CONTAINER_ROLE",
+          "value": "app"
+        },
+        {
+          "name": "DB_CONNECTION",
+          "value": "pgsql"
+        },
+        {
+          "name": "REDIS_CLIENT",
+          "value": "predis"
+        },
+        {
+          "name": "CACHE_DRIVER",
+          "value": "redis"
+        },
+        {
+          "name": "QUEUE_CONNECTION",
+          "value": "redis"
+        },
+        {
+          "name": "SESSION_DRIVER",
+          "value": "redis"
+        },
+        {
+          "name": "SENTRY_ENVIRONMENT",
+          "value": "production"
+        },
+        {
+          "name": "SENTRY_TRACES_SAMPLE_RATE",
+          "value": "0.1"
+        },
+        {
+          "name": "TELESCOPE_ENABLED",
+          "value": "true"
+        },
+        {
+          "name": "TELESCOPE_PRODUCTION_ENABLED",
+          "value": "false"
+        },
+        {
+          "name": "TELESCOPE_RETENTION_HOURS",
+          "value": "24"
+        },
+        {
+          "name": "TELESCOPE_RETENTION_LIMIT",
+          "value": "1000"
+        },
+        {
+          "name": "TELESCOPE_SAMPLING_RATE",
+          "value": "0.1"
+        },
+        {
+          "name": "TELESCOPE_MAX_ENTRIES_PER_MINUTE",
+          "value": "100"
+        },
+        {
+          "name": "TELESCOPE_RATE_LIMIT",
+          "value": "60"
+        },
+        {
+          "name": "TELESCOPE_AUTO_DISABLE_HOURS",
+          "value": "24"
+        },
+        {
+          "name": "RR_WORKERS",
+          "value": "16"
+        },
+        {
+          "name": "RR_MAX_JOBS",
+          "value": "4000"
+        },
+        {
+          "name": "RR_WORKER_MEMORY_LIMIT",
+          "value": "512"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "APP_KEY",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/app-key"
+        },
+        {
+          "name": "DB_HOST",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/db-host"
+        },
+        {
+          "name": "DB_DATABASE",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/db-database"
+        },
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/db-username"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/db-password"
+        },
+        {
+          "name": "REDIS_HOST",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/redis-host"
+        },
+        {
+          "name": "REDIS_PORT",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/redis-port"
+        },
+        {
+          "name": "REDIS_PASSWORD",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/redis-password"
+        },
+        {
+          "name": "STRIPE_SECRET",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/stripe-secret"
+        },
+        {
+          "name": "GOOGLE_APPLICATION_CREDENTIALS_JSON",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/google-credentials"
+        },
+        {
+          "name": "SENTRY_LARAVEL_DSN",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/sentry-dsn"
+        },
+        {
+          "name": "SENTRY_MAX_EVENTS_PER_MINUTE",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/sentry-max-events-minute"
+        },
+        {
+          "name": "SENTRY_MAX_EVENTS_PER_HOUR",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/sentry-max-events-hour"
+        },
+        {
+          "name": "SENTRY_TRANSACTION_SAMPLE_RATE",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/sentry-transaction-sample-rate"
+        },
+        {
+          "name": "TELESCOPE_ALLOWED_IPS",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/telescope-allowed-ips"
+        },
+        {
+          "name": "TELESCOPE_ALLOWED_USERS",
+          "valueFrom": "arn:aws:ssm:YOUR_REGION:YOUR_ACCOUNT_ID:parameter/ai-blockchain/telescope-allowed-users"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "efs-storage",
+          "containerPath": "/var/www/storage",
+          "readOnly": false
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-blockchain-roadrunner-app",
+          "awslogs-region": "YOUR_REGION",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:8000/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "stopTimeout": 30,
+      "linuxParameters": {
+        "initProcessEnabled": true
+      }
+    }
+  ],
+  "volumes": [
+    {
+      "name": "efs-storage",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-XXXXXXXXX",
+        "transitEncryption": "ENABLED",
+        "authorizationConfig": {
+          "accessPointId": "fsap-XXXXXXXXX",
+          "iam": "ENABLED"
+        }
+      }
+    }
+  ],
+  "placementConstraints": [],
+  "tags": [
+    {
+      "key": "Project",
+      "value": "AI-Blockchain-Analytics"
+    },
+    {
+      "key": "Environment",
+      "value": "production"
+    },
+    {
+      "key": "Component",
+      "value": "application"
+    }
+  ]
+}

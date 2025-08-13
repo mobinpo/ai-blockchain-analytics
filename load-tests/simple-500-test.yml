@@ -1,0 +1,105 @@
+# =============================================================================
+# AI Blockchain Analytics - Simple 500 Concurrent Load Test
+# =============================================================================
+
+config:
+  target: 'https://httpbin.org'
+  
+  phases:
+    - duration: 30
+      arrivalRate: 10
+      name: "Warmup"
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 100
+      name: "Ramp to 100"
+    - duration: 90
+      arrivalRate: 100
+      rampTo: 300
+      name: "Scale to 300"
+    - duration: 60
+      arrivalRate: 300
+      rampTo: 500
+      name: "Push to 500"
+    - duration: 300
+      arrivalRate: 500
+      name: "Sustained 500 Concurrent"
+    - duration: 60
+      arrivalRate: 500
+      rampTo: 0
+      name: "Cool Down"
+
+  http:
+    timeout: 30
+    pool: 100
+    maxSockets: 600
+
+  ensure:
+    - http.request_rate > 200
+    - http.response_time.p95 < 3000
+    - http.codes.200 > 80
+
+variables:
+  symbols: ["BTC", "ETH", "ADA", "SOL", "MATIC", "AVAX", "DOT", "LINK"]
+  analysis_types: ["sentiment", "technical", "risk", "fundamental"]
+
+scenarios:
+  - name: "Blockchain Analysis Simulation"
+    weight: 70
+    flow:
+      - post:
+          url: "/post"
+          headers:
+            'Content-Type': 'application/json'
+          json:
+            symbol: "{{ $pick(symbols) }}"
+            analysis_type: "{{ $pick(analysis_types) }}"
+            timestamp: "{{ $timestamp() }}"
+            concurrent_users: 500
+            test_phase: "blockchain_analytics_load_test"
+          expect:
+            - statusCode: 200
+      - think: "{{ $randomInt(1, 3) }}"
+      - get:
+          url: "/uuid"
+          expect:
+            - statusCode: 200
+
+  - name: "Verification Requests"
+    weight: 20
+    flow:
+      - post:
+          url: "/post"
+          json:
+            type: "verification"
+            symbol: "{{ $pick(symbols) }}"
+            level: "premium"
+          expect:
+            - statusCode: 200
+      - think: 2
+      - get:
+          url: "/json"
+          expect:
+            - statusCode: 200
+
+  - name: "High Frequency Checks"
+    weight: 10
+    flow:
+      - get:
+          url: "/json"
+          expect:
+            - statusCode: 200
+      - think: 0.5
+      - get:
+          url: "/uuid"
+          expect:
+            - statusCode: 200
+      - think: 0.5
+      - get:
+          url: "/json"
+          expect:
+            - statusCode: 200
+
+after:
+  flow:
+    - log: "🎉 500 concurrent blockchain analytics load test completed!"

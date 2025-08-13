@@ -1,0 +1,137 @@
+{
+  "family": "ai-blockchain-analytics-worker",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::YOUR_ACCOUNT:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::YOUR_ACCOUNT:role/ai-blockchain-analytics-task-role",
+  "containerDefinitions": [
+    {
+      "name": "ai-blockchain-analytics-worker",
+      "image": "YOUR_ACCOUNT.dkr.ecr.YOUR_REGION.amazonaws.com/ai-blockchain-analytics:latest",
+      "essential": true,
+      "command": [
+        "/bin/sh",
+        "-c",
+        "php artisan queue:work --queue=default,sentiment,onboarding-emails --sleep=3 --tries=3 --max-jobs=1000 --max-time=3600"
+      ],
+      "environment": [
+        {
+          "name": "APP_NAME",
+          "value": "AI Blockchain Analytics"
+        },
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        },
+        {
+          "name": "APP_DEBUG",
+          "value": "false"
+        },
+        {
+          "name": "DB_CONNECTION",
+          "value": "pgsql"
+        },
+        {
+          "name": "DB_HOST",
+          "value": "ai-blockchain-analytics-postgres.cluster-xxx.us-east-1.rds.amazonaws.com"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "5432"
+        },
+        {
+          "name": "DB_DATABASE",
+          "value": "ai_blockchain_analytics"
+        },
+        {
+          "name": "DB_USERNAME",
+          "value": "aiblockchainanalytics"
+        },
+        {
+          "name": "REDIS_HOST",
+          "value": "ai-blockchain-analytics-redis.xxx.cache.amazonaws.com"
+        },
+        {
+          "name": "REDIS_PORT",
+          "value": "6379"
+        },
+        {
+          "name": "CACHE_DRIVER",
+          "value": "redis"
+        },
+        {
+          "name": "SESSION_DRIVER",
+          "value": "redis"
+        },
+        {
+          "name": "QUEUE_CONNECTION",
+          "value": "redis"
+        },
+        {
+          "name": "CONTAINER_ROLE",
+          "value": "worker"
+        },
+        {
+          "name": "LOG_CHANNEL",
+          "value": "stderr"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "APP_KEY",
+          "valueFrom": "arn:aws:secretsmanager:YOUR_REGION:YOUR_ACCOUNT:secret:ai-blockchain-analytics/app-key"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:YOUR_REGION:YOUR_ACCOUNT:secret:ai-blockchain-analytics/db-password"
+        },
+        {
+          "name": "REDIS_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:YOUR_REGION:YOUR_ACCOUNT:secret:ai-blockchain-analytics/redis-password"
+        },
+        {
+          "name": "OPENAI_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:YOUR_REGION:YOUR_ACCOUNT:secret:ai-blockchain-analytics/openai-api-key"
+        },
+        {
+          "name": "SENTRY_DSN",
+          "valueFrom": "arn:aws:secretsmanager:YOUR_REGION:YOUR_ACCOUNT:secret:ai-blockchain-analytics/sentry-dsn"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-blockchain-analytics",
+          "awslogs-region": "YOUR_REGION",
+          "awslogs-stream-prefix": "worker"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "ps aux | grep -v grep | grep 'queue:work' || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 30
+      }
+    }
+  ],
+  "tags": [
+    {
+      "key": "Environment",
+      "value": "production"
+    },
+    {
+      "key": "Application",
+      "value": "ai-blockchain-analytics"
+    },
+    {
+      "key": "Component",
+      "value": "worker"
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+config:
+  target: 'http://localhost:8000'
+  phases:
+    # Conservative warmup
+    - duration: 15
+      arrivalRate: 5
+      name: "Warmup (5 RPS)"
+    
+    # Gradual ramp to test server capacity
+    - duration: 30
+      arrivalRate: 15
+      name: "Low load (15 RPS)"
+    
+    # Medium load
+    - duration: 45
+      arrivalRate: 50
+      name: "Medium load (50 RPS)"
+    
+    # High load before peak
+    - duration: 60
+      arrivalRate: 150
+      name: "High load (150 RPS)"
+    
+    # Peak load - 500 concurrent analyses
+    - duration: 120
+      arrivalRate: 500
+      name: "PEAK: 500 concurrent analyses"
+    
+    # Sustained high load
+    - duration: 60
+      arrivalRate: 200
+      name: "Sustained (200 RPS)"
+    
+    # Cool down
+    - duration: 20
+      arrivalRate: 20
+      name: "Cool down (20 RPS)"
+
+  http:
+    timeout: 60
+    pool: 100
+    maxSockets: 150
+    keepAlive: true
+    
+  plugins:
+    metrics-by-endpoint: {}
+    ensure: {}
+
+variables:
+  contracts:
+    - "0xE592427A0AEce92De3Edee1F18E0157C05861564"
+    - "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2"
+    - "0x1234567890123456789012345678901234567890"
+    - "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+
+scenarios:
+  # Contract Analysis - Core functionality (70%)
+  - name: "Contract Analysis"
+    weight: 70
+    flow:
+      - post:
+          url: "/api/contracts/analyze-demo"
+          json:
+            contract_input: "{{ contracts.random }}"
+            network: "ethereum"
+          capture:
+            - json: "$.analysisId"
+              as: "analysisId"
+          think: 2
+          
+      # Simulate analysis status check
+      - get:
+          url: "/api/health"
+          think: 1
+
+  # Load Test Endpoints (20%)
+  - name: "Load Test APIs"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/load-test/sentiment"
+          json:
+            text: "Blockchain market sentiment analysis for cryptocurrency trading insights"
+            intensity: "high"
+          think: 3
+          
+      - get:
+          url: "/api/load-test/complex-query"
+          think: 1
+
+  # Frontend Pages (10%)
+  - name: "Frontend Load"
+    weight: 10
+    flow:
+      - get:
+          url: "/up"
+          think: 0.2
+          
+      - get:
+          url: "/sentiment-dashboard"
+          think: 0.5

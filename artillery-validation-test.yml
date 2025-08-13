@@ -1,0 +1,27 @@
+config:
+  target: 'http://localhost:8000'
+  phases:
+    - duration: 10
+      arrivalRate: 2
+      name: "Quick validation"
+
+  http:
+    timeout: 30
+
+scenarios:
+  - name: "Endpoint Validation"
+    flow:
+      # Test health endpoint
+      - get:
+          url: "/up"
+          
+      # Test main page
+      - get:
+          url: "/"
+          
+      # Test contract analysis
+      - post:
+          url: "/api/contracts/analyze-demo"
+          json:
+            contract_input: "0xE592427A0AEce92De3Edee1F18E0157C05861564"
+            network: "ethereum"

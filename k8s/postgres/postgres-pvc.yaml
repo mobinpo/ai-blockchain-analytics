@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: ai-blockchain-analytics
+  labels:
+    app: postgres
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp2  # Change to your storage class (gp3 for AWS EKS, standard for GKE)
+  resources:
+    requests:
+      storage: 100Gi

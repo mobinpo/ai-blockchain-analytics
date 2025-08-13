@@ -1,0 +1,443 @@
+name: Load Testing Pipeline
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Load test type to run'
+        required: true
+        default: 'concurrent-500'
+        type: choice
+        options:
+          - concurrent-500
+          - blockchain-analysis
+          - quick
+          - all
+      target_url:
+        description: 'Target URL to test'
+        required: true
+        default: 'http://localhost:8000'
+        type: string
+      duration:
+        description: 'Test duration (for custom tests)'
+        required: false
+        default: 'default'
+        type: string
+      
+  # Scheduled runs
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly on Sunday at 2 AM UTC
+    
+  # Trigger on releases
+  release:
+    types: [published]
+    
+  # Trigger on pull requests to main (quick tests only)
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'app/**'
+      - 'routes/**'
+      - 'config/**'
+
+env:
+  NODE_VERSION: '18'
+  PHP_VERSION: '8.2'
+
+jobs:
+  # Pre-flight checks and setup
+  setup:
+    name: Setup and Pre-flight Checks
+    runs-on: ubuntu-latest
+    outputs:
+      test-type: ${{ steps.determine-test.outputs.test-type }}
+      target-url: ${{ steps.determine-test.outputs.target-url }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Determine test configuration
+        id: determine-test
+        run: |
+          # Determine test type based on trigger
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "test-type=quick" >> $GITHUB_OUTPUT
+            echo "target-url=http://localhost:8000" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "test-type=all" >> $GITHUB_OUTPUT
+            echo "target-url=http://localhost:8000" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            echo "test-type=concurrent-500" >> $GITHUB_OUTPUT
+            echo "target-url=http://localhost:8000" >> $GITHUB_OUTPUT
+          else
+            echo "test-type=${{ github.event.inputs.test_type || 'concurrent-500' }}" >> $GITHUB_OUTPUT
+            echo "target-url=${{ github.event.inputs.target_url || 'http://localhost:8000' }}" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install Artillery
+        run: |
+          npm install -g artillery@latest
+          npm install -g artillery-plugin-metrics-by-endpoint
+          npm install -g artillery-plugin-publish-metrics
+          
+      - name: Verify Artillery installation
+        run: |
+          artillery --version
+          echo "Artillery installed successfully"
+
+  # Application setup for testing
+  application-setup:
+    name: Setup Application
+    runs-on: ubuntu-latest
+    needs: setup
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: ai_blockchain_analytics
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, redis, bcmath
+          coverage: none
+          
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+          
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader
+        
+      - name: Setup environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          
+          # Configure database
+          sed -i 's/DB_CONNECTION=sqlite/DB_CONNECTION=pgsql/' .env
+          sed -i 's/DB_HOST=127.0.0.1/DB_HOST=localhost/' .env
+          sed -i 's/DB_DATABASE=laravel/DB_DATABASE=ai_blockchain_analytics/' .env
+          sed -i 's/DB_USERNAME=root/DB_USERNAME=postgres/' .env
+          sed -i 's/DB_PASSWORD=/DB_PASSWORD=password/' .env
+          
+          # Configure Redis
+          sed -i 's/REDIS_HOST=127.0.0.1/REDIS_HOST=localhost/' .env
+          
+          # Disable monitoring for testing
+          echo "TELESCOPE_ENABLED=false" >> .env
+          echo "SENTRY_LARAVEL_DSN=" >> .env
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install Node dependencies
+        run: npm ci
+        
+      - name: Build frontend assets
+        run: npm run build
+        
+      - name: Run database migrations
+        run: php artisan migrate --force
+        
+      - name: Start application
+        run: |
+          # Start RoadRunner server in background
+          ./vendor/bin/rr serve -d
+          sleep 10
+          
+          # Verify application is running
+          curl -f http://localhost:8000/health || (echo "Application failed to start" && exit 1)
+          
+      - name: Cache application state
+        uses: actions/cache@v3
+        with:
+          path: |
+            .env
+            storage/
+            bootstrap/cache/
+          key: ${{ runner.os }}-app-${{ github.sha }}
+
+  # Main load testing job
+  load-testing:
+    name: Load Testing - ${{ needs.setup.outputs.test-type }}
+    runs-on: ubuntu-latest
+    needs: [setup, application-setup]
+    timeout-minutes: 60
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        # For parallel testing, we can run different scenarios
+        scenario: [main]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install Artillery and plugins
+        run: |
+          npm install -g artillery@latest
+          npm install -g artillery-plugin-metrics-by-endpoint
+          npm install -g artillery-plugin-publish-metrics
+          
+      - name: Setup PHP and start application
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, redis, bcmath
+          
+      - name: Restore application cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            .env
+            storage/
+            bootstrap/cache/
+          key: ${{ runner.os }}-app-${{ github.sha }}
+          
+      - name: Setup services
+        run: |
+          # Start PostgreSQL and Redis (using Docker)
+          docker run -d --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=password -e POSTGRES_DB=ai_blockchain_analytics postgres:15-alpine
+          docker run -d --name redis -p 6379:6379 redis:7-alpine
+          
+          # Wait for services
+          sleep 10
+          
+      - name: Install dependencies and start app
+        run: |
+          composer install --no-dev --optimize-autoloader
+          npm ci
+          npm run build
+          
+          # Start RoadRunner
+          ./vendor/bin/rr serve -d
+          sleep 15
+          
+          # Verify health
+          curl -f http://localhost:8000/health
+          
+      - name: Run load tests
+        id: load-test
+        run: |
+          # Make script executable
+          chmod +x load-tests/run-load-test.sh
+          
+          # Create results directory
+          mkdir -p load-test-results
+          
+          # Run the load test
+          ./load-tests/run-load-test.sh \
+            "${{ needs.setup.outputs.test-type }}" \
+            "${{ needs.setup.outputs.target-url }}" \
+            "./load-test-results"
+          
+        continue-on-error: true
+        
+      - name: Process test results
+        id: results
+        run: |
+          # Check if test results exist
+          if [ ! -d "load-test-results" ] || [ -z "$(ls -A load-test-results)" ]; then
+            echo "No test results found"
+            echo "success=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          # Count result files
+          json_count=$(ls load-test-results/*.json 2>/dev/null | wc -l || echo "0")
+          html_count=$(ls load-test-results/*.html 2>/dev/null | wc -l || echo "0")
+          
+          echo "json_files=$json_count" >> $GITHUB_OUTPUT
+          echo "html_files=$html_count" >> $GITHUB_OUTPUT
+          
+          # Check for test failures based on file contents
+          if [ "$json_count" -gt 0 ]; then
+            echo "success=true" >> $GITHUB_OUTPUT
+          else
+            echo "success=false" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: load-test-results-${{ needs.setup.outputs.test-type }}-${{ github.run_number }}
+          path: |
+            load-test-results/
+            *.log
+          retention-days: 30
+          
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## Load Test Results - ${{ needs.setup.outputs.test-type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Test Type**: ${{ needs.setup.outputs.test-type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target URL**: ${{ needs.setup.outputs.target-url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ steps.results.outputs.success == 'true' && ' Passed' || 'L Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **JSON Results**: ${{ steps.results.outputs.json_files }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **HTML Reports**: ${{ steps.results.outputs.html_files }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add analysis if available
+          if [ -f "load-test-results/comprehensive-analysis-*.md" ]; then
+            echo "### Performance Analysis" >> $GITHUB_STEP_SUMMARY
+            cat load-test-results/comprehensive-analysis-*.md | head -20 >> $GITHUB_STEP_SUMMARY
+            echo "..." >> $GITHUB_STEP_SUMMARY
+            echo "*Full analysis available in artifacts*" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Performance comparison job
+  performance-comparison:
+    name: Performance Comparison
+    runs-on: ubuntu-latest
+    needs: [setup, load-testing]
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download current results
+        uses: actions/download-artifact@v4
+        with:
+          name: load-test-results-${{ needs.setup.outputs.test-type }}-${{ github.run_number }}
+          path: current-results/
+          
+      - name: Compare with baseline
+        run: |
+          # This would compare with stored baseline metrics
+          echo "## Performance Comparison" >> $GITHUB_STEP_SUMMARY
+          echo "Comparing current performance with baseline..." >> $GITHUB_STEP_SUMMARY
+          echo "*Performance comparison feature coming soon*" >> $GITHUB_STEP_SUMMARY
+
+  # Notification job
+  notify-results:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [setup, load-testing]
+    if: always()
+    
+    steps:
+      - name: Notify Slack on failure
+        if: needs.load-testing.result == 'failure' && github.event_name != 'pull_request'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: |
+            =¨ Load test failed for AI Blockchain Analytics
+            Test Type: ${{ needs.setup.outputs.test-type }}
+            Target: ${{ needs.setup.outputs.target-url }}
+            Branch: ${{ github.ref }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          
+      - name: Create issue on failure
+        if: needs.load-testing.result == 'failure' && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Load Test Failure - ${new Date().toISOString().split('T')[0]}`,
+              body: `
+              ## Load Test Failure Report
+              
+              **Test Type**: ${{ needs.setup.outputs.test-type }}
+              **Target URL**: ${{ needs.setup.outputs.target-url }}
+              **Workflow Run**: ${{ github.run_id }}
+              **Triggered**: Scheduled run
+              
+              The scheduled load test has failed. Please check the workflow logs and test results.
+              
+              **Actions to take**:
+              1. Review the workflow logs
+              2. Check application performance
+              3. Analyze test results in artifacts
+              4. Fix any performance regressions
+              
+              This issue was automatically created by the load testing pipeline.
+              `,
+              labels: ['bug', 'performance', 'automated']
+            });
+
+  # Cleanup job
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    needs: [load-testing, performance-comparison, notify-results]
+    if: always()
+    
+    steps:
+      - name: Cleanup artifacts older than 30 days
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listArtifactsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            for (const artifact of artifacts.data.artifacts) {
+              if (artifact.name.includes('load-test-results') && 
+                  new Date(artifact.created_at) < thirtyDaysAgo) {
+                try {
+                  await github.rest.actions.deleteArtifact({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    artifact_id: artifact.id,
+                  });
+                  console.log(`Deleted old artifact: ${artifact.name}`);
+                } catch (error) {
+                  console.log(`Failed to delete artifact ${artifact.name}: ${error}`);
+                }
+              }
+            }

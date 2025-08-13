@@ -1,0 +1,39 @@
+{
+    "contracts": [
+        {
+            "address": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+            "name": "Uniswap V2 Factory",
+            "risk_score": 25,
+            "status": "Low Risk"
+        },
+        {
+            "address": "0x27182842E098f60e3D576794A5bFFb0777E025d3",
+            "name": "Euler Finance",
+            "risk_score": 95,
+            "status": "Critical Risk"
+        },
+        {
+            "address": "0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5",
+            "name": "Compound ETH",
+            "risk_score": 40,
+            "status": "Medium Risk"
+        }
+    ],
+    "sentiment_data": [
+        {
+            "platform": "Twitter",
+            "sentiment": 0.65,
+            "volume": 1250
+        },
+        {
+            "platform": "Reddit",
+            "sentiment": 0.45,
+            "volume": 890
+        },
+        {
+            "platform": "Telegram",
+            "sentiment": 0.72,
+            "volume": 2100
+        }
+    ]
+}

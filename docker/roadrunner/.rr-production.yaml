@@ -1,0 +1,415 @@
+# RoadRunner Production Configuration
+# Optimized for AI Blockchain Analytics with high performance and security
+
+version: '3'
+
+# RPC Configuration
+rpc:
+  listen: tcp://0.0.0.0:6001
+  timeout: 60s
+
+# Server Configuration
+server:
+  command: "php worker.php"
+  user: "www"
+  group: "www"
+  env:
+    - RR_MODE=http
+    - PHP_INI_SCAN_DIR=/usr/local/etc/php/conf.d
+
+# HTTP Server Configuration
+http:
+  address: 0.0.0.0:8000
+  max_request_size: 200MB
+  middleware: ["gzip", "headers", "static", "fcgi"]
+  
+  # Upload Configuration
+  uploads:
+    forbid: [".php", ".exe", ".bat", ".sh", ".cmd", ".scr", ".vbs", ".jar"]
+    allow: [".jpg", ".jpeg", ".png", ".gif", ".svg", ".pdf", ".txt", ".csv", ".json", ".xml", ".zip"]
+    max_size: 100MB
+  
+  # CORS and Security Headers
+  headers:
+    cors:
+      allowed_origin: "*"
+      allowed_headers: "Origin, Content-Type, Accept, Authorization, X-Requested-With, X-CSRF-TOKEN, X-XSRF-TOKEN"
+      allowed_methods: "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
+      allow_credentials: true
+      max_age: 86400
+      exposed_headers: "X-Request-ID, X-Response-Time"
+    
+    response:
+      # Security Headers
+      X-Powered-By: "RoadRunner/3.0"
+      Server: "AI-Blockchain-Analytics/1.0"
+      X-Frame-Options: "SAMEORIGIN"
+      X-Content-Type-Options: "nosniff"
+      X-XSS-Protection: "1; mode=block"
+      Referrer-Policy: "strict-origin-when-cross-origin"
+      Permissions-Policy: "geolocation=(), microphone=(), camera=()"
+      Content-Security-Policy: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'self';"
+      Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      
+      # Performance Headers
+      X-Response-Time: "${response_time}"
+      X-Cache-Status: "MISS"
+  
+  # Trusted Proxy Configuration
+  trusted_subnets: 
+    - "10.0.0.0/8"
+    - "127.0.0.0/8" 
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+    - "::1/128"
+    - "fc00::/7"
+    - "fe80::/10"
+  
+  # Static File Handling
+  static:
+    dir: "/var/www/public"
+    forbid: [".htaccess", ".env", ".git", ".svn", ".hg", "*.log"]
+    calculate_etag: true
+    weak: false
+    compress: true
+    allow: [".txt", ".ico", ".css", ".js", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".woff", ".woff2", ".ttf", ".eot", ".otf", ".map", ".webp", ".avif"]
+    
+    # Cache Control
+    response:
+      Cache-Control: "public, max-age=31536000, immutable"
+      Vary: "Accept-Encoding"
+    
+    request:
+      input: "http"
+    response:
+      output: "http"
+
+# Logging Configuration
+logs:
+  mode: production
+  level: warn
+  output: stdout
+  err_output: stderr
+  encoding: json
+  channels:
+    http:
+      level: error
+    server:
+      level: warn
+    rpc:
+      level: error
+    jobs:
+      level: warn
+  file_logger_options:
+    log_output: "stdout"
+    max_size: 10
+    max_age: 30
+    max_backups: 5
+    compress: true
+
+# Worker Pool Configuration
+pool:
+  num_workers: ${RR_WORKERS:-16}
+  max_jobs: ${RR_MAX_JOBS:-4000}
+  allocate_timeout: 60s
+  destroy_timeout: 60s
+  reset_timeout: 60s
+  
+  # Advanced Pool Configuration
+  supervisor:
+    max_worker_memory: ${RR_MEMORY_LIMIT:-512}
+    ttl: 3600s
+    idle_ttl: 600s
+    exec_ttl: 120s
+    max_worker_idle: 10s
+    
+    # Worker Lifecycle Management
+    watch_tick: 1s
+    ttl_jitter: 30s
+    
+    # Memory and Performance Monitoring
+    memory_limit: ${RR_MEMORY_LIMIT:-512}
+    max_worker_memory: ${RR_MEMORY_LIMIT:-512}
+
+# Metrics and Monitoring
+metrics:
+  address: 0.0.0.0:2112
+  path: "/metrics"
+  collect:
+    # HTTP Metrics
+    http_request_total:
+      type: counter
+      help: "Total number of HTTP requests"
+      labels: ["method", "status", "route"]
+    
+    http_request_duration:
+      type: histogram
+      help: "HTTP request duration in seconds"
+      labels: ["method", "status", "route"]
+      buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+    
+    # Worker Metrics
+    worker_memory_usage:
+      type: gauge
+      help: "Worker memory usage in bytes"
+      labels: ["worker_id"]
+    
+    worker_requests_total:
+      type: counter
+      help: "Total number of requests processed by workers"
+      labels: ["worker_id"]
+    
+    # Application Metrics
+    app_response_size:
+      type: histogram
+      help: "Application response size in bytes"
+      buckets: [1024, 4096, 16384, 65536, 262144, 1048576, 4194304]
+    
+    app_database_connections:
+      type: gauge
+      help: "Number of active database connections"
+    
+    app_cache_operations:
+      type: counter
+      help: "Cache operations total"
+      labels: ["operation", "status"]
+
+# Status Endpoint
+status:
+  address: 0.0.0.0:2114
+  path: "/status"
+  response_code: 200
+
+# Job Queue Configuration
+jobs:
+  num_pollers: 8
+  pipeline_size: 100000
+  
+  pool:
+    num_workers: 16
+    max_jobs: 4000
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+    supervisor:
+      max_worker_memory: 512
+      ttl: 3600s
+      idle_ttl: 600s
+      exec_ttl: 300s
+  
+  pipelines:
+    # Default Pipeline
+    default:
+      driver: redis
+      priority: 10
+      prefetch: 10000
+      config:
+        addrs: ["${REDIS_HOST}:${REDIS_PORT}"]
+        password: "${REDIS_PASSWORD}"
+        db: 0
+        pool_size: 30
+        dial_timeout: 5s
+        read_timeout: 30s
+        write_timeout: 30s
+        pool_timeout: 30s
+        idle_timeout: 300s
+        idle_check_frequency: 60s
+        max_retries: 3
+        min_retry_backoff: 8ms
+        max_retry_backoff: 512ms
+    
+    # High Priority Pipeline for Critical Tasks
+    high_priority:
+      driver: redis
+      priority: 20
+      prefetch: 1000
+      config:
+        addrs: ["${REDIS_HOST}:${REDIS_PORT}"]
+        password: "${REDIS_PASSWORD}"
+        db: 1
+        pool_size: 20
+        dial_timeout: 5s
+        read_timeout: 30s
+        write_timeout: 30s
+    
+    # Low Priority Pipeline for Background Tasks
+    low_priority:
+      driver: redis
+      priority: 5
+      prefetch: 20000
+      config:
+        addrs: ["${REDIS_HOST}:${REDIS_PORT}"]
+        password: "${REDIS_PASSWORD}"
+        db: 2
+        pool_size: 10
+        dial_timeout: 5s
+        read_timeout: 30s
+        write_timeout: 30s
+    
+    # Analysis Pipeline for AI/ML Tasks
+    analysis:
+      driver: redis
+      priority: 15
+      prefetch: 5000
+      config:
+        addrs: ["${REDIS_HOST}:${REDIS_PORT}"]
+        password: "${REDIS_PASSWORD}"
+        db: 3
+        pool_size: 15
+        dial_timeout: 5s
+        read_timeout: 120s
+        write_timeout: 120s
+    
+    # Notification Pipeline
+    notifications:
+      driver: redis
+      priority: 8
+      prefetch: 15000
+      config:
+        addrs: ["${REDIS_HOST}:${REDIS_PORT}"]
+        password: "${REDIS_PASSWORD}"
+        db: 4
+        pool_size: 12
+  
+  consume: ["high_priority", "analysis", "default", "notifications", "low_priority"]
+
+# Key-Value Storage Configuration
+kv:
+  default:
+    driver: redis
+    config:
+      addrs: ["${REDIS_HOST}:${REDIS_PORT}"]
+      password: "${REDIS_PASSWORD}"
+      db: 5
+      pool_size: 20
+      dial_timeout: 5s
+      read_timeout: 30s
+      write_timeout: 30s
+      pool_timeout: 30s
+      idle_timeout: 300s
+      idle_check_frequency: 60s
+      max_retries: 3
+      min_retry_backoff: 8ms
+      max_retry_backoff: 512ms
+  
+  # Session Storage
+  sessions:
+    driver: redis
+    config:
+      addrs: ["${REDIS_HOST}:${REDIS_PORT}"]
+      password: "${REDIS_PASSWORD}"
+      db: 6
+      pool_size: 15
+      dial_timeout: 5s
+      read_timeout: 30s
+      write_timeout: 30s
+
+# Cache Configuration
+cache:
+  default:
+    driver: redis
+    config:
+      addrs: ["${REDIS_HOST}:${REDIS_PORT}"]
+      password: "${REDIS_PASSWORD}"
+      db: 7
+      pool_size: 25
+      dial_timeout: 5s
+      read_timeout: 30s
+      write_timeout: 30s
+      pool_timeout: 30s
+      idle_timeout: 300s
+      idle_check_frequency: 60s
+      max_retries: 3
+      min_retry_backoff: 8ms
+      max_retry_backoff: 512ms
+  
+  # Analysis Cache
+  analysis:
+    driver: redis
+    config:
+      addrs: ["${REDIS_HOST}:${REDIS_PORT}"]
+      password: "${REDIS_PASSWORD}"
+      db: 8
+      pool_size: 20
+      dial_timeout: 5s
+      read_timeout: 30s
+      write_timeout: 30s
+
+# WebSocket Configuration (if needed)
+websockets:
+  path: "/ws"
+  max_connections: 1000
+  check_origin: true
+  allowed_origins: ["${APP_URL}", "https://${DOMAIN_NAME:-localhost}"]
+  ping_period: 60s
+  max_message_size: 1048576
+
+# Health Check Configuration
+health:
+  address: 0.0.0.0:8080
+  path: "/health"
+  response_code: 200
+  checks:
+    - name: "database"
+      timeout: 5s
+      interval: 30s
+    - name: "redis"
+      timeout: 3s
+      interval: 15s
+    - name: "memory"
+      timeout: 1s
+      interval: 10s
+
+# Error Handling
+errors:
+  max_errors: 100
+  error_threshold: 0.1
+  error_window: 60s
+
+# Performance Optimization
+performance:
+  # Memory Management
+  memory:
+    max_allocation: 2GB
+    gc_threshold: 50MB
+    
+  # CPU Management
+  cpu:
+    max_cores: 0  # Use all available cores
+    
+  # I/O Management
+  io:
+    read_buffer_size: 32KB
+    write_buffer_size: 32KB
+    
+  # Connection Management
+  connections:
+    max_connections: 10000
+    keep_alive_timeout: 65s
+    read_timeout: 30s
+    write_timeout: 30s
+
+# Development Features (disabled in production)
+reload:
+  enabled: false
+
+# Temporal Configuration (if using Temporal)
+temporal:
+  address: "temporal:7233"
+  namespace: "ai-blockchain-analytics"
+  
+# OTEL Configuration
+otel:
+  insecure: true
+  compress: "gzip"
+  client: "grpc"
+  endpoint: "otel-collector:4317"
+  
+# Centrifuge Configuration (if using real-time features)
+centrifuge:
+  proxy_address: "centrifuge:8000"
+  grpc_api_address: "centrifuge:10000"
+  grpc_api_key: "${CENTRIFUGE_API_KEY}"
+  tls:
+    key: "/ssl/server-key.pem"
+    cert: "/ssl/server-cert.pem"
+    root_ca: "/ssl/rootCA.pem"

@@ -1,0 +1,42 @@
+# Demo: 500 Concurrent Analysis Load Test
+config:
+  target: 'http://localhost:8000'
+  
+  phases:
+    # Quick ramp to 500 concurrent
+    - duration: 60
+      arrivalRate: 100
+      rampTo: 500
+      name: "Demo: Ramp to 500 concurrent in 60s"
+    
+    # Brief sustained load
+    - duration: 120
+      arrivalRate: 500
+      name: "Demo: 500 concurrent for 2 minutes"
+    
+    # Quick scale down
+    - duration: 30
+      arrivalRate: 500
+      rampTo: 0
+      name: "Demo: Scale down"
+
+  http:
+    timeout: 30
+    pool: 50
+    maxSockets: 500
+
+  ensure:
+    - http.request_rate > 400
+    - http.response_time.p95 < 5000
+    - http.codes.200 > 0
+
+scenarios:
+  - name: "Contract Analysis Demo"
+    weight: 100
+    flow:
+      - get:
+          url: "/"
+          expect:
+            - statusCode: [200, 404]
+      
+      - think: 0.5

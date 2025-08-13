@@ -1,0 +1,67 @@
+config:
+  target: 'http://localhost:8003'
+  phases:
+    # Immediate ramp to 500 concurrent users
+    - duration: 30
+      arrivalRate: 100
+      rampTo: 500
+      name: "Fast ramp to 500 concurrent"
+    
+    # Sustain 500 concurrent analyses for 5 minutes
+    - duration: 300
+      arrivalRate: 500
+      name: "PEAK STRESS: 500 concurrent analyses"
+
+  # High-performance HTTP settings
+  defaults:
+    headers:
+      'User-Agent': 'Artillery-StressTest-500-Concurrent'
+      'Accept': 'application/json'
+      'Content-Type': 'application/json'
+
+  http:
+    timeout: 30
+    pool: 100
+    maxSockets: 1000
+
+scenarios:
+  # Test verification badge levels endpoint (50% of traffic)
+  - name: "High Volume API - Badge Levels"
+    weight: 50
+    flow:
+      - get:
+          url: "/api/verification-badge/levels"
+          expect:
+            - statusCode: [200, 429, 500]
+
+  # Test solidity cleaner options (25% of traffic)  
+  - name: "High Volume API - Solidity Options"
+    weight: 25
+    flow:
+      - get:
+          url: "/api/solidity-cleaner/options"
+          expect:
+            - statusCode: [200, 429, 500]
+
+  # Test sentiment timeline (25% of traffic)
+  - name: "High Volume API - Sentiment Timeline"
+    weight: 25
+    flow:
+      - get:
+          url: "/api/sentiment/timeline"
+          qs:
+            token: "ethereum"
+            timeframe: "7d"
+          expect:
+            - statusCode: [200, 429, 500]
+
+before:
+  flow:
+    - log: "🚀 STARTING STRESS TEST: 500 CONCURRENT USERS"
+    - log: "⚠️  WARNING: This is a high-intensity load test"
+    - log: "🎯 Target: 500 concurrent users for 5+ minutes"
+
+after:
+  flow:
+    - log: "✅ STRESS TEST COMPLETED"
+    - log: "📈 Check results for performance analysis"

@@ -1,0 +1,156 @@
+config:
+  target: 'http://localhost:8000'
+  
+  phases:
+    # Specialized scenarios for different analysis types
+    - duration: 120
+      arrivalRate: 100
+      name: "🔬 Security Analysis Focus"
+    - duration: 120
+      arrivalRate: 150
+      name: "💹 Sentiment Analysis Focus"
+    - duration: 180
+      arrivalRate: 500
+      name: "🎯 PEAK: Mixed Workload"
+    - duration: 120
+      arrivalRate: 200
+      name: "📄 PDF Generation Stress"
+
+  payload:
+    path: "./test-data.csv"
+    fields:
+      - "symbol"
+      - "address"
+      - "keyword"
+
+  plugins:
+    metrics-by-endpoint:
+      enabled: true
+    expect:
+      outputFormat: 'prettyError'
+
+scenarios:
+  # Security Analysis Heavy (35%)
+  - name: "🛡️ Security Analysis Heavy"
+    weight: 35
+    flow:
+      - post:
+          url: "/api/contracts/analyze-demo"
+          name: "Security Analysis"
+          json:
+            contract_input: "{{ address }}"
+            network: "ethereum"
+            analysis_type: "security"
+            depth: "comprehensive"
+          expect:
+            - statusCode: [200, 201, 202]
+          think: "{{ $randomNumber(2, 5) }}"
+      
+      # Check for OWASP security findings
+      - get:
+          url: "/api/security/findings"
+          name: "Security Findings"
+          qs:
+            contract: "{{ address }}"
+          expect:
+            - statusCode: [200, 404]
+
+  # Sentiment Analysis Heavy (25%)
+  - name: "📊 Sentiment Analysis Heavy"
+    weight: 25
+    flow:
+      - get:
+          url: "/api/sentiment-analysis/summary"
+          name: "Sentiment Summary"
+          qs:
+            symbol: "{{ symbol }}"
+            days: "{{ $randomInt(7, 30) }}"
+          expect:
+            - statusCode: 200
+      
+      - post:
+          url: "/api/load-test/sentiment"
+          name: "Sentiment Processing"
+          json:
+            text: "{{ keyword }} analysis for {{ symbol }} cryptocurrency market"
+            symbol: "{{ symbol }}"
+          expect:
+            - statusCode: [200, 201]
+      
+      - get:
+          url: "/api/sentiment-analysis/timeline"
+          name: "Sentiment Timeline"
+          qs:
+            symbol: "{{ symbol }}"
+            period: "1d"
+          expect:
+            - statusCode: [200, 404]
+
+  # PDF Generation Stress (20%)
+  - name: "📄 PDF Generation Stress"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/pdf/test"
+          name: "PDF Test Generation"
+          json:
+            type: "{{ $randomItem(['dashboard', 'sentiment', 'crawler']) }}"
+            method: "dompdf"
+          expect:
+            - statusCode: 200
+          think: 3
+      
+      - post:
+          url: "/api/pdf/sentiment-report"
+          name: "Sentiment PDF"
+          json:
+            symbol: "{{ symbol }}"
+            days: 30
+            format: "A4"
+          expect:
+            - statusCode: [200, 422]
+      
+      - post:
+          url: "/api/pdf/html"
+          name: "Custom HTML PDF"
+          json:
+            html: "<html><body><h1>{{ symbol }} Analysis Report</h1><p>{{ keyword }}</p></body></html>"
+            format: "A4"
+          expect:
+            - statusCode: 200
+
+  # Social Crawler Load (15%)
+  - name: "🕷️ Social Crawler Load"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/social-crawler/search"
+          name: "Social Search"
+          json:
+            keywords: ["{{ symbol }}", "{{ keyword }}"]
+            platforms: ["twitter", "reddit"]
+            max_results: "{{ $randomInt(20, 100) }}"
+          expect:
+            - statusCode: [200, 202]
+      
+      - get:
+          url: "/api/social-crawler/statistics"
+          name: "Crawler Stats"
+          expect:
+            - statusCode: 200
+
+  # System Monitoring (5%)
+  - name: "🏥 System Monitoring"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/health"
+          name: "Health Check"
+          expect:
+            - statusCode: 200
+      
+      - get:
+          url: "/api/load-test/complex-query"
+          name: "Complex Query"
+          expect:
+            - statusCode: [200, 500]

@@ -1,0 +1,129 @@
+# Enhanced RoadRunner Dockerfile for AI Blockchain Analytics
+# Multi-stage build for optimized production image
+
+# Build stage
+FROM php:8.3-cli-alpine AS builder
+
+# Install system dependencies
+RUN apk add --no-cache \
+    git \
+    curl \
+    libpng-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    postgresql-dev \
+    autoconf \
+    g++ \
+    make \
+    linux-headers
+
+# Install PHP extensions
+RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
+    && docker-php-ext-install \
+        pdo \
+        pdo_pgsql \
+        pgsql \
+        zip \
+        gd \
+        bcmath \
+        sockets \
+        pcntl \
+        opcache
+
+# Install Redis extension
+RUN pecl install redis \
+    && docker-php-ext-enable redis
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www
+
+# Copy composer files
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
+
+# Production stage
+FROM php:8.3-cli-alpine AS production
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    postgresql-client \
+    curl \
+    libpng \
+    libzip \
+    zip \
+    unzip \
+    supervisor \
+    nginx
+
+# Install PHP extensions (copy from builder)
+COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+
+# Create application user
+RUN addgroup -g 1000 -S www && \
+    adduser -u 1000 -S www -G www
+
+# Set working directory
+WORKDIR /var/www
+
+# Copy application files
+COPY --chown=www:www . .
+COPY --from=builder --chown=www:www /var/www/vendor ./vendor
+
+# Download and install RoadRunner
+RUN curl -L https://github.com/roadrunner-server/roadrunner/releases/latest/download/roadrunner-linux-amd64.tar.gz \
+    | tar -xz -C /usr/local/bin \
+    && chmod +x /usr/local/bin/rr
+
+# Create necessary directories
+RUN mkdir -p \
+    /var/www/storage/logs \
+    /var/www/storage/framework/cache \
+    /var/www/storage/framework/sessions \
+    /var/www/storage/framework/views \
+    /var/www/bootstrap/cache \
+    /run/nginx \
+    /var/log/supervisor
+
+# Set permissions
+RUN chown -R www:www /var/www/storage /var/www/bootstrap/cache \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+
+# Copy configuration files
+COPY docker/roadrunner/.rr.yaml /var/www/.rr.yaml
+COPY docker/php/php-prod.ini /usr/local/etc/php/conf.d/99-custom.ini
+COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
+COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy entrypoint script
+COPY docker/scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Health check script
+COPY docker/scripts/healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN chmod +x /usr/local/bin/healthcheck.sh
+
+# Expose ports
+EXPOSE 8000 6001 2112
+
+# Switch to application user
+USER www
+
+# Set environment variables
+ENV CONTAINER_ROLE=app
+ENV RR_WORKERS=8
+ENV RR_MAX_JOBS=64
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD /usr/local/bin/healthcheck.sh
+
+# Default command
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["app"]

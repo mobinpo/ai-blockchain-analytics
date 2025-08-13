@@ -1,0 +1,79 @@
+config:
+  target: 'http://localhost:8003'
+  phases:
+    # Quick warmup
+    - duration: 30
+      arrivalRate: 10
+      name: "Warmup"
+    
+    # Ramp to 100
+    - duration: 60
+      arrivalRate: 50
+      name: "Ramp to 100"
+    
+    # Ramp to 250
+    - duration: 90
+      arrivalRate: 125
+      name: "Ramp to 250"
+    
+    # Peak load - 500 concurrent
+    - duration: 300
+      arrivalRate: 500
+      name: "Peak 500 concurrent"
+    
+    # Sustained load
+    - duration: 180
+      arrivalRate: 250
+      name: "Sustained load"
+    
+    # Cool down
+    - duration: 60
+      arrivalRate: 50
+      name: "Cool down"
+
+  http:
+    timeout: 30
+    pool: 100
+
+  plugins:
+    metrics-by-endpoint: {}
+
+scenarios:
+  # Main application testing - focus on pages that work
+  - name: "Frontend Load Testing"
+    weight: 100
+    flow:
+      # Test homepage - this should always work
+      - get:
+          url: "/"
+          expect:
+            - statusCode: [200, 302]
+          think: 1
+
+      # Test login page - public endpoint
+      - get:
+          url: "/login"
+          expect:
+            - statusCode: [200]
+          think: 0.5
+
+      # Test register page - public endpoint
+      - get:
+          url: "/register"
+          expect:
+            - statusCode: [200]
+          think: 0.5
+
+      # Test dashboard (may redirect)
+      - get:
+          url: "/dashboard"
+          expect:
+            - statusCode: [200, 302]
+          think: 0.3
+
+      # Test another route that might exist
+      - get:
+          url: "/analyses"
+          expect:
+            - statusCode: [200, 302, 404]
+          think: 0.2

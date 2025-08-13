@@ -1,0 +1,228 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: ai_blockchain_app_dev
+    working_dir: /var/www
+    env_file: .env
+    volumes:
+      - ./:/var/www:delegated
+      - composer_cache:/root/.composer:cached
+      - node_modules:/var/www/node_modules:cached
+      - storage:/var/www/storage
+    ports:
+      - "${APP_PORT:-8003}:8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:${APP_PORT:-8003}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ai_blockchain_analytics
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SESSION_CONNECTION: redis
+      QUEUE_CONNECTION: redis
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: file
+      XDEBUG_MODE: debug
+      XDEBUG_CONFIG: client_host=host.docker.internal
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - ai_blockchain_dev
+
+  horizon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: ai_blockchain_horizon_dev
+    working_dir: /var/www
+    env_file: .env
+    volumes:
+      - ./:/var/www:delegated
+      - composer_cache:/root/.composer:cached
+      - storage:/var/www/storage
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ai_blockchain_analytics
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      QUEUE_CONNECTION: redis
+    depends_on:
+      app:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: php artisan horizon
+    restart: unless-stopped
+    networks:
+      - ai_blockchain_dev
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: ai_blockchain_scheduler_dev
+    working_dir: /var/www
+    env_file: .env
+    volumes:
+      - ./:/var/www:delegated
+      - composer_cache:/root/.composer:cached
+      - storage:/var/www/storage
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ai_blockchain_analytics
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      REDIS_CLIENT: predis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      app:
+        condition: service_healthy
+    command: |
+      sh -c '
+        while true; do
+          php artisan schedule:run --verbose --no-interaction &
+          sleep 60
+        done
+      '
+    restart: unless-stopped
+    networks:
+      - ai_blockchain_dev
+
+  vite:
+    image: node:20-alpine
+    container_name: ai_blockchain_vite_dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www:delegated
+      - node_modules:/var/www/node_modules:cached
+    ports:
+      - "5173:5173"
+    environment:
+      NODE_ENV: development
+      VITE_HOST: 0.0.0.0
+      VITE_PORT: 5173
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - ai_blockchain_dev
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ai_blockchain_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ai_blockchain_analytics
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ai_blockchain_analytics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - ai_blockchain_dev
+
+  redis:
+    image: redis:7-alpine
+    container_name: ai_blockchain_redis_dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data_dev:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - ai_blockchain_dev
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ai_blockchain_mailhog_dev
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - ai_blockchain_dev
+
+  # Testing database for isolated tests
+  postgres_test:
+    image: postgres:16-alpine
+    container_name: ai_blockchain_postgres_test
+    environment:
+      POSTGRES_DB: ai_blockchain_analytics_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ai_blockchain_analytics_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ai_blockchain_dev
+
+networks:
+  ai_blockchain_dev:
+    driver: bridge
+    name: ai_blockchain_network_dev
+
+volumes:
+  postgres_data_dev:
+    driver: local
+  postgres_test_data:
+    driver: local
+  redis_data_dev:
+    driver: local
+  composer_cache:
+    driver: local
+  node_modules:
+    driver: local
+  storage:
+    driver: local

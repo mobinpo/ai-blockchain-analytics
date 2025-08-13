@@ -1,0 +1,44 @@
+# 🎬 Scene: PDF Generation
+
+**Duration**: 15 seconds  
+**Start Time**: 60s  
+**Description**: Professional report generation
+
+## 📋 Recording Checklist
+
+### Pre-Recording Setup
+- [ ] Browser in full-screen mode
+- [ ] Demo data loaded and ready
+- [ ] Audio levels checked
+- [ ] Screen resolution set to 1920x1080
+- [ ] Recording software configured
+
+### Visual Elements
+- [ ] pdf_generation
+- [ ] report_preview
+- [ ] download
+
+
+### Audio Requirements
+- **Tone**: professional_benefits
+- **Pacing**: Measured but engaging
+- **Volume**: Consistent levels
+- **Quality**: Studio-grade recording
+
+### Recording Instructions
+1. Start recording 2 seconds before action
+2. Maintain smooth cursor movements
+3. Pause briefly between major actions
+4. End recording 2 seconds after completion
+
+### Post-Recording Notes
+- [ ] Review for smooth transitions
+- [ ] Check audio sync
+- [ ] Verify visual clarity
+- [ ] Note any retakes needed
+
+## 🎯 Success Criteria
+- Clear visual demonstration
+- Smooth, professional movements
+- Excellent audio quality
+- Proper timing alignment

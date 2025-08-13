@@ -1,0 +1,277 @@
+{
+  "crypto_symbols": [
+    "BTC", "ETH", "ADA", "SOL", "MATIC", "AVAX", "DOT", "LINK", "UNI", "AAVE",
+    "NEAR", "ATOM", "ALGO", "XTZ", "EGLD", "FTM", "LUNA", "MANA", "SAND", "AXS",
+    "ENJ", "CHZ", "BAT", "ZRX", "1INCH", "CRV", "COMP", "MKR", "SNX", "YFI",
+    "SUSHI", "ALPHA", "CAKE", "BNB", "XRP", "DOGE", "SHIB", "LTC", "BCH", "ETC"
+  ],
+  
+  "blockchain_networks": [
+    {
+      "name": "ethereum",
+      "chain_id": 1,
+      "explorer": "etherscan.io",
+      "native_token": "ETH",
+      "gas_token": "ETH",
+      "avg_block_time": 12
+    },
+    {
+      "name": "polygon",
+      "chain_id": 137,
+      "explorer": "polygonscan.com",
+      "native_token": "MATIC",
+      "gas_token": "MATIC",
+      "avg_block_time": 2
+    },
+    {
+      "name": "avalanche",
+      "chain_id": 43114,
+      "explorer": "snowtrace.io",
+      "native_token": "AVAX",
+      "gas_token": "AVAX",
+      "avg_block_time": 3
+    },
+    {
+      "name": "arbitrum",
+      "chain_id": 42161,
+      "explorer": "arbiscan.io",
+      "native_token": "ETH",
+      "gas_token": "ETH",
+      "avg_block_time": 1
+    },
+    {
+      "name": "optimism",
+      "chain_id": 10,
+      "explorer": "optimistic.etherscan.io",
+      "native_token": "ETH",
+      "gas_token": "ETH",
+      "avg_block_time": 2
+    }
+  ],
+  
+  "analysis_scenarios": [
+    {
+      "name": "High-Frequency Trading Analysis",
+      "priority": "urgent",
+      "batch_size": 1000,
+      "sources": ["binance", "coinbase", "kraken", "orderbook"],
+      "timeframe": "1m",
+      "analysis_type": "algorithmic_trading",
+      "complexity": "high",
+      "expected_duration": "30-60s"
+    },
+    {
+      "name": "DeFi Protocol Risk Assessment",
+      "priority": "high",
+      "batch_size": 500,
+      "sources": ["ethereum", "polygon", "arbitrum", "defipulse"],
+      "timeframe": "1h",
+      "analysis_type": "risk_assessment",
+      "complexity": "very_high",
+      "expected_duration": "2-5m"
+    },
+    {
+      "name": "Social Sentiment Aggregation",
+      "priority": "medium",
+      "batch_size": 2000,
+      "sources": ["twitter", "reddit", "telegram", "discord", "news"],
+      "timeframe": "4h",
+      "analysis_type": "sentiment_analysis",
+      "complexity": "medium",
+      "expected_duration": "1-3m"
+    },
+    {
+      "name": "NFT Market Analysis",
+      "priority": "medium",
+      "batch_size": 300,
+      "sources": ["opensea", "blur", "x2y2", "looksrare"],
+      "timeframe": "1d",
+      "analysis_type": "market_analysis",
+      "complexity": "medium",
+      "expected_duration": "45-90s"
+    },
+    {
+      "name": "Cross-Chain Bridge Security",
+      "priority": "high",
+      "batch_size": 100,
+      "sources": ["ethereum", "polygon", "arbitrum", "optimism"],
+      "timeframe": "1h",
+      "analysis_type": "security_audit",
+      "complexity": "very_high",
+      "expected_duration": "3-8m"
+    },
+    {
+      "name": "Yield Farming Optimization",
+      "priority": "medium",
+      "batch_size": 400,
+      "sources": ["defi_protocols", "yield_tracking", "apr_data"],
+      "timeframe": "12h",
+      "analysis_type": "yield_optimization",
+      "complexity": "high",
+      "expected_duration": "2-4m"
+    }
+  ],
+  
+  "contract_templates": [
+    {
+      "type": "erc20_token",
+      "standard": "ERC-20",
+      "complexity": "low",
+      "typical_functions": ["transfer", "approve", "balanceOf", "totalSupply"],
+      "security_checks": ["overflow", "reentrancy", "access_control"],
+      "gas_estimate": "50000-100000"
+    },
+    {
+      "type": "defi_protocol",
+      "standard": "Custom",
+      "complexity": "very_high",
+      "typical_functions": ["deposit", "withdraw", "swap", "liquidate", "flashloan"],
+      "security_checks": ["reentrancy", "oracle_manipulation", "flash_loan_attacks", "MEV"],
+      "gas_estimate": "200000-1000000"
+    },
+    {
+      "type": "nft_collection",
+      "standard": "ERC-721",
+      "complexity": "medium",
+      "typical_functions": ["mint", "transfer", "approve", "tokenURI"],
+      "security_checks": ["metadata_validation", "minting_limits", "royalty_enforcement"],
+      "gas_estimate": "100000-300000"
+    },
+    {
+      "type": "dao_governance",
+      "standard": "Custom",
+      "complexity": "high",
+      "typical_functions": ["propose", "vote", "execute", "delegate"],
+      "security_checks": ["voting_power", "proposal_validation", "execution_delays"],
+      "gas_estimate": "150000-500000"
+    }
+  ],
+  
+  "market_conditions": [
+    {
+      "condition": "bull_market",
+      "sentiment_bias": 0.7,
+      "volatility": "medium",
+      "volume_multiplier": 1.5,
+      "social_activity": "high"
+    },
+    {
+      "condition": "bear_market",
+      "sentiment_bias": -0.6,
+      "volatility": "high",
+      "volume_multiplier": 0.8,
+      "social_activity": "medium"
+    },
+    {
+      "condition": "sideways_market",
+      "sentiment_bias": 0.1,
+      "volatility": "low",
+      "volume_multiplier": 1.0,
+      "social_activity": "low"
+    },
+    {
+      "condition": "extreme_volatility",
+      "sentiment_bias": 0.0,
+      "volatility": "extreme",
+      "volume_multiplier": 3.0,
+      "social_activity": "extreme"
+    }
+  ],
+  
+  "ai_analysis_types": [
+    {
+      "type": "sentiment_analysis",
+      "ai_model": "gpt-4",
+      "processing_time": "30-120s",
+      "accuracy": "85-92%",
+      "resource_intensity": "medium",
+      "token_usage": "1000-5000"
+    },
+    {
+      "type": "price_prediction",
+      "ai_model": "custom_lstm",
+      "processing_time": "60-300s",
+      "accuracy": "70-80%",
+      "resource_intensity": "high",
+      "token_usage": "2000-8000"
+    },
+    {
+      "type": "risk_assessment",
+      "ai_model": "ensemble",
+      "processing_time": "90-240s",
+      "accuracy": "80-88%",
+      "resource_intensity": "high",
+      "token_usage": "3000-10000"
+    },
+    {
+      "type": "anomaly_detection",
+      "ai_model": "isolation_forest",
+      "processing_time": "20-60s",
+      "accuracy": "90-95%",
+      "resource_intensity": "low",
+      "token_usage": "500-2000"
+    }
+  ],
+  
+  "realistic_user_patterns": [
+    {
+      "user_type": "day_trader",
+      "session_duration": "2-8h",
+      "requests_per_minute": "5-15",
+      "primary_endpoints": ["sentiment", "price_analysis", "technical_indicators"],
+      "peak_hours": ["09:00-11:00", "14:00-16:00", "20:00-22:00"],
+      "geographic_distribution": ["US", "EU", "ASIA"]
+    },
+    {
+      "user_type": "defi_researcher",
+      "session_duration": "1-4h",
+      "requests_per_minute": "2-8",
+      "primary_endpoints": ["contract_analysis", "protocol_security", "yield_analysis"],
+      "peak_hours": ["10:00-12:00", "15:00-18:00"],
+      "geographic_distribution": ["US", "EU"]
+    },
+    {
+      "user_type": "institutional_analyst",
+      "session_duration": "4-12h",
+      "requests_per_minute": "1-5",
+      "primary_endpoints": ["comprehensive_reports", "risk_assessment", "compliance"],
+      "peak_hours": ["08:00-18:00"],
+      "geographic_distribution": ["US", "EU", "ASIA"]
+    },
+    {
+      "user_type": "retail_investor",
+      "session_duration": "15m-2h",
+      "requests_per_minute": "1-3",
+      "primary_endpoints": ["basic_analysis", "portfolio_tracking", "alerts"],
+      "peak_hours": ["18:00-23:00", "Weekend"],
+      "geographic_distribution": ["Global"]
+    }
+  ],
+  
+  "stress_test_scenarios": [
+    {
+      "name": "Black Swan Event Simulation",
+      "description": "Simulate extreme market conditions with 10x normal load",
+      "load_multiplier": 10,
+      "duration": "300s",
+      "expected_failures": "10-20%",
+      "recovery_time": "60-120s"
+    },
+    {
+      "name": "Viral Social Media Event",
+      "description": "Sudden spike in sentiment analysis requests",
+      "load_multiplier": 5,
+      "duration": "600s",
+      "expected_failures": "5-15%",
+      "recovery_time": "30-60s"
+    },
+    {
+      "name": "Exchange Hack Response",
+      "description": "Massive security analysis requests",
+      "load_multiplier": 8,
+      "duration": "900s",
+      "expected_failures": "15-25%",
+      "recovery_time": "90-180s"
+    }
+  ]
+}

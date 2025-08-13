@@ -1,0 +1,278 @@
+service: social-crawler-microservice
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  memorySize: 1024
+  timeout: 900  # 15 minutes (max for Lambda)
+  
+  environment:
+    STAGE: ${self:provider.stage}
+    REGION: ${self:provider.region}
+    DYNAMODB_TABLE: ${self:custom.dynamoDbTable}
+    SNS_TOPIC_ARN: ${self:resources.Outputs.CrawlerNotificationsTopic.Value}
+    
+    # Social Media API Keys (set via environment or SSM)
+    TWITTER_BEARER_TOKEN: ${env:TWITTER_BEARER_TOKEN}
+    TWITTER_API_KEY: ${env:TWITTER_API_KEY}
+    TWITTER_API_SECRET: ${env:TWITTER_API_SECRET}
+    TWITTER_ACCESS_TOKEN: ${env:TWITTER_ACCESS_TOKEN}
+    TWITTER_ACCESS_TOKEN_SECRET: ${env:TWITTER_ACCESS_TOKEN_SECRET}
+    
+    REDDIT_CLIENT_ID: ${env:REDDIT_CLIENT_ID}
+    REDDIT_CLIENT_SECRET: ${env:REDDIT_CLIENT_SECRET}
+    REDDIT_USERNAME: ${env:REDDIT_USERNAME}
+    REDDIT_PASSWORD: ${env:REDDIT_PASSWORD}
+    REDDIT_USER_AGENT: ${env:REDDIT_USER_AGENT, 'SocialCrawlerBot/1.0'}
+    
+    TELEGRAM_BOT_TOKEN: ${env:TELEGRAM_BOT_TOKEN}
+    TELEGRAM_CHANNELS: ${env:TELEGRAM_CHANNELS}
+    
+    # Proxy configuration
+    PROXY_ENABLED: ${env:PROXY_ENABLED, 'true'}
+    PROXY_URL: ${env:PROXY_URL, 'socks5://192.168.1.32:8086'}
+    
+    # Rate limiting
+    TWITTER_RATE_LIMIT_DELAY: ${env:TWITTER_RATE_LIMIT_DELAY, '1.0'}
+    REDDIT_RATE_LIMIT_DELAY: ${env:REDDIT_RATE_LIMIT_DELAY, '2.0'}
+    TELEGRAM_RATE_LIMIT_DELAY: ${env:TELEGRAM_RATE_LIMIT_DELAY, '0.5'}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:Query
+        - dynamodb:Scan
+      Resource:
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamoDbTable}"
+        - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamoDbTable}/index/*"
+    
+    - Effect: Allow
+      Action:
+        - sns:Publish
+      Resource:
+        - "arn:aws:sns:${self:provider.region}:*:${self:custom.snsTopicName}"
+    
+    - Effect: Allow
+      Action:
+        - logs:CreateLogGroup
+        - logs:CreateLogStream
+        - logs:PutLogEvents
+      Resource: "*"
+
+custom:
+  dynamoDbTable: social-media-posts-${self:provider.stage}
+  snsTopicName: crawler-notifications-${self:provider.stage}
+  
+  # Serverless plugins
+  pythonRequirements:
+    dockerizePip: true
+    slim: true
+    strip: false
+    layer: true
+    
+  # For better performance
+  prune:
+    automatic: true
+    number: 3
+
+functions:
+  crawl:
+    handler: main.lambda_handler
+    description: Social media crawler micro-service
+    events:
+      # HTTP API endpoint
+      - httpApi:
+          path: /crawl
+          method: post
+          cors: true
+      
+      # SNS trigger for scheduled crawling
+      - sns:
+          arn: !Ref CrawlerScheduleTopic
+          topicName: crawler-schedule-${self:provider.stage}
+      
+      # SQS trigger for batch processing
+      - sqs:
+          arn: !GetAtt CrawlerQueue.Arn
+          batchSize: 1
+          maximumBatchingWindowInSeconds: 5
+    
+    layers:
+      - ${cf:python-requirements-layer-${self:provider.stage}.PythonRequirementsLambdaLayerQualifiedArn}
+    
+    reservedConcurrency: 10  # Limit concurrent executions
+    
+    # VPC configuration if needed for proxy access
+    # vpc:
+    #   securityGroupIds:
+    #     - sg-xxxxxxxxx
+    #   subnetIds:
+    #     - subnet-xxxxxxxxx
+    #     - subnet-yyyyyyyyy
+
+  # Health check function
+  health:
+    handler: main.health_check
+    description: Health check for crawler micro-service
+    events:
+      - httpApi:
+          path: /health
+          method: get
+          cors: true
+    timeout: 30
+    memorySize: 256
+
+  # Job status function
+  status:
+    handler: main.get_job_status
+    description: Get crawling job status
+    events:
+      - httpApi:
+          path: /job/{jobId}/status
+          method: get
+          cors: true
+    timeout: 30
+    memorySize: 256
+
+resources:
+  Resources:
+    # DynamoDB table for storing social media posts
+    SocialMediaPostsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.dynamoDbTable}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: post_id
+            AttributeType: S
+          - AttributeName: job_id
+            AttributeType: S
+          - AttributeName: platform
+            AttributeType: S
+          - AttributeName: timestamp
+            AttributeType: S
+        KeySchema:
+          - AttributeName: post_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: job-index
+            KeySchema:
+              - AttributeName: job_id
+                KeyType: HASH
+              - AttributeName: timestamp
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: platform-index
+            KeySchema:
+              - AttributeName: platform
+                KeyType: HASH
+              - AttributeName: timestamp
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+        Tags:
+          - Key: Service
+            Value: social-crawler
+          - Key: Environment
+            Value: ${self:provider.stage}
+
+    # SNS topic for notifications
+    CrawlerNotificationsTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:custom.snsTopicName}
+        DisplayName: Social Crawler Notifications
+        
+    # SNS topic for scheduling
+    CrawlerScheduleTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: crawler-schedule-${self:provider.stage}
+        DisplayName: Social Crawler Schedule Trigger
+
+    # SQS queue for batch processing
+    CrawlerQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: crawler-queue-${self:provider.stage}
+        MessageRetentionPeriod: 1209600  # 14 days
+        VisibilityTimeoutSeconds: 960    # 16 minutes (longer than Lambda timeout)
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt CrawlerDeadLetterQueue.Arn
+          maxReceiveCount: 3
+
+    # Dead letter queue
+    CrawlerDeadLetterQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: crawler-dlq-${self:provider.stage}
+        MessageRetentionPeriod: 1209600  # 14 days
+
+    # CloudWatch Log Group
+    CrawlerLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/social-crawler-microservice-${self:provider.stage}-crawl
+        RetentionInDays: 14
+
+    # API Gateway throttling
+    ApiGatewayThrottling:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        RestApiId: !Ref HttpApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: true
+
+  Outputs:
+    CrawlerApiEndpoint:
+      Description: API Gateway endpoint URL for crawler
+      Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+      Export:
+        Name: ${self:provider.stage}-crawler-api-endpoint
+
+    CrawlerNotificationsTopic:
+      Description: SNS topic for crawler notifications
+      Value: !Ref CrawlerNotificationsTopic
+      Export:
+        Name: ${self:provider.stage}-crawler-notifications-topic
+
+    DynamoDbTable:
+      Description: DynamoDB table for social media posts
+      Value: !Ref SocialMediaPostsTable
+      Export:
+        Name: ${self:provider.stage}-social-media-posts-table
+
+plugins:
+  - serverless-python-requirements
+  - serverless-prune-plugin
+
+# Package configuration
+package:
+  individually: true
+  exclude:
+    - .git/**
+    - .pytest_cache/**
+    - __pycache__/**
+    - "*.pyc"
+    - tests/**
+    - node_modules/**
+    - package*.json
+    - .env
+    - README.md
+    - .gitignore

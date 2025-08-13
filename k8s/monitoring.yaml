@@ -1,0 +1,376 @@
+# AI Blockchain Analytics - Monitoring Stack
+# Sentry + Telescope + Observability Configuration
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: monitoring-config
+  namespace: ai-blockchain-analytics
+  labels:
+    app: monitoring
+    component: configuration
+data:
+  # Sentry Configuration
+  sentry.yaml: |
+    dsn: ${SENTRY_LARAVEL_DSN}
+    environment: ${SENTRY_ENVIRONMENT}
+    release: ${SENTRY_RELEASE}
+    
+    # Performance monitoring
+    traces_sample_rate: ${SENTRY_TRACES_SAMPLE_RATE}
+    profiles_sample_rate: ${SENTRY_PROFILES_SAMPLE_RATE}
+    
+    # Custom tags
+    tags:
+      platform: ai-blockchain-analytics
+      deployment_mode: kubernetes
+      cluster: ${CLUSTER_NAME}
+    
+    # Ignored errors
+    ignored_errors:
+      - ValidationException
+      - AuthenticationException
+      - NotFoundHttpException
+      - TooManyRequestsHttpException
+    
+    # Breadcrumbs
+    breadcrumbs:
+      logs: true
+      sql_queries: true
+      queue: true
+      cache: false
+      
+  # Telescope Staging Override (for staging namespace)
+  telescope-staging.env: |
+    TELESCOPE_ENABLED=true
+    TELESCOPE_PRODUCTION_ENABLED=true
+    TELESCOPE_SAMPLING_RATE=0.2
+    TELESCOPE_CACHE_WATCHER=true
+    TELESCOPE_COMMAND_WATCHER=true
+    TELESCOPE_EVENT_WATCHER=true
+    TELESCOPE_MODEL_WATCHER=true
+    TELESCOPE_REDIS_WATCHER=true
+    TELESCOPE_VIEW_WATCHER=true
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: telescope-cleanup
+  namespace: ai-blockchain-analytics
+  labels:
+    app: telescope
+    component: cleanup
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: telescope-cleanup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: telescope-cleanup
+            image: your-registry/ai-blockchain-analytics:latest
+            command: ["php", "artisan", "telescope:prune", "--hours=24"]
+            envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "256Mi"
+                cpu: "200m"
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 1000
+              allowPrivilegeEscalation: false
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: monitoring-service
+  namespace: ai-blockchain-analytics
+  labels:
+    app: monitoring
+spec:
+  type: ClusterIP
+  ports:
+  - name: prometheus
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  - name: sentry-relay
+    port: 3000
+    targetPort: 3000
+    protocol: TCP
+  selector:
+    app: monitoring
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentry-relay
+  namespace: ai-blockchain-analytics
+  labels:
+    app: sentry-relay
+    component: monitoring
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sentry-relay
+  template:
+    metadata:
+      labels:
+        app: sentry-relay
+        component: monitoring
+    spec:
+      containers:
+      - name: sentry-relay
+        image: getsentry/relay:latest
+        ports:
+        - containerPort: 3000
+          name: relay
+        env:
+        - name: RELAY_MODE
+          value: "proxy"
+        - name: RELAY_UPSTREAM
+          value: "https://sentry.io/"
+        - name: RELAY_HOST
+          value: "0.0.0.0"
+        - name: RELAY_PORT
+          value: "3000"
+        - name: RELAY_LOG_LEVEL
+          value: "info"
+        volumeMounts:
+        - name: relay-config
+          mountPath: /etc/relay
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/relay/healthcheck/live/
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/relay/healthcheck/ready/
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: relay-config
+        configMap:
+          name: sentry-relay-config
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sentry-relay-config
+  namespace: ai-blockchain-analytics
+  labels:
+    app: sentry-relay
+data:
+  config.yml: |
+    relay:
+      mode: proxy
+      upstream: "https://sentry.io/"
+      host: "0.0.0.0"
+      port: 3000
+      
+    http:
+      timeout: 5
+      max_retry_interval: 300
+      
+    cache:
+      project_expiry: 300
+      relay_expiry: 3600
+      
+    limits:
+      max_concurrent_requests: 100
+      max_payload_size: 20971520  # 20MB
+      
+    processing:
+      enabled: true
+      kafka_config: []
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: monitoring-netpol
+  namespace: ai-blockchain-analytics
+  labels:
+    app: monitoring
+spec:
+  podSelector:
+    matchLabels:
+      component: monitoring
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: roadrunner-app
+    - podSelector:
+        matchLabels:
+          app: crawler-microservice
+    - podSelector:
+        matchLabels:
+          app: horizon-worker
+    ports:
+    - protocol: TCP
+      port: 3000  # Sentry Relay
+  egress:
+  - to: []  # Allow all outbound for Sentry communication
+    ports:
+    - protocol: TCP
+      port: 443
+
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: ai-blockchain-analytics-metrics
+  namespace: ai-blockchain-analytics
+  labels:
+    app: ai-blockchain-analytics
+    component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: roadrunner-app
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    honorLabels: true
+  - port: metrics
+    interval: 30s
+    path: /telescope-metrics
+    honorLabels: true
+  namespaceSelector:
+    matchNames:
+    - ai-blockchain-analytics
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: monitoring-setup
+  namespace: ai-blockchain-analytics
+  labels:
+    app: monitoring-setup
+    component: setup
+spec:
+  template:
+    metadata:
+      labels:
+        app: monitoring-setup
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: setup
+        image: your-registry/ai-blockchain-analytics:latest
+        command: ["php", "artisan", "monitoring:setup"]
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        env:
+        - name: SETUP_SENTRY
+          value: "true"
+        - name: SETUP_TELESCOPE
+          value: "true"
+        - name: SETUP_PROMETHEUS
+          value: "true"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+# Telescope Route Middleware ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: telescope-middleware-config
+  namespace: ai-blockchain-analytics
+  labels:
+    app: telescope
+    component: security
+data:
+  telescope-production.php: |
+    <?php
+    
+    return [
+        'middleware' => [
+            'web',
+            \App\Http\Middleware\TelescopeProduction::class,
+            \Laravel\Telescope\Http\Middleware\Authorize::class,
+        ],
+        
+        'gate' => function ($request) {
+            // Check if in production environment
+            if (app()->environment('production')) {
+                // Check if production access is enabled
+                if (!config('telescope.ai_blockchain.production_enabled')) {
+                    return false;
+                }
+                
+                // Check IP restrictions
+                $allowedIps = config('telescope.ai_blockchain.production_restrictions.allowed_ips', []);
+                if (!empty($allowedIps) && !in_array($request->ip(), $allowedIps)) {
+                    return false;
+                }
+                
+                // Check user restrictions
+                if (!auth()->check()) {
+                    return false;
+                }
+                
+                $user = auth()->user();
+                $allowedUsers = config('telescope.ai_blockchain.production_restrictions.allowed_users', []);
+                if (!empty($allowedUsers) && !in_array($user->email, $allowedUsers)) {
+                    return false;
+                }
+                
+                // Check permissions
+                $requiredPermission = config('telescope.ai_blockchain.production_restrictions.required_permission');
+                if ($requiredPermission && !$user->can($requiredPermission)) {
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            // Allow in non-production environments for local development
+            return app()->environment('local', 'testing');
+        },
+    ];

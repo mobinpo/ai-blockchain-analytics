@@ -1,0 +1,450 @@
+# AI Blockchain Analytics Crawler Microservice Deployment
+# Supports both Octane and Lambda deployment modes
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: crawler-config
+  namespace: ai-blockchain-analytics
+  labels:
+    app: crawler-microservice
+    component: configuration
+data:
+  # Crawler Configuration
+  CRAWLER_ENABLED: "true"
+  CRAWLER_DEPLOYMENT_MODE: "octane"
+  CRAWLER_DEFAULT_INTERVAL: "300"
+  CRAWLER_MAX_CONCURRENT_JOBS: "5"
+  CRAWLER_JOB_TIMEOUT: "30"
+  
+  # Platform Configurations
+  TWITTER_CRAWLER_ENABLED: "true"
+  TWITTER_RATE_LIMIT: "300"
+  TWITTER_REQUEST_DELAY: "1000"
+  
+  REDDIT_CRAWLER_ENABLED: "true"
+  REDDIT_RATE_LIMIT: "100"
+  REDDIT_REQUEST_DELAY: "2000"
+  
+  TELEGRAM_CRAWLER_ENABLED: "true"
+  TELEGRAM_RATE_LIMIT: "200"
+  TELEGRAM_REQUEST_DELAY: "500"
+  
+  # Processing Configuration
+  CRAWLER_SENTIMENT_ANALYSIS_ENABLED: "true"
+  CRAWLER_SENTIMENT_BATCH_SIZE: "10"
+  CRAWLER_FUZZY_MATCHING: "true"
+  CRAWLER_SIMILARITY_THRESHOLD: "0.8"
+  
+  # Storage Configuration
+  CRAWLER_STORE_RAW_DATA: "true"
+  CRAWLER_BATCH_INSERT_SIZE: "100"
+  CRAWLER_RETENTION_DAYS: "90"
+  
+  # Monitoring Configuration
+  CRAWLER_MONITORING_ENABLED: "true"
+  CRAWLER_TRACK_PERFORMANCE: "true"
+  CRAWLER_LOG_LEVEL: "info"
+  
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: crawler-secrets
+  namespace: ai-blockchain-analytics
+  labels:
+    app: crawler-microservice
+    component: secrets
+type: Opaque
+data:
+  # Twitter API Credentials (Base64 encoded)
+  TWITTER_API_KEY: ""
+  TWITTER_API_SECRET: ""
+  TWITTER_BEARER_TOKEN: ""
+  TWITTER_ACCESS_TOKEN: ""
+  TWITTER_ACCESS_TOKEN_SECRET: ""
+  
+  # Reddit API Credentials
+  REDDIT_CLIENT_ID: ""
+  REDDIT_CLIENT_SECRET: ""
+  REDDIT_USERNAME: ""
+  REDDIT_PASSWORD: ""
+  
+  # Telegram API Credentials
+  TELEGRAM_BOT_TOKEN: ""
+  TELEGRAM_API_ID: ""
+  TELEGRAM_API_HASH: ""
+  TELEGRAM_PHONE_NUMBER: ""
+  
+  # Alert Webhooks
+  CRAWLER_SLACK_WEBHOOK: ""
+  CRAWLER_DISCORD_WEBHOOK: ""
+  CRAWLER_ALERT_EMAIL: ""
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crawler-microservice
+  namespace: ai-blockchain-analytics
+  labels:
+    app: crawler-microservice
+    component: crawler
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: crawler-microservice
+  template:
+    metadata:
+      labels:
+        app: crawler-microservice
+        component: crawler
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9091"
+        prometheus.io/path: "/metrics"
+    spec:
+      initContainers:
+      - name: wait-for-redis
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args:
+        - |
+          until nc -z redis-service 6379; do
+            echo "Waiting for Redis..."
+            sleep 2
+          done
+          echo "Redis is ready"
+      - name: wait-for-postgres
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args:
+        - |
+          until nc -z postgres-service 5432; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready"
+      containers:
+      - name: crawler-microservice
+        image: your-registry/ai-blockchain-analytics:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8001
+          name: crawler-http
+          protocol: TCP
+        - containerPort: 9091
+          name: metrics
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - configMapRef:
+            name: crawler-config
+        - secretRef:
+            name: app-secrets
+        - secretRef:
+            name: crawler-secrets
+        env:
+        - name: CONTAINER_ROLE
+          value: "crawler"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        command: ["/usr/local/bin/crawler-entrypoint"]
+        volumeMounts:
+        - name: crawler-storage
+          mountPath: /var/www/storage/crawler
+        - name: crawler-cache
+          mountPath: /var/www/bootstrap/cache/crawler
+        - name: crawler-logs
+          mountPath: /var/log/crawler
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+            ephemeral-storage: "1Gi"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+            ephemeral-storage: "5Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8001
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8001
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: crawler-storage
+        persistentVolumeClaim:
+          claimName: crawler-storage-pvc
+      - name: crawler-cache
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: crawler-logs
+        emptyDir:
+          sizeLimit: 2Gi
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - crawler-microservice
+              topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: crawler-storage-pvc
+  namespace: ai-blockchain-analytics
+  labels:
+    app: crawler-microservice
+    component: storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: efs
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: crawler-microservice
+  namespace: ai-blockchain-analytics
+  labels:
+    app: crawler-microservice
+    component: crawler
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8001
+    targetPort: 8001
+    protocol: TCP
+    name: crawler-http
+  - port: 9091
+    targetPort: 9091
+    protocol: TCP
+    name: metrics
+  selector:
+    app: crawler-microservice
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: crawler-microservice-hpa
+  namespace: ai-blockchain-analytics
+  labels:
+    app: crawler-microservice
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: crawler-microservice
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 30
+      - type: Pods
+        value: 2
+        periodSeconds: 30
+      selectPolicy: Max
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: crawler-microservice-pdb
+  namespace: ai-blockchain-analytics
+  labels:
+    app: crawler-microservice
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: crawler-microservice
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: crawler-cleanup
+  namespace: ai-blockchain-analytics
+  labels:
+    app: crawler-microservice
+    component: cleanup
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: crawler-cleanup
+            component: cleanup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: cleanup
+            image: your-registry/ai-blockchain-analytics:latest
+            command: ["php", "artisan", "crawler:cleanup", "--days=90"]
+            envFrom:
+            - configMapRef:
+                name: app-config
+            - configMapRef:
+                name: crawler-config
+            - secretRef:
+                name: app-secrets
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+
+---
+# Network Policy for Crawler Microservice
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: crawler-microservice-netpol
+  namespace: ai-blockchain-analytics
+  labels:
+    app: crawler-microservice
+spec:
+  podSelector:
+    matchLabels:
+      app: crawler-microservice
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: roadrunner-app
+    - podSelector:
+        matchLabels:
+          app: monitoring
+    ports:
+    - protocol: TCP
+      port: 8001
+    - protocol: TCP
+      port: 9091
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to: []  # Allow external API calls
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80

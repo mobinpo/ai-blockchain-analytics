@@ -1,0 +1,107 @@
+[
+  {
+    "contract_address": "0xa0b86991c431c924137b295c2c1c5b0b4b0a4d6e2",
+    "chain_id": "1",
+    "analysis_type": "security_audit",
+    "priority": "high",
+    "source_code": "pragma solidity ^0.8.0; contract USDCToken { mapping(address => uint256) public balances; function transfer(address to, uint256 amount) public returns (bool) { require(balances[msg.sender] >= amount); balances[msg.sender] -= amount; balances[to] += amount; return true; } }"
+  },
+  {
+    "contract_address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+    "chain_id": "1", 
+    "analysis_type": "vulnerability_scan",
+    "priority": "critical",
+    "source_code": "pragma solidity ^0.8.0; contract DAI { mapping(address => uint256) balances; mapping(address => mapping(address => uint256)) allowances; function transferFrom(address from, address to, uint256 amount) public returns (bool) { require(allowances[from][msg.sender] >= amount); require(balances[from] >= amount); balances[from] -= amount; balances[to] += amount; allowances[from][msg.sender] -= amount; return true; } }"
+  },
+  {
+    "contract_address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    "chain_id": "1",
+    "analysis_type": "gas_optimization",
+    "priority": "medium",
+    "source_code": "pragma solidity ^0.8.0; contract USDT { mapping(address => uint256) balances; address public owner; modifier onlyOwner() { require(msg.sender == owner); _; } function mint(address to, uint256 amount) public onlyOwner { balances[to] += amount; } }"
+  },
+  {
+    "contract_address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+    "chain_id": "1",
+    "analysis_type": "compliance_check",
+    "priority": "high",
+    "source_code": "pragma solidity ^0.8.0; contract WBTC { mapping(address => uint256) balances; mapping(address => bool) public blacklisted; function transfer(address to, uint256 amount) public returns (bool) { require(!blacklisted[msg.sender] && !blacklisted[to]); require(balances[msg.sender] >= amount); balances[msg.sender] -= amount; balances[to] += amount; return true; } }"
+  },
+  {
+    "contract_address": "0x514910771AF9Ca656af840dff83E8264EcF986CA",
+    "chain_id": "1",
+    "analysis_type": "security_audit",
+    "priority": "medium",
+    "source_code": "pragma solidity ^0.8.0; contract ChainlinkToken { mapping(address => uint256) balances; uint256 public totalSupply; function burn(uint256 amount) public { require(balances[msg.sender] >= amount); balances[msg.sender] -= amount; totalSupply -= amount; } }"
+  },
+  {
+    "contract_address": "0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0",
+    "chain_id": "1",
+    "analysis_type": "vulnerability_scan",
+    "priority": "low",
+    "source_code": "pragma solidity ^0.8.0; contract MATIC { mapping(address => uint256) balances; event Transfer(address indexed from, address indexed to, uint256 value); function transfer(address to, uint256 amount) public returns (bool) { require(balances[msg.sender] >= amount); balances[msg.sender] -= amount; balances[to] += amount; emit Transfer(msg.sender, to, amount); return true; } }"
+  },
+  {
+    "contract_address": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
+    "chain_id": "1",
+    "analysis_type": "gas_optimization",
+    "priority": "high",
+    "source_code": "pragma solidity ^0.8.0; contract Uniswap { mapping(address => uint256) balances; mapping(address => mapping(address => uint256)) allowances; function approve(address spender, uint256 amount) public returns (bool) { allowances[msg.sender][spender] = amount; return true; } function transferFrom(address from, address to, uint256 amount) public returns (bool) { require(allowances[from][msg.sender] >= amount); require(balances[from] >= amount); balances[from] -= amount; balances[to] += amount; allowances[from][msg.sender] -= amount; return true; } }"
+  },
+  {
+    "contract_address": "0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE",
+    "chain_id": "1",
+    "analysis_type": "compliance_check", 
+    "priority": "critical",
+    "source_code": "pragma solidity ^0.8.0; contract SHIB { mapping(address => uint256) balances; mapping(address => bool) public authorized; modifier onlyAuthorized() { require(authorized[msg.sender]); _; } function setAuthorized(address user, bool status) public onlyAuthorized { authorized[user] = status; } }"
+  },
+  {
+    "contract_address": "0x4Fabb145d64652a948d72533023f6E7A623C7C53",
+    "chain_id": "1",
+    "analysis_type": "security_audit",
+    "priority": "medium",
+    "source_code": "pragma solidity ^0.8.0; contract BUSD { mapping(address => uint256) balances; address[] public owners; uint256 public required; function submitTransaction(address destination, uint256 value, bytes memory data) public returns (uint256 txIndex) { txIndex = transactions.length; transactions.push(Transaction({ destination: destination, value: value, data: data, executed: false })); confirmTransaction(txIndex); } struct Transaction { address destination; uint256 value; bytes data; bool executed; } Transaction[] public transactions; }"
+  },
+  {
+    "contract_address": "0x3845badAde8e6dFF049820680d1F14bD3903a5d0",
+    "chain_id": "1",
+    "analysis_type": "vulnerability_scan",
+    "priority": "high",
+    "source_code": "pragma solidity ^0.8.0; contract SAND { mapping(address => uint256) balances; mapping(address => uint256) public nonces; function metaTransfer(address from, address to, uint256 value, uint256 fee, uint256 nonce, bytes memory sig) public returns (bool) { require(nonces[from] == nonce); bytes32 hash = keccak256(abi.encodePacked(from, to, value, fee, nonce)); address signer = recoverSigner(hash, sig); require(signer == from); nonces[from]++; balances[from] -= value + fee; balances[to] += value; balances[msg.sender] += fee; return true; } function recoverSigner(bytes32 hash, bytes memory sig) pure internal returns (address) { bytes32 r; bytes32 s; uint8 v; assembly { r := mload(add(sig, 32)) s := mload(add(sig, 64)) v := byte(0, mload(add(sig, 96))) } return ecrecover(hash, v, r, s); } }"
+  },
+  {
+    "contract_address": "0x0000000000085d4780B73119b644AE5ecd22b376",
+    "chain_id": "1",
+    "analysis_type": "gas_optimization",
+    "priority": "low",
+    "source_code": "pragma solidity ^0.8.0; contract TrueUSD { mapping(address => uint256) balances; mapping(address => bool) public canBurn; function burnFrom(address account, uint256 amount) public { require(canBurn[msg.sender]); require(balances[account] >= amount); balances[account] -= amount; } }"
+  },
+  {
+    "contract_address": "0x8E870D67F660D95d5be530380D0eC0bd388289E1",
+    "chain_id": "137",
+    "analysis_type": "security_audit",
+    "priority": "medium",
+    "source_code": "pragma solidity ^0.8.0; contract PolygonToken { mapping(address => uint256) balances; uint256 public maxSupply = 10000000000 * 10**18; function mint(address to, uint256 amount) public { require(totalSupply() + amount <= maxSupply); balances[to] += amount; } function totalSupply() public view returns (uint256) { return totalSupply; } }"
+  },
+  {
+    "contract_address": "0x55d398326f99059fF775485246999027B3197955", 
+    "chain_id": "56",
+    "analysis_type": "compliance_check",
+    "priority": "high",
+    "source_code": "pragma solidity ^0.8.0; contract BSC_USD { mapping(address => uint256) balances; address public admin; mapping(address => bool) public frozenAccount; event FrozenFunds(address target, bool frozen); function freezeAccount(address target, bool freeze) public { require(msg.sender == admin); frozenAccount[target] = freeze; emit FrozenFunds(target, freeze); } function transfer(address to, uint256 amount) public returns (bool) { require(!frozenAccount[msg.sender]); require(!frozenAccount[to]); require(balances[msg.sender] >= amount); balances[msg.sender] -= amount; balances[to] += amount; return true; } }"
+  },
+  {
+    "contract_address": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+    "chain_id": "56", 
+    "analysis_type": "vulnerability_scan",
+    "priority": "critical",
+    "source_code": "pragma solidity ^0.8.0; contract WBNB { mapping(address => uint256) balances; event Deposit(address indexed dst, uint256 wad); event Withdrawal(address indexed src, uint256 wad); function deposit() public payable { balances[msg.sender] += msg.value; emit Deposit(msg.sender, msg.value); } function withdraw(uint256 wad) public { require(balances[msg.sender] >= wad); balances[msg.sender] -= wad; payable(msg.sender).transfer(wad); emit Withdrawal(msg.sender, wad); } receive() external payable { deposit(); } }"
+  },
+  {
+    "contract_address": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
+    "chain_id": "56",
+    "analysis_type": "gas_optimization", 
+    "priority": "medium",
+    "source_code": "pragma solidity ^0.8.0; contract ETH_BSC { mapping(address => uint256) balances; mapping(address => mapping(address => uint256)) allowances; string public name = 'Ethereum Token'; string public symbol = 'ETH'; uint8 public decimals = 18; function transfer(address to, uint256 amount) public returns (bool success) { require(to != address(0)); require(balances[msg.sender] >= amount); balances[msg.sender] -= amount; balances[to] += amount; return true; } function approve(address spender, uint256 amount) public returns (bool success) { allowances[msg.sender][spender] = amount; return true; } function transferFrom(address from, address to, uint256 amount) public returns (bool success) { require(to != address(0)); require(balances[from] >= amount); require(allowances[from][msg.sender] >= amount); balances[from] -= amount; allowances[from][msg.sender] -= amount; balances[to] += amount; return true; } }"
+  }
+]

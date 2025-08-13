@@ -1,0 +1,180 @@
+{
+  "family": "ai-blockchain-analytics-app",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "2048",
+  "memory": "4096",
+  "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/ai-blockchain-analytics-task-role",
+  "containerDefinitions": [
+    {
+      "name": "app",
+      "image": "${DOCKER_REGISTRY}/ai-blockchain-analytics:${IMAGE_TAG}",
+      "cpu": 1536,
+      "memory": 3072,
+      "memoryReservation": 2048,
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp",
+          "name": "http"
+        },
+        {
+          "containerPort": 2112,
+          "protocol": "tcp",
+          "name": "metrics"
+        },
+        {
+          "containerPort": 2114,
+          "protocol": "tcp",
+          "name": "status"
+        }
+      ],
+      "environment": [
+        {"name": "APP_ENV", "value": "production"},
+        {"name": "APP_DEBUG", "value": "false"},
+        {"name": "LOG_CHANNEL", "value": "stderr"},
+        {"name": "LOG_LEVEL", "value": "warning"},
+        {"name": "DB_CONNECTION", "value": "pgsql"},
+        {"name": "DB_HOST", "value": "${RDS_ENDPOINT}"},
+        {"name": "DB_PORT", "value": "5432"},
+        {"name": "DB_DATABASE", "value": "ai_blockchain_analytics"},
+        {"name": "CACHE_DRIVER", "value": "redis"},
+        {"name": "QUEUE_CONNECTION", "value": "redis"},
+        {"name": "SESSION_DRIVER", "value": "redis"},
+        {"name": "REDIS_HOST", "value": "${ELASTICACHE_ENDPOINT}"},
+        {"name": "REDIS_PORT", "value": "6379"},
+        {"name": "BROADCAST_DRIVER", "value": "redis"},
+        {"name": "RR_HTTP_ADDRESS", "value": ":8080"},
+        {"name": "RR_HTTP_NUM_WORKERS", "value": "4"},
+        {"name": "RR_HTTP_MAX_JOBS", "value": "64"},
+        {"name": "AWS_DEFAULT_REGION", "value": "${AWS_REGION}"}
+      ],
+      "secrets": [
+        {
+          "name": "APP_KEY",
+          "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:ai-blockchain-analytics/app-key"
+        },
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:ai-blockchain-analytics/db-credentials:username::"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:ai-blockchain-analytics/db-credentials:password::"
+        },
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:ai-blockchain-analytics/jwt-secret"
+        },
+        {
+          "name": "GOOGLE_CLOUD_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:ai-blockchain-analytics/google-cloud-api-key"
+        },
+        {
+          "name": "ETHERSCAN_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:ai-blockchain-analytics/etherscan-api-key"
+        },
+        {
+          "name": "BSCSCAN_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:ai-blockchain-analytics/bscscan-api-key"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-blockchain-analytics/app",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "app",
+          "awslogs-create-group": "true"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "/usr/local/bin/healthcheck"],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "command": ["/usr/local/bin/rr", "serve", "-c", "/app/.rr.yaml"],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "linuxParameters": {
+        "capabilities": {
+          "drop": ["ALL"]
+        }
+      },
+      "user": "1000:1000",
+      "readonlyRootFilesystem": false,
+      "privileged": false
+    },
+    {
+      "name": "nginx",
+      "image": "nginx:alpine",
+      "cpu": 256,
+      "memory": 512,
+      "memoryReservation": 256,
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "protocol": "tcp",
+          "name": "nginx"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-blockchain-analytics/nginx",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "nginx",
+          "awslogs-create-group": "true"
+        }
+      },
+      "dependsOn": [
+        {
+          "containerName": "app",
+          "condition": "HEALTHY"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "nginx-config",
+          "containerPath": "/etc/nginx/nginx.conf",
+          "readOnly": true
+        }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 30
+      }
+    }
+  ],
+  "volumes": [
+    {
+      "name": "nginx-config",
+      "host": {
+        "sourcePath": "/etc/nginx/nginx.conf"
+      }
+    }
+  ],
+  "placementConstraints": [],
+  "tags": [
+    {
+      "key": "Environment",
+      "value": "production"
+    },
+    {
+      "key": "Application",
+      "value": "ai-blockchain-analytics"
+    },
+    {
+      "key": "Component",
+      "value": "web"
+    }
+  ]
+}

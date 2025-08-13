@@ -1,0 +1,65 @@
+{
+    "name": "sentiment-shield",
+    "version": "1.0.0",
+    "description": "Sentiment Shield - AI-powered blockchain security platform with dual smart contract & sentiment analysis",
+    "$schema": "https://json.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "keywords": [
+        "sentiment-shield",
+        "blockchain-security",
+        "smart-contract-analysis",
+        "sentiment-analysis",
+        "laravel",
+        "octane",
+        "vue",
+        "inertia",
+        "ai",
+        "web3",
+        "defi"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/mobin/sentiment-shield.git"
+    },
+    "scripts": {
+        "build": "vite build && vite build --ssr",
+        "dev": "vite",
+        "lint": "eslint resources/js --ext .vue,.js --fix",
+        "lint:check": "eslint resources/js --ext .vue,.js",
+        "format": "prettier --write resources/js",
+        "test": "vitest",
+        "test:ci": "vitest run --coverage",
+        "type-check": "vue-tsc --noEmit",
+        "load-test": "artillery run load-tests/artillery-config.yml",
+        "load-test:quick": "artillery quick --count 10 --num 5 http://localhost:8000",
+        "load-test:500": "artillery run load-tests/concurrent-500.yml",
+        "load-test:analysis": "artillery run load-tests/blockchain-analysis.yml",
+        "load-test:report": "artillery run load-tests/artillery-config.yml --output load-test-results.json && artillery report load-test-results.json"
+    },
+    "devDependencies": {
+        "@inertiajs/vue3": "^2.0.0",
+        "@tailwindcss/forms": "^0.5.3",
+        "@vitejs/plugin-vue": "^5.0.0",
+        "@vue/server-renderer": "^3.4.0",
+        "artillery": "^1.7.9",
+        "artillery-plugin-metrics-by-endpoint": "^1.3.0",
+        "artillery-plugin-publish-metrics": "^1.4.0",
+        "autoprefixer": "^10.4.12",
+        "axios": "^1.8.2",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^1.0.0",
+        "postcss": "^8.4.31",
+        "tailwindcss": "^3.2.1",
+        "vite": "^6.0.0",
+        "vue": "^3.4.0"
+    },
+    "dependencies": {
+        "@headlessui/vue": "^1.7.23",
+        "@heroicons/vue": "^2.2.0",
+        "chart.js": "^4.5.0",
+        "chartjs-adapter-date-fns": "^3.0.0",
+        "date-fns": "^4.1.0",
+        "vue-chartjs": "^5.3.2"
+    }
+}

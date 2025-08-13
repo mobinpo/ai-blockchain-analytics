@@ -1,0 +1,146 @@
+config:
+  target: 'http://localhost:8000'
+  phases:
+    # Initial warmup
+    - duration: 10
+      arrivalRate: 5
+      name: "Initial warmup"
+    
+    # Gradual ramp-up to test system capacity
+    - duration: 30
+      arrivalRate: 25
+      name: "Ramp to 25 RPS"
+    
+    # Medium load test
+    - duration: 60
+      arrivalRate: 100
+      name: "Ramp to 100 RPS"
+    
+    # High load test
+    - duration: 120
+      arrivalRate: 250
+      name: "Ramp to 250 RPS"
+    
+    # Peak load - 500 concurrent analyses (reduced duration for server safety)
+    - duration: 180
+      arrivalRate: 500
+      name: "Peak 500 concurrent analyses"
+    
+    # Sustained high load
+    - duration: 90
+      arrivalRate: 300
+      name: "Sustained 300 RPS"
+    
+    # Cool down
+    - duration: 30
+      arrivalRate: 50
+      name: "Cool down"
+
+  http:
+    timeout: 45
+    pool: 200
+    maxSockets: 300
+    
+  plugins:
+    metrics-by-endpoint: {}
+
+variables:
+  # Sample contract addresses for testing
+  contracts:
+    - "0xE592427A0AEce92De3Edee1F18E0157C05861564"  # Uniswap V3
+    - "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2"  # Aave V3
+    - "0x27182842E098f60e3D576794A5bFFb0777E025d3"  # Euler (exploited)
+    - "0x1234567890123456789012345678901234567890"  # Test contract
+  
+  # Analysis types
+  analysisTypes:
+    - "security"
+    - "optimization"
+    - "vulnerability"
+    - "gas-efficiency"
+
+scenarios:
+  # Contract Analysis - Primary focus (60% of traffic)
+  - name: "Contract Analysis Load"
+    weight: 60
+    flow:
+      # Live contract analyzer (main endpoint)
+      - post:
+          url: "/api/contracts/analyze-demo"
+          json:
+            contract_input: "{{ contracts.random }}"
+            network: "ethereum"
+            analysis_type: "{{ analysisTypes.random }}"
+          think: 3
+          
+      # Follow up with another analysis
+      - post:
+          url: "/api/contracts/analyze-demo"
+          json:
+            contract_input: "{{ contracts.random }}"
+            network: "polygon"
+            analysis_type: "{{ analysisTypes.random }}"
+          think: 2
+
+  # Load test API endpoints (20% of traffic)
+  - name: "Load Test API"
+    weight: 20
+    flow:
+      # Complex database query simulation
+      - get:
+          url: "/api/load-test/complex-query"
+          think: 1
+          
+      # CPU intensive operation
+      - post:
+          url: "/api/load-test/cpu-intensive"
+          json:
+            complexity: 1000
+            iterations: 500
+          think: 4
+          
+      # Sentiment analysis simulation
+      - post:
+          url: "/api/load-test/sentiment"
+          json:
+            text: "Analyzing blockchain security trends and market sentiment for comprehensive risk assessment"
+            network: "ethereum"
+          think: 2
+
+  # Frontend Load (15% of traffic)
+  - name: "Frontend Application"
+    weight: 15
+    flow:
+      # Main pages
+      - get:
+          url: "/"
+          think: 0.5
+          
+      # Dashboard access
+      - get:
+          url: "/sentiment-dashboard"
+          think: 1
+          
+      # Security page
+      - get:
+          url: "/security"
+          think: 0.3
+
+  # System Health & Monitoring (5% of traffic)
+  - name: "System Health"
+    weight: 5
+    flow:
+      # Health checks
+      - get:
+          url: "/up"
+          think: 0.1
+          
+      # API health
+      - get:
+          url: "/api/health"
+          think: 0.1
+          
+      # Test monitoring
+      - get:
+          url: "/test-monitoring"
+          think: 0.2

@@ -1,0 +1,280 @@
+# RoadRunner Production Configuration for AI Blockchain Analytics v0.9.0
+# Optimized for high-performance production deployment
+
+version: '3'
+
+# RPC configuration
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+# Server configuration
+server:
+  command: "php worker.php"
+  user: ""
+  group: ""
+  env:
+    - APP_ENV: production
+    - APP_DEBUG: false
+  relay: "pipes"
+  relay_timeout: "20s"
+
+# HTTP server configuration
+http:
+  address: 0.0.0.0:8080
+  max_request_size: 10
+  middleware: ["static", "gzip", "headers"]
+  uploads:
+    forbid: [".php", ".exe", ".bat", ".sh"]
+  trusted_subnets:
+    - "10.0.0.0/8"
+    - "127.0.0.0/8"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+    - "::1/128"
+    - "fc00::/7"
+    - "fe80::/10"
+  
+  # Static files serving
+  static:
+    dir: "public"
+    forbid: [".htaccess", ".php"]
+    request:
+      input: "Nyholm\\Psr7\\ServerRequest"
+      response: "Nyholm\\Psr7\\Response"
+  
+  # Response headers
+  headers:
+    response:
+      X-Powered-By: "RoadRunner"
+      X-Frame-Options: "DENY"
+      X-Content-Type-Options: "nosniff"
+      X-XSS-Protection: "1; mode=block"
+      Referrer-Policy: "strict-origin-when-cross-origin"
+      Content-Security-Policy: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'none';"
+  
+  # Gzip compression
+  gzip:
+    level: 6
+    types: ["text/html", "text/css", "text/plain", "text/javascript", "application/javascript", "application/json", "application/xml", "image/svg+xml"]
+
+# Worker pool configuration
+pool:
+  num_workers: 8
+  max_jobs: 1000
+  allocate_timeout: 60s
+  destroy_timeout: 60s
+  supervisor:
+    watch_tick: 1s
+    ttl: 0s
+    idle_ttl: 10s
+    exec_ttl: 60s
+    max_worker_memory: 256
+
+# Metrics and health checks
+metrics:
+  address: 127.0.0.1:2112
+  
+status:
+  address: 127.0.0.1:2114
+
+# Logging configuration
+logs:
+  mode: production
+  level: info
+  encoding: json
+  output: stdout
+  err_output: stderr
+  channels:
+    http:
+      level: info
+    server:
+      level: info
+    rpc:
+      level: info
+
+# Redis configuration for sessions and cache
+redis:
+  addrs:
+    - "${REDIS_HOST}:${REDIS_PORT}"
+  password: "${REDIS_PASSWORD}"
+  db: 0
+  master_name: ""
+  username: ""
+  dial_timeout: 5s
+  read_timeout: 3s
+  write_timeout: 3s
+  pool_size: 10
+  min_idle_conns: 5
+  max_conn_age: 30m
+  pool_timeout: 4s
+  idle_timeout: 5m
+  idle_check_frequency: 1m
+
+# Session configuration
+session:
+  driver: redis
+  config:
+    addr: "${REDIS_HOST}:${REDIS_PORT}"
+    password: "${REDIS_PASSWORD}"
+    db: 1
+
+# Cache configuration  
+cache:
+  driver: redis
+  config:
+    addr: "${REDIS_HOST}:${REDIS_PORT}"
+    password: "${REDIS_PASSWORD}"
+    db: 2
+
+# Queue configuration
+jobs:
+  num_pollers: 4
+  pipeline_size: 100000
+  pool:
+    num_workers: 4
+    max_jobs: 100
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+    supervisor:
+      watch_tick: 1s
+      ttl: 0s
+      idle_ttl: 10s
+      exec_ttl: 0s
+      max_worker_memory: 256
+  
+  pipelines:
+    default:
+      driver: redis
+      config:
+        addrs:
+          - "${REDIS_HOST}:${REDIS_PORT}"
+        password: "${REDIS_PASSWORD}"
+        db: 3
+        master_name: ""
+        username: ""
+        dial_timeout: 5s
+        read_timeout: 3s
+        write_timeout: 3s
+        pool_size: 10
+        
+    high:
+      driver: redis
+      config:
+        addrs:
+          - "${REDIS_HOST}:${REDIS_PORT}"
+        password: "${REDIS_PASSWORD}"
+        db: 4
+        master_name: ""
+        username: ""
+        dial_timeout: 5s
+        read_timeout: 3s
+        write_timeout: 3s
+        pool_size: 10
+
+# Temporal workflow configuration (if using)
+temporal:
+  address: "temporal:7233"
+  namespace: "default"
+  activities:
+    num_workers: 2
+
+# Reload configuration for development
+reload:
+  interval: 1s
+  patterns: [".php"]
+  services:
+    http:
+      recursive: true
+      ignore: ["vendor"]
+      patterns: [".php", ".go", ".md"]
+      dirs: ["./"]
+
+# Health check endpoint
+health:
+  address: 127.0.0.1:2113
+
+# OpenTelemetry configuration for monitoring
+otel:
+  insecure: true
+  compress: false
+  client: jaeger
+  custom_url: ""
+  service_name: "ai-blockchain-analytics"
+  service_version: "v0.9.0"
+  endpoint: ""
+  headers: {}
+  resource:
+    service.name: "ai-blockchain-analytics"
+    service.version: "v0.9.0"
+    deployment.environment: "production"
+
+# Centrifuge WebSocket configuration (if using real-time features)
+centrifuge:
+  proxy_address: "127.0.0.1:10000"
+  grpc_api_address: "127.0.0.1:10001"
+  admin_address: "127.0.0.1:8001"
+  admin_insecure: false
+  api_insecure: false
+  allowed_origins: ["https://${DOMAIN}"]
+  websocket_compression: true
+  sockjs_url: "https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"
+
+# gRPC configuration (if using microservices)
+grpc:
+  listen: "tcp://127.0.0.1:9001"
+  max_recv_msg_size: 50331648
+  max_send_msg_size: 50331648
+  max_connection_idle: "0s"
+  max_connection_age: "0s"
+  max_connection_age_grace: "0s"
+  time: "120s"
+  timeout: "200s"
+  
+  # TLS configuration for production
+  tls:
+    key: "/etc/ssl/private/server.key"
+    cert: "/etc/ssl/certs/server.crt"
+    root_ca: "/etc/ssl/certs/ca.crt"
+    client_auth_type: ""
+
+# KV storage configuration
+kv:
+  default:
+    driver: redis
+    config:
+      addrs:
+        - "${REDIS_HOST}:${REDIS_PORT}"
+      password: "${REDIS_PASSWORD}"
+      db: 5
+
+# Broadcast configuration for real-time features
+broadcast:
+  default:
+    driver: redis
+    config:
+      addrs:
+        - "${REDIS_HOST}:${REDIS_PORT}"
+      password: "${REDIS_PASSWORD}"
+      db: 6
+
+# Lock configuration for distributed locking
+lock:
+  default:
+    driver: redis
+    config:
+      addrs:
+        - "${REDIS_HOST}:${REDIS_PORT}"
+      password: "${REDIS_PASSWORD}"
+      db: 7
+
+# TCP server configuration (if needed)
+tcp:
+  servers:
+    server1:
+      addr: "127.0.0.1:7001"
+      delimiter: "\r\n"
+  pool:
+    num_workers: 2
+    max_jobs: 100
+    allocate_timeout: 60s
+    destroy_timeout: 60s

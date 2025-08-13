@@ -1,0 +1,299 @@
+{
+  "examples": [
+    {
+      "name": "Re-entrancy Vulnerability",
+      "description": "Classic reentrancy vulnerability with complete metadata",
+      "finding": {
+        "id": "F7A8B2C3-4D5E-6F7A-8B9C-0D1E2F3A4B5C",
+        "severity": "HIGH",
+        "title": "Re-entrancy vulnerability in withdraw function",
+        "category": "Re-entrancy",
+        "description": "The withdraw function performs an external call to transfer Ether before updating the user's balance, allowing for re-entrant calls that can drain contract funds.",
+        "confidence": "HIGH",
+        "location": {
+          "line": 125,
+          "function": "withdraw",
+          "contract": "VulnerableBank",
+          "file": "contracts/VulnerableBank.sol",
+          "code_snippet": "function withdraw(uint amount) public {\n    require(balances[msg.sender] >= amount);\n    msg.sender.call{value: amount}(\"\");\n    balances[msg.sender] -= amount;\n}"
+        },
+        "recommendation": {
+          "summary": "Implement checks-effects-interactions pattern and add reentrancy guard",
+          "detailed_steps": [
+            "Move state changes before external calls",
+            "Add OpenZeppelin's ReentrancyGuard modifier",
+            "Use pull payment pattern for withdrawals",
+            "Implement proper error handling for failed transfers"
+          ],
+          "code_fix": "function withdraw(uint amount) public nonReentrant {\n    require(balances[msg.sender] >= amount);\n    balances[msg.sender] -= amount;\n    (bool success, ) = msg.sender.call{value: amount}(\"\");\n    require(success, \"Transfer failed\");\n}",
+          "references": [
+            {
+              "title": "Ethereum Smart Contract Security Best Practices",
+              "url": "https://consensys.github.io/smart-contract-best-practices/attacks/reentrancy/",
+              "type": "documentation"
+            }
+          ]
+        },
+        "risk_assessment": {
+          "cvss_score": 8.1,
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:H",
+          "exploitability": "EASY",
+          "impact": {
+            "confidentiality": "NONE",
+            "integrity": "HIGH",
+            "availability": "HIGH",
+            "financial": "HIGH"
+          },
+          "likelihood": "HIGH"
+        },
+        "evidence": {
+          "attack_vector": "Attacker creates malicious contract with fallback function that recursively calls withdraw",
+          "proof_of_concept": "1. Deploy malicious contract\n2. Deposit small amount\n3. Call withdraw with fallback triggering re-entrancy\n4. Drain contract funds",
+          "similar_incidents": [
+            {
+              "name": "The DAO Hack",
+              "date": "2016-06-17",
+              "impact": "$50 million stolen",
+              "reference": "https://www.coindesk.com/understanding-dao-hack-journalists"
+            }
+          ]
+        },
+        "remediation": {
+          "effort": "LOW",
+          "timeline": "IMMEDIATE",
+          "priority": 1,
+          "cost_estimate": "MINIMAL"
+        },
+        "blockchain_specific": {
+          "gas_impact": {
+            "estimated_gas": 21000,
+            "gas_optimization": false
+          },
+          "token_standard": "N/A",
+          "network_specific": ["ETHEREUM", "POLYGON", "BSC"]
+        },
+        "ai_metadata": {
+          "model": "gpt-4",
+          "analysis_version": "2.1.0",
+          "detection_method": "LLM_ANALYSIS",
+          "prompt_version": "v1.2",
+          "tokens_used": 1250,
+          "processing_time_ms": 3500,
+          "false_positive_probability": 0.05
+        },
+        "compliance": {
+          "standards": ["OWASP_TOP_10", "SMART_CONTRACT_WEAKNESS_CLASSIFICATION"],
+          "regulations": []
+        },
+        "status": "OPEN",
+        "tags": ["reentrancy", "external-call", "state-change", "critical"],
+        "created_at": "2025-08-03T10:30:00Z",
+        "updated_at": "2025-08-03T10:30:00Z"
+      }
+    },
+    {
+      "name": "Integer Overflow",
+      "description": "Integer overflow in token minting function",
+      "finding": {
+        "id": "A1B2C3D4-E5F6-7890-ABCD-EF1234567890",
+        "severity": "MEDIUM",
+        "title": "Integer overflow in mint function allows unlimited token creation",
+        "category": "Integer Overflow/Underflow",
+        "description": "The mint function in the token contract uses unchecked arithmetic that can overflow, potentially allowing unlimited token creation beyond the intended supply cap.",
+        "confidence": "HIGH",
+        "location": {
+          "line": 89,
+          "function": "mint",
+          "contract": "VulnerableToken",
+          "file": "contracts/VulnerableToken.sol",
+          "code_snippet": "function mint(address to, uint256 amount) public onlyOwner {\n    totalSupply += amount;\n    balances[to] += amount;\n    emit Transfer(address(0), to, amount);\n}"
+        },
+        "recommendation": {
+          "summary": "Use SafeMath library or upgrade to Solidity 0.8+ with built-in overflow protection",
+          "detailed_steps": [
+            "Upgrade to Solidity 0.8.0 or higher for automatic overflow checks",
+            "Alternatively, implement SafeMath library for arithmetic operations",
+            "Add explicit supply cap checks before minting",
+            "Consider using OpenZeppelin's ERC20 implementation"
+          ],
+          "code_fix": "function mint(address to, uint256 amount) public onlyOwner {\n    require(totalSupply + amount >= totalSupply, \"Overflow detected\");\n    require(totalSupply + amount <= maxSupply, \"Exceeds max supply\");\n    totalSupply += amount;\n    balances[to] += amount;\n    emit Transfer(address(0), to, amount);\n}",
+          "references": [
+            {
+              "title": "OpenZeppelin SafeMath Documentation",
+              "url": "https://docs.openzeppelin.com/contracts/2.x/api/math#SafeMath",
+              "type": "documentation"
+            }
+          ]
+        },
+        "risk_assessment": {
+          "cvss_score": 6.5,
+          "exploitability": "MODERATE",
+          "impact": {
+            "confidentiality": "NONE",
+            "integrity": "HIGH",
+            "availability": "LOW",
+            "financial": "MEDIUM"
+          },
+          "likelihood": "MEDIUM"
+        },
+        "blockchain_specific": {
+          "token_standard": "ERC20",
+          "network_specific": ["ETHEREUM", "POLYGON"]
+        },
+        "ai_metadata": {
+          "model": "gpt-4",
+          "analysis_version": "2.1.0",
+          "detection_method": "LLM_ANALYSIS"
+        },
+        "status": "OPEN",
+        "tags": ["overflow", "arithmetic", "token", "supply"],
+        "created_at": "2025-08-03T10:35:00Z",
+        "updated_at": "2025-08-03T10:35:00Z"
+      }
+    },
+    {
+      "name": "Unvalidated Input",
+      "description": "Missing input validation in transfer function",
+      "finding": {
+        "id": "B2C3D4E5-F6G7-8901-BCDE-F23456789012",
+        "severity": "MEDIUM",
+        "title": "Missing zero address validation in transfer function",
+        "category": "Unvalidated Input",
+        "description": "The transfer function does not validate that the recipient address is not the zero address, which could result in permanent token loss.",
+        "confidence": "HIGH",
+        "location": {
+          "line": 45,
+          "function": "transfer",
+          "contract": "BasicToken",
+          "code_snippet": "function transfer(address to, uint256 amount) public {\n    require(balances[msg.sender] >= amount);\n    balances[msg.sender] -= amount;\n    balances[to] += amount;\n}"
+        },
+        "recommendation": {
+          "summary": "Add validation to prevent transfers to zero address and other invalid addresses",
+          "detailed_steps": [
+            "Add require statement to check for zero address",
+            "Consider checking for contract address if needed",
+            "Validate amount is greater than zero",
+            "Add proper error messages for failed validations"
+          ],
+          "code_fix": "function transfer(address to, uint256 amount) public {\n    require(to != address(0), \"Transfer to zero address\");\n    require(amount > 0, \"Transfer amount must be positive\");\n    require(balances[msg.sender] >= amount, \"Insufficient balance\");\n    balances[msg.sender] -= amount;\n    balances[to] += amount;\n}",
+          "references": [
+            {
+              "title": "ERC20 Standard Implementation",
+              "url": "https://eips.ethereum.org/EIPS/eip-20",
+              "type": "standard"
+            }
+          ]
+        },
+        "risk_assessment": {
+          "cvss_score": 4.3,
+          "exploitability": "EASY",
+          "impact": {
+            "confidentiality": "NONE",
+            "integrity": "LOW",
+            "availability": "NONE",
+            "financial": "LOW"
+          },
+          "likelihood": "MEDIUM"
+        },
+        "remediation": {
+          "effort": "TRIVIAL",
+          "timeline": "SHORT_TERM",
+          "priority": 3,
+          "cost_estimate": "MINIMAL"
+        },
+        "ai_metadata": {
+          "model": "gpt-3.5-turbo",
+          "analysis_version": "2.1.0",
+          "detection_method": "PATTERN_MATCHING",
+          "tokens_used": 650,
+          "processing_time_ms": 1200,
+          "false_positive_probability": 0.15
+        },
+        "status": "OPEN",
+        "tags": ["validation", "zero-address", "input", "transfer"],
+        "created_at": "2025-08-03T10:40:00Z",
+        "updated_at": "2025-08-03T10:40:00Z"
+      }
+    },
+    {
+      "name": "Gas Optimization",
+      "description": "Inefficient gas usage in loop",
+      "finding": {
+        "id": "C3D4E5F6-G7H8-9012-CDEF-345678901234",
+        "severity": "LOW",
+        "title": "Inefficient gas usage in batch transfer function",
+        "category": "Gas Optimization",
+        "description": "The batchTransfer function performs multiple SSTORE operations that could be optimized to reduce gas costs for users.",
+        "confidence": "MEDIUM",
+        "location": {
+          "line": 78,
+          "function": "batchTransfer",
+          "contract": "BatchTransfer"
+        },
+        "recommendation": {
+          "summary": "Optimize storage operations and consider using events for better gas efficiency",
+          "detailed_steps": [
+            "Minimize storage writes in loops",
+            "Use memory variables for intermediate calculations",
+            "Consider emitting events instead of storing all data",
+            "Implement early termination conditions"
+          ]
+        },
+        "risk_assessment": {
+          "impact": {
+            "confidentiality": "NONE",
+            "integrity": "NONE",
+            "availability": "LOW",
+            "financial": "LOW"
+          }
+        },
+        "blockchain_specific": {
+          "gas_impact": {
+            "estimated_gas": 150000,
+            "gas_optimization": true
+          }
+        },
+        "ai_metadata": {
+          "model": "gpt-4",
+          "analysis_version": "2.1.0",
+          "detection_method": "LLM_ANALYSIS"
+        },
+        "status": "OPEN",
+        "tags": ["gas", "optimization", "loop", "storage"],
+        "created_at": "2025-08-03T10:45:00Z",
+        "updated_at": "2025-08-03T10:45:00Z"
+      }
+    },
+    {
+      "name": "Minimal Finding",
+      "description": "Minimal required fields only",
+      "finding": {
+        "id": "D4E5F6G7-H8I9-0123-DEFG-456789012345",
+        "severity": "INFO",
+        "title": "Code quality improvement suggestion",
+        "category": "Code Quality",
+        "description": "The contract could benefit from additional documentation and comments for better maintainability.",
+        "confidence": "LOW",
+        "location": {
+          "line": 1
+        },
+        "recommendation": {
+          "summary": "Add comprehensive documentation and inline comments"
+        },
+        "ai_metadata": {
+          "model": "gpt-3.5-turbo",
+          "analysis_version": "2.1.0",
+          "detection_method": "LLM_ANALYSIS"
+        },
+        "status": "OPEN",
+        "created_at": "2025-08-03T10:50:00Z",
+        "updated_at": "2025-08-03T10:50:00Z"
+      }
+    }
+  ],
+  "schema_reference": {
+    "version": "2.0",
+    "file": "schemas/security-finding-v2.json",
+    "validation_service": "App\\Services\\SecurityFindingValidator"
+  }
+}

@@ -1,0 +1,863 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Prompt-Optimized OWASP Security Finding Schema",
+  "description": "Enhanced OWASP-compliant schema optimized for AI prompt engineering and LLM consumption",
+  "type": "object",
+  "required": ["severity", "title", "line", "recommendation"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z]{2,4}-\\d{3,6}$",
+      "description": "Standardized finding identifier (e.g., CRIT-001, HIGH-042)"
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"],
+      "description": "OWASP risk severity level - CRITICAL: immediate threat, HIGH: significant risk, MEDIUM: moderate risk, LOW: minor issue, INFO: informational"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 80,
+      "pattern": "^[A-Z][a-z].*[^.]$",
+      "description": "Concise vulnerability title starting with capital letter, no trailing period (e.g., 'Re-entrancy in withdrawal function')"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Re-entrancy",
+        "Integer Overflow/Underflow", 
+        "Access Control",
+        "Input Validation",
+        "Business Logic",
+        "Cryptographic Issues",
+        "Information Disclosure",
+        "Denial of Service",
+        "Front-running/MEV",
+        "Oracle Manipulation",
+        "Flash Loan Attack",
+        "Gas Optimization",
+        "Code Quality",
+        "Upgrade Pattern Issue",
+        "Proxy Vulnerability",
+        "Timelock Bypass",
+        "Governance Attack",
+        "Cross-Chain Issue",
+        "NFT Vulnerability",
+        "DeFi Protocol Issue",
+        "Weak Randomness",
+        "Unchecked External Calls",
+        "State Variable Visibility",
+        "Signature Replay Attack",
+        "Other"
+      ],
+      "description": "Standardized vulnerability category for AI classification"
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100000,
+      "description": "Source code line number where vulnerability starts"
+    },
+    "end_line": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100000,
+      "description": "Source code line number where vulnerability ends (for multi-line issues)"
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "maxLength": 200,
+          "pattern": "^[^<>:\"|?*]+\\.(sol|vy|js|ts)$",
+          "description": "File path relative to project root"
+        },
+        "contract": {
+          "type": "string",
+          "maxLength": 50,
+          "pattern": "^[A-Z][a-zA-Z0-9_]*$",
+          "description": "Contract name (PascalCase)"
+        },
+        "function": {
+          "type": "string",
+          "maxLength": 50,
+          "pattern": "^[a-z][a-zA-Z0-9_]*$",
+          "description": "Function name (camelCase)"
+        },
+        "modifier": {
+          "type": "string",
+          "maxLength": 30,
+          "description": "Relevant modifier name if applicable"
+        }
+      },
+      "required": ["file"],
+      "description": "Structured location information for precise vulnerability positioning"
+    },
+    "recommendation": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 200,
+          "description": "One-sentence actionable fix summary"
+        },
+        "detailed_steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "minItems": 1,
+          "maxItems": 5,
+          "description": "Step-by-step remediation instructions"
+        },
+        "code_changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": ["add", "remove", "replace", "move"]
+              },
+              "line_number": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "old_code": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "new_code": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "explanation": {
+                "type": "string",
+                "maxLength": 100
+              }
+            },
+            "required": ["action"],
+            "additionalProperties": false
+          },
+          "maxItems": 3,
+          "description": "Specific code changes needed"
+        },
+        "libraries_needed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_/-]*$"
+          },
+          "maxItems": 3,
+          "description": "Required libraries (e.g., @openzeppelin/contracts)"
+        },
+        "testing_guidance": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "How to verify the fix works correctly"
+        },
+        "estimated_time": {
+          "type": "string",
+          "enum": ["5 minutes", "30 minutes", "2 hours", "1 day", "1 week", "2+ weeks"],
+          "description": "Estimated time to implement fix"
+        }
+      },
+      "required": ["summary", "detailed_steps"],
+      "description": "Structured, actionable remediation guidance optimized for developer consumption"
+    },
+    "description": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 30,
+          "maxLength": 150,
+          "description": "Concise technical description"
+        },
+        "technical_details": {
+          "type": "string",
+          "maxLength": 400,
+          "description": "Detailed technical explanation of the vulnerability"
+        },
+        "root_cause": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Underlying cause of the vulnerability"
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "maxItems": 3,
+          "description": "Conditions required for exploitation"
+        }
+      },
+      "required": ["summary"],
+      "description": "Layered vulnerability description for different audiences"
+    },
+    "impact": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "type": "string",
+          "enum": ["FINANCIAL_LOSS", "FUND_DRAINAGE", "UNAUTHORIZED_ACCESS", "SERVICE_DISRUPTION", "DATA_EXPOSURE", "REPUTATION_DAMAGE", "GOVERNANCE_COMPROMISE", "MINIMAL"],
+          "description": "Primary impact type"
+        },
+        "financial_estimate": {
+          "type": "object",
+          "properties": {
+            "min_usd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "max_usd": {
+              "type": "number",
+              "minimum": 0
+            },
+            "confidence": {
+              "type": "string",
+              "enum": ["LOW", "MEDIUM", "HIGH"]
+            }
+          },
+          "description": "Estimated financial impact range"
+        },
+        "affected_users": {
+          "type": "string",
+          "enum": ["NONE", "FEW", "SOME", "MANY", "ALL"],
+          "description": "Scale of user impact"
+        },
+        "business_impact": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["OPERATIONAL_HALT", "REGULATORY_VIOLATION", "CUSTOMER_LOSS", "COMPETITIVE_DISADVANTAGE", "MINIMAL"]
+          },
+          "maxItems": 3,
+          "description": "Business-level consequences"
+        }
+      },
+      "required": ["primary"],
+      "description": "Comprehensive impact assessment"
+    },
+    "exploitability": {
+      "type": "object",
+      "properties": {
+        "difficulty": {
+          "type": "string",
+          "enum": ["TRIVIAL", "EASY", "MODERATE", "DIFFICULT", "THEORETICAL"],
+          "description": "Technical difficulty of exploitation"
+        },
+        "attack_complexity": {
+          "type": "string",
+          "enum": ["LOW", "HIGH"],
+          "description": "CVSS attack complexity rating"
+        },
+        "privileges_required": {
+          "type": "string",
+          "enum": ["NONE", "LOW", "HIGH"],
+          "description": "Required attacker privileges"
+        },
+        "user_interaction": {
+          "type": "string",
+          "enum": ["NONE", "REQUIRED"],
+          "description": "Whether user interaction is needed"
+        },
+        "attack_vector": {
+          "type": "string",
+          "enum": ["NETWORK", "ADJACENT_NETWORK", "LOCAL", "PHYSICAL"],
+          "description": "CVSS attack vector"
+        }
+      },
+      "required": ["difficulty"],
+      "description": "Structured exploitability assessment following CVSS methodology"
+    },
+    "code_analysis": {
+      "type": "object",
+      "properties": {
+        "vulnerable_snippet": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Exact vulnerable code with line numbers"
+        },
+        "fixed_snippet": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Corrected code implementation"
+        },
+        "context_before": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Code context before vulnerable section"
+        },
+        "context_after": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Code context after vulnerable section"
+        },
+        "syntax_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "maxItems": 5,
+          "description": "Solidity patterns that trigger this vulnerability type"
+        }
+      },
+      "description": "Enhanced code analysis for AI model training"
+    },
+    "attack_scenario": {
+      "type": "object",
+      "properties": {
+        "step_by_step": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "step": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "action": {
+                "type": "string",
+                "maxLength": 150
+              },
+              "actor": {
+                "type": "string",
+                "enum": ["ATTACKER", "VICTIM", "CONTRACT", "EXTERNAL_SERVICE"]
+              },
+              "technical_detail": {
+                "type": "string",
+                "maxLength": 200
+              }
+            },
+            "required": ["step", "action", "actor"]
+          },
+          "minItems": 2,
+          "maxItems": 8,
+          "description": "Detailed attack scenario breakdown"
+        },
+        "tools_required": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "maxItems": 5,
+          "description": "Tools/libraries needed for exploitation"
+        },
+        "skill_level": {
+          "type": "string",
+          "enum": ["SCRIPT_KIDDIE", "INTERMEDIATE", "ADVANCED", "EXPERT"],
+          "description": "Required attacker skill level"
+        }
+      },
+      "description": "Structured attack scenario for threat modeling"
+    },
+    "detection": {
+      "type": "object",
+      "properties": {
+        "static_analysis": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "maxItems": 3,
+          "description": "Static analysis patterns that detect this issue"
+        },
+        "dynamic_testing": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "maxItems": 3,
+          "description": "Runtime tests to detect exploitation"
+        },
+        "monitoring_indicators": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "maxItems": 3,
+          "description": "On-chain indicators of attack attempts"
+        }
+      },
+      "description": "Detection and monitoring guidance"
+    },
+    "confidence_metrics": {
+      "type": "object",
+      "properties": {
+        "overall_confidence": {
+          "type": "string",
+          "enum": ["HIGH", "MEDIUM", "LOW"],
+          "description": "AI model confidence in finding accuracy"
+        },
+        "false_positive_risk": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH"],
+          "description": "Estimated false positive probability"
+        },
+        "evidence_strength": {
+          "type": "string",
+          "enum": ["STRONG", "MODERATE", "WEAK"],
+          "description": "Strength of supporting evidence"
+        },
+        "pattern_match_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "How well the code matches known vulnerability patterns"
+        },
+        "context_relevance": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Relevance of surrounding code context"
+        }
+      },
+      "required": ["overall_confidence"],
+      "description": "AI confidence metrics for quality assessment"
+    },
+    "standards_compliance": {
+      "type": "object",
+      "properties": {
+        "cvss_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 10.0,
+          "description": "CVSS v3.1 base score"
+        },
+        "cvss_vector": {
+          "type": "string",
+          "pattern": "^CVSS:3\\.[01]/AV:[NALP]/AC:[LH]/PR:[NLH]/UI:[NR]/S:[UC]/C:[NLH]/I:[NLH]/A:[NLH]$",
+          "description": "Full CVSS v3.1 vector string"
+        },
+        "owasp_category": {
+          "type": "string",
+          "enum": [
+            "A01:2021-Broken Access Control",
+            "A02:2021-Cryptographic Failures", 
+            "A03:2021-Injection",
+            "A04:2021-Insecure Design",
+            "A05:2021-Security Misconfiguration",
+            "A06:2021-Vulnerable and Outdated Components",
+            "A07:2021-Identification and Authentication Failures",
+            "A08:2021-Software and Data Integrity Failures",
+            "A09:2021-Security Logging and Monitoring Failures",
+            "A10:2021-Server-Side Request Forgery"
+          ],
+          "description": "OWASP Top 10 2021 mapping"
+        },
+        "swc_id": {
+          "type": "string",
+          "pattern": "^SWC-\\d{3}$",
+          "description": "Smart Contract Weakness Classification ID"
+        },
+        "cwe_id": {
+          "type": "string",
+          "pattern": "^CWE-\\d+$",
+          "description": "Common Weakness Enumeration ID"
+        },
+        "similar_cve": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^CVE-\\d{4}-\\d{4,}$"
+          },
+          "maxItems": 3,
+          "description": "Related CVE identifiers"
+        }
+      },
+      "description": "Mapping to security standards and frameworks"
+    },
+    "blockchain_context": {
+      "type": "object",
+      "properties": {
+        "networks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["ETHEREUM", "POLYGON", "BSC", "ARBITRUM", "OPTIMISM", "AVALANCHE", "FANTOM", "ALL_EVM", "BITCOIN", "SOLANA"]
+          },
+          "description": "Applicable blockchain networks"
+        },
+        "token_standards": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["ERC20", "ERC721", "ERC1155", "ERC777", "ERC4626", "BEP20", "SPL"]
+          },
+          "description": "Relevant token standards"
+        },
+        "defi_protocols": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["AMM", "LENDING", "YIELD_FARMING", "STAKING", "DERIVATIVES", "DAO", "BRIDGE", "ORACLE", "INSURANCE"]
+          },
+          "description": "DeFi protocol categories affected"
+        },
+        "gas_implications": {
+          "type": "object",
+          "properties": {
+            "exploitation_cost": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Estimated gas cost for exploitation"
+            },
+            "fix_cost": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Gas cost impact of implementing fix"
+            },
+            "optimization_savings": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Gas savings from optimization fixes"
+            }
+          },
+          "description": "Gas cost analysis"
+        }
+      },
+      "description": "Blockchain-specific context and implications"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["DOCUMENTATION", "EXPLOIT_EXAMPLE", "FIX_EXAMPLE", "SECURITY_ADVISORY", "ACADEMIC_PAPER", "TOOL"]
+          },
+          "relevance": {
+            "type": "string",
+            "enum": ["HIGH", "MEDIUM", "LOW"]
+          }
+        },
+        "required": ["title", "url", "type"],
+        "additionalProperties": false
+      },
+      "maxItems": 8,
+      "description": "Categorized and prioritized references"
+    },
+    "historical_context": {
+      "type": "object",
+      "properties": {
+        "incidents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 100
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "amount_lost_usd": {
+                "type": "number",
+                "minimum": 0
+              },
+              "similar_pattern": {
+                "type": "boolean"
+              },
+              "lessons_learned": {
+                "type": "string",
+                "maxLength": 200
+              }
+            },
+            "required": ["name", "date"]
+          },
+          "maxItems": 5,
+          "description": "Historical incidents with similar patterns"
+        },
+        "pattern_evolution": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "How this vulnerability pattern has evolved"
+        }
+      },
+      "description": "Historical context and pattern analysis"
+    },
+    "ai_metadata": {
+      "type": "object",
+      "properties": {
+        "model_name": {
+          "type": "string",
+          "enum": ["gpt-4", "gpt-4-turbo", "claude-3-opus", "claude-3-sonnet", "claude-3-haiku", "gemini-pro", "llama-2", "custom"],
+          "description": "AI model used for analysis"
+        },
+        "analysis_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Analysis engine version (semver)"
+        },
+        "tokens_used": {
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "output": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": ["total"],
+          "description": "Token consumption metrics"
+        },
+        "processing_time_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Analysis processing time in milliseconds"
+        },
+        "prompt_template_id": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Prompt template used for analysis"
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "description": "Model temperature setting used"
+        }
+      },
+      "required": ["model_name", "analysis_version"],
+      "description": "AI analysis metadata for reproducibility"
+    },
+    "workflow": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["OPEN", "TRIAGING", "CONFIRMED", "IN_PROGRESS", "TESTING", "FIXED", "CLOSED", "FALSE_POSITIVE", "DUPLICATE"],
+          "default": "OPEN",
+          "description": "Current workflow status"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Remediation priority (1=highest, 5=lowest)"
+        },
+        "assignee": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Assigned team member or team"
+        },
+        "due_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Target remediation date"
+        },
+        "effort_estimate": {
+          "type": "string",
+          "enum": ["XS", "S", "M", "L", "XL"],
+          "description": "T-shirt sizing for implementation effort"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "maxItems": 5,
+          "description": "External dependencies blocking remediation"
+        }
+      },
+      "required": ["status"],
+      "description": "Workflow and project management data"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_-]+$",
+        "maxLength": 30
+      },
+      "maxItems": 15,
+      "uniqueItems": true,
+      "description": "Machine-readable tags for categorization and filtering"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of finding creation"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of last update"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "id": "CRIT-001",
+      "severity": "CRITICAL",
+      "title": "Re-entrancy in withdrawal function",
+      "category": "Re-entrancy",
+      "line": 125,
+      "location": {
+        "file": "contracts/VulnerableBank.sol",
+        "contract": "VulnerableBank",
+        "function": "withdraw"
+      },
+      "recommendation": {
+        "summary": "Implement checks-effects-interactions pattern and add ReentrancyGuard modifier.",
+        "detailed_steps": [
+          "Move balance update before external call",
+          "Add OpenZeppelin ReentrancyGuard import",
+          "Apply nonReentrant modifier to withdraw function",
+          "Add proper error handling for failed transfers"
+        ],
+        "code_changes": [
+          {
+            "action": "replace",
+            "line_number": 125,
+            "old_code": "msg.sender.call{value: amount}(\"\");\nbalances[msg.sender] -= amount;",
+            "new_code": "balances[msg.sender] -= amount;\n(bool success, ) = msg.sender.call{value: amount}(\"\");\nrequire(success, \"Transfer failed\");",
+            "explanation": "Apply checks-effects-interactions pattern"
+          }
+        ],
+        "libraries_needed": ["@openzeppelin/contracts/security/ReentrancyGuard.sol"],
+        "testing_guidance": "Create unit test with malicious contract that attempts re-entrancy",
+        "estimated_time": "30 minutes"
+      },
+      "description": {
+        "summary": "External call before state update enables classic re-entrancy attack",
+        "technical_details": "The withdraw function performs external call to transfer Ether before updating the user's balance state, violating the checks-effects-interactions pattern",
+        "root_cause": "State modifications occur after external call execution",
+        "prerequisites": ["Attacker must have contract balance", "Fallback function in attacker contract"]
+      },
+      "impact": {
+        "primary": "FUND_DRAINAGE",
+        "financial_estimate": {
+          "min_usd": 10000,
+          "max_usd": 10000000,
+          "confidence": "HIGH"
+        },
+        "affected_users": "ALL",
+        "business_impact": ["OPERATIONAL_HALT", "REGULATORY_VIOLATION"]
+      },
+      "exploitability": {
+        "difficulty": "EASY",
+        "attack_complexity": "LOW",
+        "privileges_required": "LOW",
+        "user_interaction": "NONE",
+        "attack_vector": "NETWORK"
+      },
+      "attack_scenario": {
+        "step_by_step": [
+          {
+            "step": 1,
+            "action": "Deploy malicious contract with recursive fallback function",
+            "actor": "ATTACKER",
+            "technical_detail": "Contract's fallback calls withdraw again during execution"
+          },
+          {
+            "step": 2,
+            "action": "Deposit minimum amount to establish balance",
+            "actor": "ATTACKER",
+            "technical_detail": "Creates legitimate balance entry in mapping"
+          },
+          {
+            "step": 3,
+            "action": "Call withdraw function with deposited amount",
+            "actor": "ATTACKER",
+            "technical_detail": "Triggers initial withdrawal and external call"
+          },
+          {
+            "step": 4,
+            "action": "Re-enter withdraw during external call",
+            "actor": "ATTACKER",
+            "technical_detail": "Balance not yet updated, passes require check again"
+          },
+          {
+            "step": 5,
+            "action": "Continue recursion until gas limit or contract drained",
+            "actor": "ATTACKER",
+            "technical_detail": "Each recursive call transfers more funds"
+          }
+        ],
+        "tools_required": ["Solidity", "Remix/Hardhat", "Web3 library"],
+        "skill_level": "INTERMEDIATE"
+      },
+      "confidence_metrics": {
+        "overall_confidence": "HIGH",
+        "false_positive_risk": "LOW",
+        "evidence_strength": "STRONG",
+        "pattern_match_score": 0.95,
+        "context_relevance": 0.88
+      },
+      "standards_compliance": {
+        "cvss_score": 9.1,
+        "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:N/I:H/A:H",
+        "swc_id": "SWC-107",
+        "cwe_id": "CWE-841"
+      },
+      "blockchain_context": {
+        "networks": ["ALL_EVM"],
+        "gas_implications": {
+          "exploitation_cost": 50000,
+          "fix_cost": 25000
+        }
+      },
+      "historical_context": {
+        "incidents": [
+          {
+            "name": "The DAO Hack",
+            "date": "2016-06-17",
+            "amount_lost_usd": 50000000,
+            "similar_pattern": true,
+            "lessons_learned": "Re-entrancy can have catastrophic consequences in DeFi"
+          }
+        ]
+      },
+      "ai_metadata": {
+        "model_name": "gpt-4",
+        "analysis_version": "2.1.0",
+        "tokens_used": {
+          "input": 2500,
+          "output": 1250,
+          "total": 3750
+        },
+        "processing_time_ms": 3200,
+        "prompt_template_id": "security_analysis_v2"
+      },
+      "workflow": {
+        "status": "OPEN",
+        "priority": 1,
+        "effort_estimate": "S"
+      },
+      "tags": ["reentrancy", "external-call", "critical", "defi", "withdrawal"],
+      "created_at": "2025-08-04T10:30:00Z"
+    }
+  ]
+}

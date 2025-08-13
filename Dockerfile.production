@@ -1,0 +1,124 @@
+# Multi-stage Docker build for Laravel with RoadRunner
+FROM php:8.3-fpm-alpine AS base
+
+# Install system dependencies
+RUN apk add --no-cache \
+    bash \
+    curl \
+    freetype-dev \
+    g++ \
+    gcc \
+    git \
+    icu-dev \
+    jpeg-dev \
+    libc-dev \
+    libpng-dev \
+    libzip-dev \
+    make \
+    mysql-client \
+    nodejs \
+    npm \
+    oniguruma-dev \
+    openssl-dev \
+    postgresql-dev \
+    unzip \
+    zip
+
+# Install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        bcmath \
+        gd \
+        intl \
+        mbstring \
+        opcache \
+        pdo \
+        pdo_mysql \
+        pdo_pgsql \
+        zip
+
+# Install Redis extension
+RUN pecl install redis \
+    && docker-php-ext-enable redis
+
+# Configure PHP for production
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/99-custom.ini
+COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Create www-data user directories
+RUN mkdir -p /var/www/html/storage/logs \
+    && mkdir -p /var/www/html/storage/framework/cache \
+    && mkdir -p /var/www/html/storage/framework/sessions \
+    && mkdir -p /var/www/html/storage/framework/views \
+    && mkdir -p /var/www/html/bootstrap/cache
+
+# Copy composer files first for better caching
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies
+RUN composer install --no-dev --no-scripts --no-autoloader --optimize-autoloader
+
+# Copy package.json and package-lock.json
+COPY package.json package-lock.json ./
+
+# Install Node.js dependencies
+RUN npm ci --only=production
+
+# Copy application code
+COPY . .
+
+# Generate autoloader
+RUN composer dump-autoload --optimize
+
+# Build frontend assets
+RUN npm run build
+
+# Set proper permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache
+
+# Remove development dependencies
+RUN npm prune --production \
+    && rm -rf node_modules/.cache \
+    && rm -rf /tmp/* \
+    && rm -rf /var/cache/apk/*
+
+# Production stage
+FROM base AS production
+
+# Install RoadRunner
+RUN curl -sSL https://github.com/roadrunner-server/roadrunner/releases/download/v2023.3.12/roadrunner-2023.3.12-linux-amd64.tar.gz | tar -xz \
+    && mv roadrunner-2023.3.12-linux-amd64/rr /usr/local/bin/rr \
+    && chmod +x /usr/local/bin/rr \
+    && rm -rf roadrunner-2023.3.12-linux-amd64
+
+# Copy RoadRunner configuration
+COPY docker/roadrunner/.rr.yaml /var/www/html/.rr.yaml
+
+# Create entrypoint script
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Switch to www-data user
+USER www-data
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Expose port
+EXPOSE 8080
+
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# Default command
+CMD ["rr", "serve"]

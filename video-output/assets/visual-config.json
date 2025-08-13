@@ -1,0 +1,20 @@
+{
+    "colors": {
+        "primary": "#4ecdc4",
+        "secondary": "#44a08d",
+        "danger": "#ff4757",
+        "warning": "#ffa726",
+        "success": "#26de81",
+        "background": "#2c3e50"
+    },
+    "fonts": {
+        "heading": "Arial, sans-serif",
+        "body": "Helvetica, Arial, sans-serif",
+        "mono": "Monaco, Consolas, monospace"
+    },
+    "animations": {
+        "fade_duration": "0.5s",
+        "slide_duration": "0.8s",
+        "pulse_duration": "2s"
+    }
+}

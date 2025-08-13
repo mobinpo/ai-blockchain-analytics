@@ -1,0 +1,3214 @@
+{
+  "aggregate": {
+    "counters": {
+      "vusers.created_by_name.Sentiment Analysis Pipeline": 248332,
+      "vusers.created": 413550,
+      "http.requests": 413550,
+      "plugins.metrics-by-endpoint./.errors.ECONNRESET": 248332,
+      "errors.ECONNRESET": 413550,
+      "vusers.failed": 413550,
+      "vusers.created_by_name.Contract Analysis": 103088,
+      "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 103088,
+      "vusers.created_by_name.Verification Analysis": 41303,
+      "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 41303,
+      "vusers.created_by_name.Dashboard Requests": 20827,
+      "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 20827
+    },
+    "rates": {
+      "http.request_rate": 371
+    },
+    "firstCounterAt": 1754667717969,
+    "lastCounterAt": 1754668887700,
+    "firstMetricAt": 1754667717969,
+    "lastMetricAt": 1754668887700,
+    "period": 1754668880000,
+    "summaries": {},
+    "histograms": {}
+  },
+  "intermediate": [
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 6,
+        "vusers.created": 11,
+        "http.requests": 11,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 5,
+        "errors.ECONNRESET": 10,
+        "vusers.failed": 10,
+        "vusers.created_by_name.Contract Analysis": 4,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 4,
+        "vusers.created_by_name.Verification Analysis": 1,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 1
+      },
+      "rates": {
+        "http.request_rate": 10
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667717969,
+      "lastCounterAt": 1754667719968,
+      "firstMetricAt": 1754667717969,
+      "lastMetricAt": 1754667719968,
+      "period": "1754667710000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 27,
+        "errors.ECONNRESET": 50,
+        "vusers.failed": 50,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 26,
+        "vusers.created": 50,
+        "http.requests": 50,
+        "vusers.created_by_name.Verification Analysis": 3,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 3,
+        "vusers.created_by_name.Contract Analysis": 17,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 16,
+        "vusers.created_by_name.Dashboard Requests": 4,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 4
+      },
+      "rates": {
+        "http.request_rate": 5
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667720016,
+      "lastCounterAt": 1754667729969,
+      "firstMetricAt": 1754667720016,
+      "lastMetricAt": 1754667729969,
+      "period": "1754667720000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 17,
+        "errors.ECONNRESET": 50,
+        "vusers.failed": 50,
+        "vusers.created_by_name.Contract Analysis": 16,
+        "vusers.created": 50,
+        "http.requests": 50,
+        "vusers.created_by_name.Dashboard Requests": 4,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 4,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 24,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 23,
+        "vusers.created_by_name.Verification Analysis": 6,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 6
+      },
+      "rates": {
+        "http.request_rate": 5
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667730016,
+      "lastCounterAt": 1754667739967,
+      "firstMetricAt": 1754667730016,
+      "lastMetricAt": 1754667739967,
+      "period": "1754667730000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 32,
+        "errors.ECONNRESET": 50,
+        "vusers.failed": 50,
+        "vusers.created_by_name.Contract Analysis": 14,
+        "vusers.created": 50,
+        "http.requests": 50,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 14,
+        "vusers.created_by_name.Dashboard Requests": 4,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 3,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 31,
+        "vusers.created_by_name.Verification Analysis": 1,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 1
+      },
+      "rates": {
+        "http.request_rate": 5
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667740016,
+      "lastCounterAt": 1754667749967,
+      "firstMetricAt": 1754667740016,
+      "lastMetricAt": 1754667749967,
+      "period": "1754667740000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 3,
+        "errors.ECONNRESET": 50,
+        "vusers.failed": 50,
+        "vusers.created_by_name.Dashboard Requests": 2,
+        "vusers.created": 50,
+        "http.requests": 50,
+        "vusers.created_by_name.Verification Analysis": 9,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 9,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 29,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 29,
+        "vusers.created_by_name.Contract Analysis": 10,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 9
+      },
+      "rates": {
+        "http.request_rate": 5
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667750016,
+      "lastCounterAt": 1754667759967,
+      "firstMetricAt": 1754667750016,
+      "lastMetricAt": 1754667759967,
+      "period": "1754667750000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 15,
+        "errors.ECONNRESET": 50,
+        "vusers.failed": 50,
+        "vusers.created_by_name.Contract Analysis": 14,
+        "vusers.created": 50,
+        "http.requests": 50,
+        "vusers.created_by_name.Verification Analysis": 6,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 6,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 27,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 26,
+        "vusers.created_by_name.Dashboard Requests": 3,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 3
+      },
+      "rates": {
+        "http.request_rate": 5
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667760016,
+      "lastCounterAt": 1754667769967,
+      "firstMetricAt": 1754667760016,
+      "lastMetricAt": 1754667769967,
+      "period": "1754667760000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 32,
+        "errors.ECONNRESET": 51,
+        "vusers.failed": 51,
+        "vusers.created_by_name.Verification Analysis": 2,
+        "vusers.created": 51,
+        "http.requests": 51,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 2,
+        "vusers.created_by_name.Contract Analysis": 12,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 12,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 32,
+        "vusers.created_by_name.Dashboard Requests": 5,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 5
+      },
+      "rates": {
+        "http.request_rate": 6
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667770016,
+      "lastCounterAt": 1754667779971,
+      "firstMetricAt": 1754667770016,
+      "lastMetricAt": 1754667779971,
+      "period": "1754667770000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 64,
+        "errors.ECONNRESET": 102,
+        "vusers.failed": 102,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 64,
+        "vusers.created": 102,
+        "http.requests": 102,
+        "vusers.created_by_name.Dashboard Requests": 6,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 6,
+        "vusers.created_by_name.Verification Analysis": 7,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 7,
+        "vusers.created_by_name.Contract Analysis": 25,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 25
+      },
+      "rates": {
+        "http.request_rate": 16
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667780019,
+      "lastCounterAt": 1754667789978,
+      "firstMetricAt": 1754667780019,
+      "lastMetricAt": 1754667789978,
+      "period": "1754667780000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 123,
+        "errors.ECONNRESET": 178,
+        "vusers.failed": 178,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 125,
+        "vusers.created": 181,
+        "http.requests": 181,
+        "vusers.created_by_name.Contract Analysis": 35,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 34,
+        "vusers.created_by_name.Dashboard Requests": 8,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 8,
+        "vusers.created_by_name.Verification Analysis": 13,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 13
+      },
+      "rates": {
+        "http.request_rate": 23
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667790021,
+      "lastCounterAt": 1754667799984,
+      "firstMetricAt": 1754667790021,
+      "lastMetricAt": 1754667799984,
+      "period": "1754667790000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 64,
+        "errors.ECONNRESET": 254,
+        "vusers.failed": 254,
+        "vusers.created_by_name.Dashboard Requests": 10,
+        "vusers.created": 254,
+        "http.requests": 254,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 10,
+        "vusers.created_by_name.Verification Analysis": 22,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 22,
+        "vusers.created_by_name.Contract Analysis": 64,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 158,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 158
+      },
+      "rates": {
+        "http.request_rate": 30
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667800019,
+      "lastCounterAt": 1754667809985,
+      "firstMetricAt": 1754667800019,
+      "lastMetricAt": 1754667809985,
+      "period": "1754667800000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 200,
+        "errors.ECONNRESET": 349,
+        "vusers.failed": 349,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 200,
+        "vusers.created": 349,
+        "http.requests": 349,
+        "vusers.created_by_name.Contract Analysis": 91,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 92,
+        "vusers.created_by_name.Dashboard Requests": 14,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 14,
+        "vusers.created_by_name.Verification Analysis": 44,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 43
+      },
+      "rates": {
+        "http.request_rate": 35
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667810032,
+      "lastCounterAt": 1754667819988,
+      "firstMetricAt": 1754667810032,
+      "lastMetricAt": 1754667819988,
+      "period": "1754667810000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 245,
+        "errors.ECONNRESET": 422,
+        "vusers.failed": 422,
+        "vusers.created_by_name.Contract Analysis": 110,
+        "vusers.created": 425,
+        "http.requests": 425,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 107,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 246,
+        "vusers.created_by_name.Dashboard Requests": 26,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 26,
+        "vusers.created_by_name.Verification Analysis": 43,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 44
+      },
+      "rates": {
+        "http.request_rate": 43
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667820035,
+      "lastCounterAt": 1754667829994,
+      "firstMetricAt": 1754667820035,
+      "lastMetricAt": 1754667829994,
+      "period": "1754667820000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 310,
+        "errors.ECONNRESET": 502,
+        "vusers.failed": 502,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 310,
+        "vusers.created": 502,
+        "http.requests": 502,
+        "vusers.created_by_name.Contract Analysis": 124,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 125,
+        "vusers.created_by_name.Verification Analysis": 44,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 43,
+        "vusers.created_by_name.Dashboard Requests": 24,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 24
+      },
+      "rates": {
+        "http.request_rate": 51
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667830019,
+      "lastCounterAt": 1754667839994,
+      "firstMetricAt": 1754667830019,
+      "lastMetricAt": 1754667839994,
+      "period": "1754667830000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 339,
+        "errors.ECONNRESET": 577,
+        "vusers.failed": 577,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 341,
+        "vusers.created": 580,
+        "http.requests": 579,
+        "vusers.created_by_name.Contract Analysis": 145,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 143,
+        "vusers.created_by_name.Verification Analysis": 61,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 62,
+        "vusers.created_by_name.Dashboard Requests": 33,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 33
+      },
+      "rates": {
+        "http.request_rate": 58
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667840006,
+      "lastCounterAt": 1754667849999,
+      "firstMetricAt": 1754667840006,
+      "lastMetricAt": 1754667849999,
+      "period": "1754667840000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 178,
+        "errors.ECONNRESET": 665,
+        "vusers.failed": 665,
+        "vusers.created_by_name.Contract Analysis": 177,
+        "vusers.created": 665,
+        "http.requests": 666,
+        "vusers.created_by_name.Verification Analysis": 73,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 72,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 377,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 377,
+        "vusers.created_by_name.Dashboard Requests": 38,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 38
+      },
+      "rates": {
+        "http.request_rate": 67
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667850001,
+      "lastCounterAt": 1754667859999,
+      "firstMetricAt": 1754667850001,
+      "lastMetricAt": 1754667859999,
+      "period": "1754667850000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 460,
+        "vusers.created": 743,
+        "http.requests": 743,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 459,
+        "errors.ECONNRESET": 743,
+        "vusers.failed": 743,
+        "vusers.created_by_name.Verification Analysis": 65,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 64,
+        "vusers.created_by_name.Contract Analysis": 177,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 179,
+        "vusers.created_by_name.Dashboard Requests": 41,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 41
+      },
+      "rates": {
+        "http.request_rate": 75
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667860003,
+      "lastCounterAt": 1754667869999,
+      "firstMetricAt": 1754667860003,
+      "lastMetricAt": 1754667869999,
+      "period": "1754667860000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 221,
+        "vusers.created": 819,
+        "http.requests": 819,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 217,
+        "errors.ECONNRESET": 820,
+        "vusers.failed": 820,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 479,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 482,
+        "vusers.created_by_name.Verification Analysis": 86,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 88,
+        "vusers.created_by_name.Dashboard Requests": 33,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 33
+      },
+      "rates": {
+        "http.request_rate": 83
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667870005,
+      "lastCounterAt": 1754667879998,
+      "firstMetricAt": 1754667870005,
+      "lastMetricAt": 1754667879998,
+      "period": "1754667870000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 569,
+        "vusers.created": 897,
+        "http.requests": 897,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 569,
+        "errors.ECONNRESET": 898,
+        "vusers.failed": 898,
+        "vusers.created_by_name.Verification Analysis": 86,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 86,
+        "vusers.created_by_name.Contract Analysis": 207,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 209,
+        "vusers.created_by_name.Dashboard Requests": 35,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 34
+      },
+      "rates": {
+        "http.request_rate": 90
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667880000,
+      "lastCounterAt": 1754667889993,
+      "firstMetricAt": 1754667880000,
+      "lastMetricAt": 1754667889993,
+      "period": "1754667880000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 234,
+        "vusers.created": 984,
+        "http.requests": 984,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 237,
+        "errors.ECONNRESET": 979,
+        "vusers.failed": 979,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 583,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 576,
+        "vusers.created_by_name.Verification Analysis": 116,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 115,
+        "vusers.created_by_name.Dashboard Requests": 51,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 51
+      },
+      "rates": {
+        "http.request_rate": 99
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667890002,
+      "lastCounterAt": 1754667899990,
+      "firstMetricAt": 1754667890002,
+      "lastMetricAt": 1754667899990,
+      "period": "1754667890000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 669,
+        "vusers.created": 1075,
+        "http.requests": 1075,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 676,
+        "errors.ECONNRESET": 1076,
+        "vusers.failed": 1076,
+        "vusers.created_by_name.Contract Analysis": 257,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 255,
+        "vusers.created_by_name.Verification Analysis": 101,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 98,
+        "vusers.created_by_name.Dashboard Requests": 48,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 47
+      },
+      "rates": {
+        "http.request_rate": 109
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667900002,
+      "lastCounterAt": 1754667909998,
+      "firstMetricAt": 1754667900002,
+      "lastMetricAt": 1754667909998,
+      "period": "1754667900000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 713,
+        "vusers.created": 1183,
+        "http.requests": 1183,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 711,
+        "errors.ECONNRESET": 1182,
+        "vusers.failed": 1182,
+        "vusers.created_by_name.Verification Analysis": 128,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 131,
+        "vusers.created_by_name.Contract Analysis": 287,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 284,
+        "vusers.created_by_name.Dashboard Requests": 55,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 56
+      },
+      "rates": {
+        "http.request_rate": 119
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667910000,
+      "lastCounterAt": 1754667919996,
+      "firstMetricAt": 1754667910000,
+      "lastMetricAt": 1754667919996,
+      "period": "1754667910000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 769,
+        "vusers.created": 1304,
+        "http.requests": 1304,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 766,
+        "errors.ECONNRESET": 1296,
+        "vusers.failed": 1296,
+        "vusers.created_by_name.Contract Analysis": 327,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 323,
+        "vusers.created_by_name.Dashboard Requests": 62,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 63,
+        "vusers.created_by_name.Verification Analysis": 146,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 144
+      },
+      "rates": {
+        "http.request_rate": 131
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667920009,
+      "lastCounterAt": 1754667929986,
+      "firstMetricAt": 1754667920009,
+      "lastMetricAt": 1754667929986,
+      "period": "1754667920000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 840,
+        "vusers.created": 1409,
+        "http.requests": 1409,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 835,
+        "errors.ECONNRESET": 1404,
+        "vusers.failed": 1404,
+        "vusers.created_by_name.Verification Analysis": 148,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 148,
+        "vusers.created_by_name.Contract Analysis": 358,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 359,
+        "vusers.created_by_name.Dashboard Requests": 63,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 62
+      },
+      "rates": {
+        "http.request_rate": 142
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667930021,
+      "lastCounterAt": 1754667939994,
+      "firstMetricAt": 1754667930021,
+      "lastMetricAt": 1754667939994,
+      "period": "1754667930000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 927,
+        "vusers.created": 1520,
+        "http.requests": 1520,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 922,
+        "errors.ECONNRESET": 1516,
+        "vusers.failed": 1516,
+        "vusers.created_by_name.Contract Analysis": 392,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 389,
+        "vusers.created_by_name.Verification Analysis": 135,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 138,
+        "vusers.created_by_name.Dashboard Requests": 66,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 67
+      },
+      "rates": {
+        "http.request_rate": 153
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667940020,
+      "lastCounterAt": 1754667949999,
+      "firstMetricAt": 1754667940020,
+      "lastMetricAt": 1754667949999,
+      "period": "1754667940000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 391,
+        "vusers.created": 1635,
+        "http.requests": 1635,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 993,
+        "errors.ECONNRESET": 1635,
+        "vusers.failed": 1635,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 393,
+        "vusers.created_by_name.Verification Analysis": 179,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 178,
+        "vusers.created_by_name.Dashboard Requests": 74,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 71,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 991
+      },
+      "rates": {
+        "http.request_rate": 165
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667950026,
+      "lastCounterAt": 1754667959999,
+      "firstMetricAt": 1754667950026,
+      "lastMetricAt": 1754667959999,
+      "period": "1754667950000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 427,
+        "vusers.created": 1742,
+        "http.requests": 1742,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 420,
+        "errors.ECONNRESET": 1702,
+        "vusers.failed": 1702,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1045,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1023,
+        "vusers.created_by_name.Dashboard Requests": 83,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 77,
+        "vusers.created_by_name.Verification Analysis": 187,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 182
+      },
+      "rates": {
+        "http.request_rate": 175
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667960000,
+      "lastCounterAt": 1754667969985,
+      "firstMetricAt": 1754667960000,
+      "lastMetricAt": 1754667969985,
+      "period": "1754667960000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 463,
+        "vusers.created": 1859,
+        "http.requests": 1859,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 186,
+        "errors.ECONNRESET": 1905,
+        "vusers.failed": 1905,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 474,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1119,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1143,
+        "vusers.created_by_name.Verification Analysis": 183,
+        "vusers.created_by_name.Dashboard Requests": 94,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 102
+      },
+      "rates": {
+        "http.request_rate": 187
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667970003,
+      "lastCounterAt": 1754667979998,
+      "firstMetricAt": 1754667970003,
+      "lastMetricAt": 1754667979998,
+      "period": "1754667970000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 190,
+        "errors.ECONNRESET": 1960,
+        "vusers.failed": 1960,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1222,
+        "vusers.created": 1972,
+        "http.requests": 1972,
+        "vusers.created_by_name.Dashboard Requests": 95,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1215,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 94,
+        "vusers.created_by_name.Contract Analysis": 465,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 461,
+        "vusers.created_by_name.Verification Analysis": 190
+      },
+      "rates": {
+        "http.request_rate": 198
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667980005,
+      "lastCounterAt": 1754667989997,
+      "firstMetricAt": 1754667980005,
+      "lastMetricAt": 1754667989997,
+      "period": "1754667980000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1245,
+        "errors.ECONNRESET": 2079,
+        "vusers.failed": 2079,
+        "vusers.created_by_name.Contract Analysis": 526,
+        "vusers.created": 2077,
+        "http.requests": 2076,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 527,
+        "vusers.created_by_name.Verification Analysis": 199,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 199,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1244,
+        "vusers.created_by_name.Dashboard Requests": 108,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 108
+      },
+      "rates": {
+        "http.request_rate": 208
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754667990015,
+      "lastCounterAt": 1754667999999,
+      "firstMetricAt": 1754667990015,
+      "lastMetricAt": 1754667999999,
+      "period": "1754667990000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Verification Analysis": 210,
+        "vusers.created": 2193,
+        "http.requests": 2194,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1283,
+        "errors.ECONNRESET": 2160,
+        "vusers.failed": 2160,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 210,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1305,
+        "vusers.created_by_name.Contract Analysis": 562,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 552,
+        "vusers.created_by_name.Dashboard Requests": 116,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 115
+      },
+      "rates": {
+        "http.request_rate": 221
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668000000,
+      "lastCounterAt": 1754668009997,
+      "firstMetricAt": 1754668000000,
+      "lastMetricAt": 1754668009997,
+      "period": "1754668000000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1423,
+        "errors.ECONNRESET": 2335,
+        "vusers.failed": 2335,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1406,
+        "vusers.created": 2303,
+        "http.requests": 2303,
+        "vusers.created_by_name.Contract Analysis": 570,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 582,
+        "vusers.created_by_name.Verification Analysis": 216,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 218,
+        "vusers.created_by_name.Dashboard Requests": 111,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 112
+      },
+      "rates": {
+        "http.request_rate": 232
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668010008,
+      "lastCounterAt": 1754668019996,
+      "firstMetricAt": 1754668010008,
+      "lastMetricAt": 1754668019996,
+      "period": "1754668010000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1475,
+        "vusers.created": 2411,
+        "http.requests": 2411,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 573,
+        "errors.ECONNRESET": 2395,
+        "vusers.failed": 2395,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1473,
+        "vusers.created_by_name.Contract Analysis": 579,
+        "vusers.created_by_name.Verification Analysis": 239,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 233,
+        "vusers.created_by_name.Dashboard Requests": 118,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 116
+      },
+      "rates": {
+        "http.request_rate": 242
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668020000,
+      "lastCounterAt": 1754668029998,
+      "firstMetricAt": 1754668020000,
+      "lastMetricAt": 1754668029998,
+      "period": "1754668020000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1489,
+        "vusers.created": 2529,
+        "http.requests": 2529,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 267,
+        "errors.ECONNRESET": 2541,
+        "vusers.failed": 2541,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 644,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1494,
+        "vusers.created_by_name.Contract Analysis": 640,
+        "vusers.created_by_name.Verification Analysis": 265,
+        "vusers.created_by_name.Dashboard Requests": 135,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 136
+      },
+      "rates": {
+        "http.request_rate": 254
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668030000,
+      "lastCounterAt": 1754668039996,
+      "firstMetricAt": 1754668030000,
+      "lastMetricAt": 1754668039996,
+      "period": "1754668030000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1592,
+        "vusers.created": 2639,
+        "http.requests": 2639,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1593,
+        "errors.ECONNRESET": 2639,
+        "vusers.failed": 2639,
+        "vusers.created_by_name.Verification Analysis": 273,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 273,
+        "vusers.created_by_name.Contract Analysis": 653,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 649,
+        "vusers.created_by_name.Dashboard Requests": 121,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 124
+      },
+      "rates": {
+        "http.request_rate": 265
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668040000,
+      "lastCounterAt": 1754668049998,
+      "firstMetricAt": 1754668040000,
+      "lastMetricAt": 1754668049998,
+      "period": "1754668040000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 680,
+        "vusers.created": 2745,
+        "http.requests": 2745,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 244,
+        "errors.ECONNRESET": 2664,
+        "vusers.failed": 2664,
+        "vusers.created_by_name.Verification Analysis": 249,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 659,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1676,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1623,
+        "vusers.created_by_name.Dashboard Requests": 140,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 138
+      },
+      "rates": {
+        "http.request_rate": 275
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668050002,
+      "lastCounterAt": 1754668059999,
+      "firstMetricAt": 1754668050002,
+      "lastMetricAt": 1754668059999,
+      "period": "1754668050000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1808,
+        "errors.ECONNRESET": 2954,
+        "vusers.failed": 2954,
+        "vusers.created_by_name.Contract Analysis": 678,
+        "vusers.created": 2864,
+        "http.requests": 2863,
+        "vusers.created_by_name.Dashboard Requests": 131,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1753,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 705,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 133,
+        "vusers.created_by_name.Verification Analysis": 302,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 308
+      },
+      "rates": {
+        "http.request_rate": 288
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668060002,
+      "lastCounterAt": 1754668069999,
+      "firstMetricAt": 1754668060002,
+      "lastMetricAt": 1754668069999,
+      "period": "1754668060000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 763,
+        "vusers.created": 2971,
+        "http.requests": 2972,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1495,
+        "errors.ECONNRESET": 2510,
+        "vusers.failed": 2510,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1762,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 650,
+        "vusers.created_by_name.Dashboard Requests": 168,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 133,
+        "vusers.created_by_name.Verification Analysis": 278,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 232
+      },
+      "rates": {
+        "http.request_rate": 298
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668070000,
+      "lastCounterAt": 1754668079990,
+      "firstMetricAt": 1754668070000,
+      "lastMetricAt": 1754668079990,
+      "period": "1754668070000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 783,
+        "vusers.created": 3113,
+        "http.requests": 3113,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1863,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 347,
+        "errors.ECONNRESET": 3566,
+        "vusers.failed": 3566,
+        "vusers.created_by_name.Verification Analysis": 301,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 893,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2126,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 200,
+        "vusers.created_by_name.Dashboard Requests": 166
+      },
+      "rates": {
+        "http.request_rate": 313
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668080001,
+      "lastCounterAt": 1754668089994,
+      "firstMetricAt": 1754668080001,
+      "lastMetricAt": 1754668089994,
+      "period": "1754668080000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2025,
+        "errors.ECONNRESET": 3244,
+        "vusers.failed": 3244,
+        "vusers.created_by_name.Dashboard Requests": 165,
+        "vusers.created": 3279,
+        "http.requests": 3279,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2041,
+        "vusers.created_by_name.Contract Analysis": 785,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 162,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 773,
+        "vusers.created_by_name.Verification Analysis": 288,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 284
+      },
+      "rates": {
+        "http.request_rate": 330
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668090005,
+      "lastCounterAt": 1754668099991,
+      "firstMetricAt": 1754668090005,
+      "lastMetricAt": 1754668099991,
+      "period": "1754668090000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 863,
+        "errors.ECONNRESET": 3476,
+        "vusers.failed": 3476,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2112,
+        "vusers.created_by_name.Dashboard Requests": 145,
+        "vusers.created": 3449,
+        "http.requests": 3448,
+        "vusers.created_by_name.Contract Analysis": 849,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2102,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 146,
+        "vusers.created_by_name.Verification Analysis": 353,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 355
+      },
+      "rates": {
+        "http.request_rate": 347
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668100000,
+      "lastCounterAt": 1754668109999,
+      "firstMetricAt": 1754668100000,
+      "lastMetricAt": 1754668109999,
+      "period": "1754668100000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 275,
+        "errors.ECONNRESET": 2739,
+        "vusers.failed": 2739,
+        "vusers.created_by_name.Contract Analysis": 912,
+        "vusers.created": 3611,
+        "http.requests": 3612,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1623,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 686,
+        "vusers.created_by_name.Dashboard Requests": 189,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2155,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 155,
+        "vusers.created_by_name.Verification Analysis": 355
+      },
+      "rates": {
+        "http.request_rate": 362
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668110000,
+      "lastCounterAt": 1754668119996,
+      "firstMetricAt": 1754668110000,
+      "lastMetricAt": 1754668119996,
+      "period": "1754668110000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2309,
+        "vusers.created": 3791,
+        "http.requests": 3791,
+        "vusers.created_by_name.Contract Analysis": 915,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 365,
+        "errors.ECONNRESET": 3761,
+        "vusers.failed": 3761,
+        "vusers.created_by_name.Verification Analysis": 362,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2302,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 919,
+        "vusers.created_by_name.Dashboard Requests": 205,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 175
+      },
+      "rates": {
+        "http.request_rate": 381
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668120003,
+      "lastCounterAt": 1754668129999,
+      "firstMetricAt": 1754668120003,
+      "lastMetricAt": 1754668129999,
+      "period": "1754668120000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2391,
+        "vusers.created": 3944,
+        "http.requests": 3944,
+        "vusers.created_by_name.Verification Analysis": 369,
+        "vusers.created_by_name.Contract Analysis": 982,
+        "vusers.created_by_name.Dashboard Requests": 202,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2366,
+        "errors.ECONNRESET": 3909,
+        "vusers.failed": 3909,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 970,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 365,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 208
+      },
+      "rates": {
+        "http.request_rate": 396
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668130007,
+      "lastCounterAt": 1754668139998,
+      "firstMetricAt": 1754668130007,
+      "lastMetricAt": 1754668139998,
+      "period": "1754668130000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 1017,
+        "vusers.created": 4123,
+        "http.requests": 4123,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2504,
+        "vusers.created_by_name.Dashboard Requests": 216,
+        "vusers.created_by_name.Verification Analysis": 386,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2491,
+        "errors.ECONNRESET": 4084,
+        "vusers.failed": 4084,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 986,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 217,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 390
+      },
+      "rates": {
+        "http.request_rate": 414
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668140000,
+      "lastCounterAt": 1754668149998,
+      "firstMetricAt": 1754668140000,
+      "lastMetricAt": 1754668149998,
+      "period": "1754668140000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 1087,
+        "vusers.created": 4282,
+        "http.requests": 4281,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2610,
+        "vusers.created_by_name.Dashboard Requests": 195,
+        "vusers.created_by_name.Verification Analysis": 390,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2272,
+        "errors.ECONNRESET": 3744,
+        "vusers.failed": 3744,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 943,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 345,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 184
+      },
+      "rates": {
+        "http.request_rate": 429
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668150004,
+      "lastCounterAt": 1754668159999,
+      "firstMetricAt": 1754668150004,
+      "lastMetricAt": 1754668159999,
+      "period": "1754668150000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2689,
+        "vusers.created": 4462,
+        "http.requests": 4463,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 527,
+        "errors.ECONNRESET": 5896,
+        "vusers.failed": 5896,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1493,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3553,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 323,
+        "vusers.created_by_name.Contract Analysis": 1102,
+        "vusers.created_by_name.Verification Analysis": 415,
+        "vusers.created_by_name.Dashboard Requests": 256
+      },
+      "rates": {
+        "http.request_rate": 448
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668160000,
+      "lastCounterAt": 1754668169999,
+      "firstMetricAt": 1754668160000,
+      "lastMetricAt": 1754668169999,
+      "period": "1754668160000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 856,
+        "errors.ECONNRESET": 3281,
+        "vusers.failed": 3281,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2733,
+        "vusers.created": 4624,
+        "http.requests": 4624,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1928,
+        "vusers.created_by_name.Contract Analysis": 1213,
+        "vusers.created_by_name.Verification Analysis": 442,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 321,
+        "vusers.created_by_name.Dashboard Requests": 236,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 176
+      },
+      "rates": {
+        "http.request_rate": 463
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668170001,
+      "lastCounterAt": 1754668179999,
+      "firstMetricAt": 1754668170001,
+      "lastMetricAt": 1754668179999,
+      "period": "1754668170000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2915,
+        "vusers.created": 4791,
+        "http.requests": 4789,
+        "vusers.created_by_name.Contract Analysis": 1138,
+        "vusers.created_by_name.Verification Analysis": 500,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3769,
+        "errors.ECONNRESET": 6200,
+        "vusers.failed": 6200,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 297,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1501,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 633,
+        "vusers.created_by_name.Dashboard Requests": 238
+      },
+      "rates": {
+        "http.request_rate": 482
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668180001,
+      "lastCounterAt": 1754668189999,
+      "firstMetricAt": 1754668180001,
+      "lastMetricAt": 1754668189999,
+      "period": "1754668180000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2961,
+        "vusers.created": 4947,
+        "http.requests": 4949,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2942,
+        "errors.ECONNRESET": 4929,
+        "vusers.failed": 4929,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1277,
+        "vusers.created_by_name.Contract Analysis": 1271,
+        "vusers.created_by_name.Dashboard Requests": 252,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 253,
+        "vusers.created_by_name.Verification Analysis": 463,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 457
+      },
+      "rates": {
+        "http.request_rate": 498
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668190000,
+      "lastCounterAt": 1754668199998,
+      "firstMetricAt": 1754668190000,
+      "lastMetricAt": 1754668199998,
+      "period": "1754668190000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 469,
+        "errors.ECONNRESET": 4789,
+        "vusers.failed": 4789,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3043,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2932,
+        "vusers.created_by_name.Contract Analysis": 1236,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1164,
+        "vusers.created_by_name.Dashboard Requests": 237,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 224,
+        "vusers.created_by_name.Verification Analysis": 484
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668200000,
+      "lastCounterAt": 1754668209995,
+      "firstMetricAt": 1754668200000,
+      "lastMetricAt": 1754668209995,
+      "period": "1754668200000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1360,
+        "errors.ECONNRESET": 5062,
+        "vusers.failed": 5062,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2904,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2927,
+        "vusers.created_by_name.Contract Analysis": 1336,
+        "vusers.created_by_name.Verification Analysis": 492,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 498,
+        "vusers.created_by_name.Dashboard Requests": 268,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 277
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668210002,
+      "lastCounterAt": 1754668219995,
+      "firstMetricAt": 1754668210002,
+      "lastMetricAt": 1754668219995,
+      "period": "1754668210000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Dashboard Requests": 273,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2519,
+        "errors.ECONNRESET": 4238,
+        "vusers.failed": 4238,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2974,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 233,
+        "vusers.created_by_name.Verification Analysis": 480,
+        "vusers.created_by_name.Contract Analysis": 1273,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 393,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1093
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668220002,
+      "lastCounterAt": 1754668229995,
+      "firstMetricAt": 1754668220002,
+      "lastMetricAt": 1754668229995,
+      "period": "1754668220000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Dashboard Requests": 270,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2991,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3032,
+        "errors.ECONNRESET": 5065,
+        "vusers.failed": 5065,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1251,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 521,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 261,
+        "vusers.created_by_name.Contract Analysis": 1232,
+        "vusers.created_by_name.Verification Analysis": 507
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668230002,
+      "lastCounterAt": 1754668239995,
+      "firstMetricAt": 1754668230002,
+      "lastMetricAt": 1754668239995,
+      "period": "1754668230000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3026,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3536,
+        "errors.ECONNRESET": 5861,
+        "vusers.failed": 5861,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1430,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 330,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 565,
+        "vusers.created_by_name.Verification Analysis": 478,
+        "vusers.created_by_name.Contract Analysis": 1220,
+        "vusers.created_by_name.Dashboard Requests": 276
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668240002,
+      "lastCounterAt": 1754668249995,
+      "firstMetricAt": 1754668240002,
+      "lastMetricAt": 1754668249995,
+      "period": "1754668240000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3012,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2949,
+        "errors.ECONNRESET": 4887,
+        "vusers.failed": 4887,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 511,
+        "vusers.created_by_name.Verification Analysis": 525,
+        "vusers.created_by_name.Dashboard Requests": 252,
+        "vusers.created_by_name.Contract Analysis": 1211,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 249,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1178
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668250002,
+      "lastCounterAt": 1754668259995,
+      "firstMetricAt": 1754668250002,
+      "lastMetricAt": 1754668259995,
+      "period": "1754668250000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2953,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1321,
+        "errors.ECONNRESET": 5108,
+        "vusers.failed": 5108,
+        "vusers.created_by_name.Verification Analysis": 515,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3019,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 524,
+        "vusers.created_by_name.Contract Analysis": 1288,
+        "vusers.created_by_name.Dashboard Requests": 244,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 244
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668260000,
+      "lastCounterAt": 1754668269994,
+      "firstMetricAt": 1754668260000,
+      "lastMetricAt": 1754668269994,
+      "period": "1754668260000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1273,
+        "errors.ECONNRESET": 5009,
+        "vusers.failed": 5009,
+        "vusers.created_by_name.Verification Analysis": 457,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2971,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 460,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2984,
+        "vusers.created_by_name.Contract Analysis": 1281,
+        "vusers.created_by_name.Dashboard Requests": 291,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 292
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668270000,
+      "lastCounterAt": 1754668279994,
+      "firstMetricAt": 1754668270000,
+      "lastMetricAt": 1754668279994,
+      "period": "1754668270000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3001,
+        "errors.ECONNRESET": 4998,
+        "vusers.failed": 4998,
+        "vusers.created_by_name.Contract Analysis": 1229,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 487,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3009,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1230,
+        "vusers.created_by_name.Verification Analysis": 483,
+        "vusers.created_by_name.Dashboard Requests": 279,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 280
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668280002,
+      "lastCounterAt": 1754668289998,
+      "firstMetricAt": 1754668280002,
+      "lastMetricAt": 1754668289998,
+      "period": "1754668280000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2932,
+        "errors.ECONNRESET": 4998,
+        "vusers.failed": 4998,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2934,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Dashboard Requests": 290,
+        "vusers.created_by_name.Contract Analysis": 1269,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 291,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1270,
+        "vusers.created_by_name.Verification Analysis": 507,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 505
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668290000,
+      "lastCounterAt": 1754668299994,
+      "firstMetricAt": 1754668290000,
+      "lastMetricAt": 1754668299994,
+      "period": "1754668290000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2964,
+        "errors.ECONNRESET": 5003,
+        "vusers.failed": 5003,
+        "vusers.created_by_name.Verification Analysis": 525,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2961,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 521,
+        "vusers.created_by_name.Contract Analysis": 1265,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1270,
+        "vusers.created_by_name.Dashboard Requests": 249,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 248
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668300002,
+      "lastCounterAt": 1754668309998,
+      "firstMetricAt": 1754668300002,
+      "lastMetricAt": 1754668309998,
+      "period": "1754668300000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 1266,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Verification Analysis": 508,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1103,
+        "errors.ECONNRESET": 4402,
+        "vusers.failed": 4402,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 453,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2993,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2641,
+        "vusers.created_by_name.Dashboard Requests": 233,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 205
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668310002,
+      "lastCounterAt": 1754668319994,
+      "firstMetricAt": 1754668310002,
+      "lastMetricAt": 1754668319994,
+      "period": "1754668310000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Verification Analysis": 483,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3059,
+        "vusers.created_by_name.Contract Analysis": 1205,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1362,
+        "errors.ECONNRESET": 5590,
+        "vusers.failed": 5590,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3409,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 283,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 536,
+        "vusers.created_by_name.Dashboard Requests": 253
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668320002,
+      "lastCounterAt": 1754668329994,
+      "firstMetricAt": 1754668320002,
+      "lastMetricAt": 1754668329994,
+      "period": "1754668320000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2900,
+        "errors.ECONNRESET": 4753,
+        "vusers.failed": 4753,
+        "vusers.created_by_name.Dashboard Requests": 229,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 212,
+        "vusers.created_by_name.Verification Analysis": 504,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 481,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3054,
+        "vusers.created_by_name.Contract Analysis": 1213,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1160
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668330002,
+      "lastCounterAt": 1754668339994,
+      "firstMetricAt": 1754668330002,
+      "lastMetricAt": 1754668339994,
+      "period": "1754668330000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3002,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Contract Analysis": 1249,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1312,
+        "errors.ECONNRESET": 5261,
+        "vusers.failed": 5261,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3161,
+        "vusers.created_by_name.Verification Analysis": 511,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 537,
+        "vusers.created_by_name.Dashboard Requests": 238,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 251
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668340002,
+      "lastCounterAt": 1754668349995,
+      "firstMetricAt": 1754668340002,
+      "lastMetricAt": 1754668349995,
+      "period": "1754668340000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3009,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3010,
+        "errors.ECONNRESET": 5000,
+        "vusers.failed": 5000,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 484,
+        "vusers.created_by_name.Contract Analysis": 1247,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1242,
+        "vusers.created_by_name.Verification Analysis": 484,
+        "vusers.created_by_name.Dashboard Requests": 260,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 264
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668350002,
+      "lastCounterAt": 1754668359994,
+      "firstMetricAt": 1754668350002,
+      "lastMetricAt": 1754668359994,
+      "period": "1754668350000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 490,
+        "errors.ECONNRESET": 4991,
+        "vusers.failed": 4991,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3018,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3010,
+        "vusers.created_by_name.Contract Analysis": 1259,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1258,
+        "vusers.created_by_name.Verification Analysis": 490,
+        "vusers.created_by_name.Dashboard Requests": 233,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 233
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668360002,
+      "lastCounterAt": 1754668369993,
+      "firstMetricAt": 1754668360002,
+      "lastMetricAt": 1754668369993,
+      "period": "1754668360000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2962,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 278,
+        "errors.ECONNRESET": 5009,
+        "vusers.failed": 5009,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1265,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2966,
+        "vusers.created_by_name.Contract Analysis": 1261,
+        "vusers.created_by_name.Dashboard Requests": 279,
+        "vusers.created_by_name.Verification Analysis": 498,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 500
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668370002,
+      "lastCounterAt": 1754668379999,
+      "firstMetricAt": 1754668370002,
+      "lastMetricAt": 1754668379999,
+      "period": "1754668370000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 1254,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 519,
+        "errors.ECONNRESET": 4993,
+        "vusers.failed": 4993,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2981,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2987,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1253,
+        "vusers.created_by_name.Verification Analysis": 520,
+        "vusers.created_by_name.Dashboard Requests": 239,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 240
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668380002,
+      "lastCounterAt": 1754668389998,
+      "firstMetricAt": 1754668380002,
+      "lastMetricAt": 1754668389998,
+      "period": "1754668380000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2939,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2929,
+        "errors.ECONNRESET": 4966,
+        "vusers.failed": 4966,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 240,
+        "vusers.created_by_name.Dashboard Requests": 239,
+        "vusers.created_by_name.Contract Analysis": 1261,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1245,
+        "vusers.created_by_name.Verification Analysis": 561,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 552
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668390002,
+      "lastCounterAt": 1754668399993,
+      "firstMetricAt": 1754668390002,
+      "lastMetricAt": 1754668399993,
+      "period": "1754668390000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1237,
+        "errors.ECONNRESET": 5025,
+        "vusers.failed": 5025,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2996,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3010,
+        "vusers.created_by_name.Dashboard Requests": 277,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 273,
+        "vusers.created_by_name.Verification Analysis": 500,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 505,
+        "vusers.created_by_name.Contract Analysis": 1227
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668400002,
+      "lastCounterAt": 1754668409994,
+      "firstMetricAt": 1754668400002,
+      "lastMetricAt": 1754668409994,
+      "period": "1754668400000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3009,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1244,
+        "errors.ECONNRESET": 5011,
+        "vusers.failed": 5011,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 500,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3009,
+        "vusers.created_by_name.Contract Analysis": 1241,
+        "vusers.created_by_name.Dashboard Requests": 255,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 258,
+        "vusers.created_by_name.Verification Analysis": 495
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668410002,
+      "lastCounterAt": 1754668419994,
+      "firstMetricAt": 1754668410002,
+      "lastMetricAt": 1754668419994,
+      "period": "1754668410000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3050,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 226,
+        "errors.ECONNRESET": 4933,
+        "vusers.failed": 4933,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 456,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3006,
+        "vusers.created_by_name.Contract Analysis": 1263,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1245,
+        "vusers.created_by_name.Dashboard Requests": 226,
+        "vusers.created_by_name.Verification Analysis": 461
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668420002,
+      "lastCounterAt": 1754668429993,
+      "firstMetricAt": 1754668420002,
+      "lastMetricAt": 1754668429993,
+      "period": "1754668420000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3010,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3053,
+        "errors.ECONNRESET": 5066,
+        "vusers.failed": 5066,
+        "vusers.created_by_name.Verification Analysis": 519,
+        "vusers.created_by_name.Contract Analysis": 1246,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 522,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1265,
+        "vusers.created_by_name.Dashboard Requests": 225,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 226
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668430002,
+      "lastCounterAt": 1754668439993,
+      "firstMetricAt": 1754668430002,
+      "lastMetricAt": 1754668439993,
+      "period": "1754668430000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 1258,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2996,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2993,
+        "errors.ECONNRESET": 4996,
+        "vusers.failed": 4996,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 238,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1254,
+        "vusers.created_by_name.Verification Analysis": 508,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 511,
+        "vusers.created_by_name.Dashboard Requests": 238
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668440002,
+      "lastCounterAt": 1754668449993,
+      "firstMetricAt": 1754668440002,
+      "lastMetricAt": 1754668449993,
+      "period": "1754668440000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3009,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3018,
+        "errors.ECONNRESET": 5007,
+        "vusers.failed": 5007,
+        "vusers.created_by_name.Verification Analysis": 518,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 515,
+        "vusers.created_by_name.Contract Analysis": 1211,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1216,
+        "vusers.created_by_name.Dashboard Requests": 262,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 258
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668450002,
+      "lastCounterAt": 1754668459997,
+      "firstMetricAt": 1754668450002,
+      "lastMetricAt": 1754668459997,
+      "period": "1754668450000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3021,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2885,
+        "errors.ECONNRESET": 4790,
+        "vusers.failed": 4790,
+        "vusers.created_by_name.Contract Analysis": 1260,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1203,
+        "vusers.created_by_name.Verification Analysis": 482,
+        "vusers.created_by_name.Dashboard Requests": 237,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 474,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 228
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668460002,
+      "lastCounterAt": 1754668469993,
+      "firstMetricAt": 1754668460002,
+      "lastMetricAt": 1754668469993,
+      "period": "1754668460000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2885,
+        "errors.ECONNRESET": 4783,
+        "vusers.failed": 4783,
+        "vusers.created_by_name.Contract Analysis": 1241,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Dashboard Requests": 248,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3016,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1190,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 234,
+        "vusers.created_by_name.Verification Analysis": 495,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 474
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668470002,
+      "lastCounterAt": 1754668479993,
+      "firstMetricAt": 1754668470002,
+      "lastMetricAt": 1754668479993,
+      "period": "1754668470000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 576,
+        "errors.ECONNRESET": 5422,
+        "vusers.failed": 5422,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3016,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Verification Analysis": 543,
+        "vusers.created_by_name.Dashboard Requests": 218,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3270,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1332,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 244,
+        "vusers.created_by_name.Contract Analysis": 1223
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668480002,
+      "lastCounterAt": 1754668489992,
+      "firstMetricAt": 1754668480002,
+      "lastMetricAt": 1754668489992,
+      "period": "1754668480000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2463,
+        "errors.ECONNRESET": 4042,
+        "vusers.failed": 4042,
+        "vusers.created_by_name.Contract Analysis": 1232,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 984,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3025,
+        "vusers.created_by_name.Verification Analysis": 488,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 393,
+        "vusers.created_by_name.Dashboard Requests": 255,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 202
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668490002,
+      "lastCounterAt": 1754668499993,
+      "firstMetricAt": 1754668490002,
+      "lastMetricAt": 1754668499993,
+      "period": "1754668490000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 1249,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2994,
+        "vusers.created_by_name.Verification Analysis": 502,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1469,
+        "errors.ECONNRESET": 5860,
+        "vusers.failed": 5860,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 307,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3502,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 582,
+        "vusers.created_by_name.Dashboard Requests": 255
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668500002,
+      "lastCounterAt": 1754668509996,
+      "firstMetricAt": 1754668500002,
+      "lastMetricAt": 1754668509996,
+      "period": "1754668500000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2961,
+        "errors.ECONNRESET": 4892,
+        "vusers.failed": 4892,
+        "vusers.created_by_name.Contract Analysis": 1205,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3025,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1177,
+        "vusers.created_by_name.Verification Analysis": 540,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 530,
+        "vusers.created_by_name.Dashboard Requests": 230,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 224
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668510002,
+      "lastCounterAt": 1754668519993,
+      "firstMetricAt": 1754668510002,
+      "lastMetricAt": 1754668519993,
+      "period": "1754668510000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1274,
+        "errors.ECONNRESET": 5205,
+        "vusers.failed": 5205,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3107,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2986,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Dashboard Requests": 259,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 559,
+        "vusers.created_by_name.Contract Analysis": 1222,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 265,
+        "vusers.created_by_name.Verification Analysis": 533
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668520002,
+      "lastCounterAt": 1754668529994,
+      "firstMetricAt": 1754668520002,
+      "lastMetricAt": 1754668529994,
+      "period": "1754668520000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2964,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2970,
+        "errors.ECONNRESET": 5002,
+        "vusers.failed": 5002,
+        "vusers.created_by_name.Contract Analysis": 1275,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 505,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1274,
+        "vusers.created_by_name.Verification Analysis": 509,
+        "vusers.created_by_name.Dashboard Requests": 252,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 253
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668530002,
+      "lastCounterAt": 1754668539992,
+      "firstMetricAt": 1754668530002,
+      "lastMetricAt": 1754668539992,
+      "period": "1754668530000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2965,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2951,
+        "errors.ECONNRESET": 4984,
+        "vusers.failed": 4984,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 270,
+        "vusers.created_by_name.Contract Analysis": 1226,
+        "vusers.created_by_name.Dashboard Requests": 272,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1225,
+        "vusers.created_by_name.Verification Analysis": 537,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 538
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668540002,
+      "lastCounterAt": 1754668549992,
+      "firstMetricAt": 1754668540002,
+      "lastMetricAt": 1754668549992,
+      "period": "1754668540000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3018,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1246,
+        "errors.ECONNRESET": 5015,
+        "vusers.failed": 5015,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 498,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3032,
+        "vusers.created_by_name.Dashboard Requests": 237,
+        "vusers.created_by_name.Contract Analysis": 1245,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 239,
+        "vusers.created_by_name.Verification Analysis": 500
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668550002,
+      "lastCounterAt": 1754668559992,
+      "firstMetricAt": 1754668550002,
+      "lastMetricAt": 1754668559992,
+      "period": "1754668550000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2981,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 507,
+        "errors.ECONNRESET": 5000,
+        "vusers.failed": 5000,
+        "vusers.created_by_name.Contract Analysis": 1253,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2975,
+        "vusers.created_by_name.Verification Analysis": 505,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1256,
+        "vusers.created_by_name.Dashboard Requests": 261,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 262
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668560002,
+      "lastCounterAt": 1754668569992,
+      "firstMetricAt": 1754668560002,
+      "lastMetricAt": 1754668569992,
+      "period": "1754668560000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3032,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1219,
+        "errors.ECONNRESET": 5000,
+        "vusers.failed": 5000,
+        "vusers.created_by_name.Contract Analysis": 1219,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3034,
+        "vusers.created_by_name.Verification Analysis": 499,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 502,
+        "vusers.created_by_name.Dashboard Requests": 250,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 245
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668570002,
+      "lastCounterAt": 1754668579992,
+      "firstMetricAt": 1754668570002,
+      "lastMetricAt": 1754668579992,
+      "period": "1754668570000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3013,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2995,
+        "errors.ECONNRESET": 4981,
+        "vusers.failed": 4981,
+        "vusers.created_by_name.Contract Analysis": 1241,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1239,
+        "vusers.created_by_name.Verification Analysis": 510,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 507,
+        "vusers.created_by_name.Dashboard Requests": 236,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 240
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668580002,
+      "lastCounterAt": 1754668589992,
+      "firstMetricAt": 1754668580002,
+      "lastMetricAt": 1754668589992,
+      "period": "1754668580000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3001,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2832,
+        "errors.ECONNRESET": 4691,
+        "vusers.failed": 4691,
+        "vusers.created_by_name.Contract Analysis": 1206,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1121,
+        "vusers.created_by_name.Verification Analysis": 499,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 460,
+        "vusers.created_by_name.Dashboard Requests": 294,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 278
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668590002,
+      "lastCounterAt": 1754668599992,
+      "firstMetricAt": 1754668590002,
+      "lastMetricAt": 1754668599992,
+      "period": "1754668590000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3025,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 498,
+        "errors.ECONNRESET": 5314,
+        "vusers.failed": 5314,
+        "vusers.created_by_name.Verification Analysis": 455,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 277,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3201,
+        "vusers.created_by_name.Contract Analysis": 1259,
+        "vusers.created_by_name.Dashboard Requests": 261,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1338
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668600002,
+      "lastCounterAt": 1754668609991,
+      "firstMetricAt": 1754668600002,
+      "lastMetricAt": 1754668609991,
+      "period": "1754668600000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3026,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Verification Analysis": 487,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2962,
+        "errors.ECONNRESET": 4885,
+        "vusers.failed": 4885,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 471,
+        "vusers.created_by_name.Contract Analysis": 1242,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1216,
+        "vusers.created_by_name.Dashboard Requests": 245,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 236
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668610002,
+      "lastCounterAt": 1754668619992,
+      "firstMetricAt": 1754668610002,
+      "lastMetricAt": 1754668619992,
+      "period": "1754668610000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1238,
+        "errors.ECONNRESET": 5028,
+        "vusers.failed": 5028,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3018,
+        "vusers.created_by_name.Contract Analysis": 1221,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3006,
+        "vusers.created_by_name.Verification Analysis": 525,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 523,
+        "vusers.created_by_name.Dashboard Requests": 248,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 249
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668620002,
+      "lastCounterAt": 1754668629992,
+      "firstMetricAt": 1754668620002,
+      "lastMetricAt": 1754668629992,
+      "period": "1754668620000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2985,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 461,
+        "errors.ECONNRESET": 4689,
+        "vusers.failed": 4689,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2808,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1189,
+        "vusers.created_by_name.Contract Analysis": 1278,
+        "vusers.created_by_name.Verification Analysis": 493,
+        "vusers.created_by_name.Dashboard Requests": 244,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 231
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668630002,
+      "lastCounterAt": 1754668639992,
+      "firstMetricAt": 1754668630002,
+      "lastMetricAt": 1754668639992,
+      "period": "1754668630000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 1270,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2959,
+        "vusers.created_by_name.Dashboard Requests": 245,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3197,
+        "errors.ECONNRESET": 5410,
+        "vusers.failed": 5410,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1378,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 267,
+        "vusers.created_by_name.Verification Analysis": 526,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 568
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668640002,
+      "lastCounterAt": 1754668649992,
+      "firstMetricAt": 1754668640002,
+      "lastMetricAt": 1754668649992,
+      "period": "1754668640000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3018,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1929,
+        "errors.ECONNRESET": 3167,
+        "vusers.failed": 3167,
+        "vusers.created_by_name.Verification Analysis": 473,
+        "vusers.created_by_name.Dashboard Requests": 248,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 291,
+        "vusers.created_by_name.Contract Analysis": 1261,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 150,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 797
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668650001,
+      "lastCounterAt": 1754668659992,
+      "firstMetricAt": 1754668650001,
+      "lastMetricAt": 1754668659992,
+      "period": "1754668650000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Verification Analysis": 497,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3002,
+        "vusers.created_by_name.Dashboard Requests": 251,
+        "vusers.created_by_name.Contract Analysis": 1250,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 4008,
+        "errors.ECONNRESET": 6701,
+        "vusers.failed": 6701,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 338,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 671,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1684
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668660002,
+      "lastCounterAt": 1754668669992,
+      "firstMetricAt": 1754668660002,
+      "lastMetricAt": 1754668669992,
+      "period": "1754668660000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 268,
+        "errors.ECONNRESET": 5138,
+        "vusers.failed": 5138,
+        "vusers.created_by_name.Contract Analysis": 1239,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1267,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3072,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2984,
+        "vusers.created_by_name.Verification Analysis": 520,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 531,
+        "vusers.created_by_name.Dashboard Requests": 257
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668670002,
+      "lastCounterAt": 1754668679997,
+      "firstMetricAt": 1754668670002,
+      "lastMetricAt": 1754668679997,
+      "period": "1754668670000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2991,
+        "errors.ECONNRESET": 4999,
+        "vusers.failed": 4999,
+        "vusers.created_by_name.Contract Analysis": 1244,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1244,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2993,
+        "vusers.created_by_name.Verification Analysis": 499,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 500,
+        "vusers.created_by_name.Dashboard Requests": 264,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 264
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668680002,
+      "lastCounterAt": 1754668689992,
+      "firstMetricAt": 1754668680002,
+      "lastMetricAt": 1754668689992,
+      "period": "1754668680000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2993,
+        "errors.ECONNRESET": 4972,
+        "vusers.failed": 4972,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3007,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 477,
+        "vusers.created_by_name.Contract Analysis": 1257,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1250,
+        "vusers.created_by_name.Verification Analysis": 480,
+        "vusers.created_by_name.Dashboard Requests": 256,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 252
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668690002,
+      "lastCounterAt": 1754668699992,
+      "firstMetricAt": 1754668690002,
+      "lastMetricAt": 1754668699992,
+      "period": "1754668690000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3050,
+        "errors.ECONNRESET": 5028,
+        "vusers.failed": 5028,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 480,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3039,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Contract Analysis": 1254,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1260,
+        "vusers.created_by_name.Verification Analysis": 473,
+        "vusers.created_by_name.Dashboard Requests": 234,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 238
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668700002,
+      "lastCounterAt": 1754668709999,
+      "firstMetricAt": 1754668700002,
+      "lastMetricAt": 1754668709999,
+      "period": "1754668700000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2968,
+        "errors.ECONNRESET": 5000,
+        "vusers.failed": 5000,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2961,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Verification Analysis": 502,
+        "vusers.created_by_name.Contract Analysis": 1265,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 496,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1264,
+        "vusers.created_by_name.Dashboard Requests": 272,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 272
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668710002,
+      "lastCounterAt": 1754668719992,
+      "firstMetricAt": 1754668710002,
+      "lastMetricAt": 1754668719992,
+      "period": "1754668710000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3008,
+        "errors.ECONNRESET": 4999,
+        "vusers.failed": 4999,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3010,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Verification Analysis": 481,
+        "vusers.created_by_name.Contract Analysis": 1268,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 483,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1266,
+        "vusers.created_by_name.Dashboard Requests": 241,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 242
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668720002,
+      "lastCounterAt": 1754668729999,
+      "firstMetricAt": 1754668720002,
+      "lastMetricAt": 1754668729999,
+      "period": "1754668720000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 1206,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3032,
+        "errors.ECONNRESET": 4998,
+        "vusers.failed": 4998,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3040,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1211,
+        "vusers.created_by_name.Dashboard Requests": 265,
+        "vusers.created_by_name.Verification Analysis": 489,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 263,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 492
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668730002,
+      "lastCounterAt": 1754668739992,
+      "firstMetricAt": 1754668730002,
+      "lastMetricAt": 1754668739992,
+      "period": "1754668730000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3031,
+        "errors.ECONNRESET": 4997,
+        "vusers.failed": 4997,
+        "vusers.created_by_name.Contract Analysis": 1210,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3022,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 515,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1201,
+        "vusers.created_by_name.Verification Analysis": 519,
+        "vusers.created_by_name.Dashboard Requests": 249,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 250
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668740002,
+      "lastCounterAt": 1754668749992,
+      "firstMetricAt": 1754668740002,
+      "lastMetricAt": 1754668749992,
+      "period": "1754668740000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1297,
+        "errors.ECONNRESET": 5002,
+        "vusers.failed": 5002,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2952,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2958,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.Verification Analysis": 517,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 517,
+        "vusers.created_by_name.Dashboard Requests": 235,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 236,
+        "vusers.created_by_name.Contract Analysis": 1290
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668750002,
+      "lastCounterAt": 1754668759995,
+      "firstMetricAt": 1754668750002,
+      "lastMetricAt": 1754668759995,
+      "period": "1754668750000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2987,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2998,
+        "errors.ECONNRESET": 5004,
+        "vusers.failed": 5004,
+        "vusers.created_by_name.Contract Analysis": 1244,
+        "vusers.created_by_name.Dashboard Requests": 278,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1244,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 272,
+        "vusers.created_by_name.Verification Analysis": 491,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 490
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668760002,
+      "lastCounterAt": 1754668769992,
+      "firstMetricAt": 1754668760002,
+      "lastMetricAt": 1754668769992,
+      "period": "1754668760000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 3013,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 3013,
+        "errors.ECONNRESET": 4997,
+        "vusers.failed": 4997,
+        "vusers.created_by_name.Contract Analysis": 1258,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1253,
+        "vusers.created_by_name.Verification Analysis": 485,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 486,
+        "vusers.created_by_name.Dashboard Requests": 244,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 245
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668770002,
+      "lastCounterAt": 1754668779993,
+      "firstMetricAt": 1754668770002,
+      "lastMetricAt": 1754668779993,
+      "period": "1754668770000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 1258,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1264,
+        "errors.ECONNRESET": 5001,
+        "vusers.failed": 5001,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2973,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 514,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2967,
+        "vusers.created_by_name.Verification Analysis": 512,
+        "vusers.created_by_name.Dashboard Requests": 257,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 256
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668780002,
+      "lastCounterAt": 1754668789992,
+      "firstMetricAt": 1754668780002,
+      "lastMetricAt": 1754668789992,
+      "period": "1754668780000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 230,
+        "errors.ECONNRESET": 4995,
+        "vusers.failed": 4995,
+        "vusers.created_by_name.Contract Analysis": 1207,
+        "vusers.created": 4992,
+        "http.requests": 4992,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2981,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1213,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2985,
+        "vusers.created_by_name.Verification Analysis": 573,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 571,
+        "vusers.created_by_name.Dashboard Requests": 227
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668790002,
+      "lastCounterAt": 1754668799996,
+      "firstMetricAt": 1754668790002,
+      "lastMetricAt": 1754668799996,
+      "period": "1754668790000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2756,
+        "vusers.created": 4630,
+        "http.requests": 4630,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2764,
+        "errors.ECONNRESET": 4635,
+        "vusers.failed": 4635,
+        "vusers.created_by_name.Verification Analysis": 506,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 504,
+        "vusers.created_by_name.Dashboard Requests": 236,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 237,
+        "vusers.created_by_name.Contract Analysis": 1132,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1130
+      },
+      "rates": {
+        "http.request_rate": 465
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668800001,
+      "lastCounterAt": 1754668809991,
+      "firstMetricAt": 1754668800001,
+      "lastMetricAt": 1754668809991,
+      "period": "1754668800000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2408,
+        "errors.ECONNRESET": 4085,
+        "vusers.failed": 4085,
+        "vusers.created_by_name.Contract Analysis": 1068,
+        "vusers.created": 4083,
+        "http.requests": 4083,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 1071,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2412,
+        "vusers.created_by_name.Verification Analysis": 405,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 409,
+        "vusers.created_by_name.Dashboard Requests": 198,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 197
+      },
+      "rates": {
+        "http.request_rate": 411
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668810007,
+      "lastCounterAt": 1754668819997,
+      "firstMetricAt": 1754668810007,
+      "lastMetricAt": 1754668819997,
+      "period": "1754668810000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 162,
+        "errors.ECONNRESET": 3531,
+        "vusers.failed": 3531,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 2176,
+        "vusers.created": 3535,
+        "http.requests": 3534,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2181,
+        "vusers.created_by_name.Contract Analysis": 890,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 879,
+        "vusers.created_by_name.Verification Analysis": 309,
+        "vusers.created_by_name.Dashboard Requests": 160,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 309
+      },
+      "rates": {
+        "http.request_rate": 359
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668820000,
+      "lastCounterAt": 1754668829999,
+      "firstMetricAt": 1754668820000,
+      "lastMetricAt": 1754668829999,
+      "period": "1754668820000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Dashboard Requests": 144,
+        "vusers.created": 2981,
+        "http.requests": 2982,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1786,
+        "errors.ECONNRESET": 3000,
+        "vusers.failed": 3000,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1779,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 142,
+        "vusers.created_by_name.Contract Analysis": 734,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 746,
+        "vusers.created_by_name.Verification Analysis": 324,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 326
+      },
+      "rates": {
+        "http.request_rate": 305
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668830000,
+      "lastCounterAt": 1754668839997,
+      "firstMetricAt": 1754668830000,
+      "lastMetricAt": 1754668839997,
+      "period": "1754668830000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1443,
+        "errors.ECONNRESET": 2436,
+        "vusers.failed": 2436,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1437,
+        "vusers.created": 2428,
+        "http.requests": 2428,
+        "vusers.created_by_name.Verification Analysis": 231,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 232,
+        "vusers.created_by_name.Contract Analysis": 636,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 634,
+        "vusers.created_by_name.Dashboard Requests": 124,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 127
+      },
+      "rates": {
+        "http.request_rate": 248
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668840010,
+      "lastCounterAt": 1754668849998,
+      "firstMetricAt": 1754668840010,
+      "lastMetricAt": 1754668849998,
+      "period": "1754668840000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1092,
+        "errors.ECONNRESET": 1888,
+        "vusers.failed": 1888,
+        "vusers.created_by_name.Contract Analysis": 472,
+        "vusers.created": 1882,
+        "http.requests": 1882,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 473,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 1084,
+        "vusers.created_by_name.Verification Analysis": 216,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 213,
+        "vusers.created_by_name.Dashboard Requests": 110,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 110
+      },
+      "rates": {
+        "http.request_rate": 190
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668850003,
+      "lastCounterAt": 1754668859984,
+      "firstMetricAt": 1754668850003,
+      "lastMetricAt": 1754668859984,
+      "period": "1754668850000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 826,
+        "vusers.created": 1336,
+        "http.requests": 1336,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 311,
+        "errors.ECONNRESET": 1346,
+        "vusers.failed": 1346,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 831,
+        "vusers.created_by_name.Contract Analysis": 310,
+        "vusers.created_by_name.Verification Analysis": 127,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 131,
+        "vusers.created_by_name.Dashboard Requests": 73,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 73
+      },
+      "rates": {
+        "http.request_rate": 137
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668860008,
+      "lastCounterAt": 1754668869997,
+      "firstMetricAt": 1754668860008,
+      "lastMetricAt": 1754668869997,
+      "period": "1754668860000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 213,
+        "vusers.created": 782,
+        "http.requests": 782,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 218,
+        "errors.ECONNRESET": 788,
+        "vusers.failed": 788,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 461,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 462,
+        "vusers.created_by_name.Verification Analysis": 71,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 72,
+        "vusers.created_by_name.Dashboard Requests": 37,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 36
+      },
+      "rates": {
+        "http.request_rate": 87
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668870018,
+      "lastCounterAt": 1754668879977,
+      "firstMetricAt": 1754668870018,
+      "lastMetricAt": 1754668879977,
+      "period": "1754668870000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Contract Analysis": 85,
+        "vusers.created": 241,
+        "http.requests": 241,
+        "plugins.metrics-by-endpoint./api/contracts/analyze.errors.ECONNRESET": 86,
+        "errors.ECONNRESET": 247,
+        "vusers.failed": 247,
+        "vusers.created_by_name.Sentiment Analysis Pipeline": 123,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 127,
+        "vusers.created_by_name.Verification Analysis": 22,
+        "plugins.metrics-by-endpoint./get-verified.errors.ECONNRESET": 22,
+        "vusers.created_by_name.Dashboard Requests": 11,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 12
+      },
+      "rates": {
+        "http.request_rate": 32
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754668880000,
+      "lastCounterAt": 1754668887700,
+      "firstMetricAt": 1754668880000,
+      "lastMetricAt": 1754668887700,
+      "period": "1754668880000",
+      "summaries": {},
+      "histograms": {}
+    }
+  ]
+}

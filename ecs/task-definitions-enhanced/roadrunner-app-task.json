@@ -1,0 +1,362 @@
+{
+  "family": "ai-blockchain-analytics-roadrunner-app",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "roadrunner-app",
+      "image": "ai-blockchain-analytics:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp",
+          "name": "http"
+        },
+        {
+          "containerPort": 2112,
+          "protocol": "tcp",
+          "name": "metrics"
+        },
+        {
+          "containerPort": 2114,
+          "protocol": "tcp",
+          "name": "health"
+        }
+      ],
+      "environment": [
+        {
+          "name": "APP_NAME",
+          "value": "AI Blockchain Analytics"
+        },
+        {
+          "name": "APP_ENV",
+          "value": "production"
+        },
+        {
+          "name": "APP_DEBUG",
+          "value": "false"
+        },
+        {
+          "name": "APP_URL",
+          "value": "https://api.ai-blockchain-analytics.com"
+        },
+        {
+          "name": "DB_CONNECTION",
+          "value": "pgsql"
+        },
+        {
+          "name": "DB_HOST",
+          "value": "ai-blockchain-analytics-postgres.cluster-xyz.region.rds.amazonaws.com"
+        },
+        {
+          "name": "DB_PORT",
+          "value": "5432"
+        },
+        {
+          "name": "DB_DATABASE",
+          "value": "ai_blockchain_analytics"
+        },
+        {
+          "name": "DB_USERNAME",
+          "value": "postgres"
+        },
+        {
+          "name": "REDIS_HOST",
+          "value": "ai-blockchain-analytics-redis.xyz.cache.amazonaws.com"
+        },
+        {
+          "name": "REDIS_PORT",
+          "value": "6379"
+        },
+        {
+          "name": "CACHE_DRIVER",
+          "value": "redis"
+        },
+        {
+          "name": "SESSION_DRIVER",
+          "value": "redis"
+        },
+        {
+          "name": "QUEUE_CONNECTION",
+          "value": "redis"
+        },
+        {
+          "name": "FILESYSTEM_DISK",
+          "value": "s3"
+        },
+        {
+          "name": "AWS_BUCKET",
+          "value": "ai-blockchain-analytics-storage"
+        },
+        {
+          "name": "AWS_DEFAULT_REGION",
+          "value": "us-east-1"
+        },
+        {
+          "name": "LOG_CHANNEL",
+          "value": "cloudwatch"
+        },
+        {
+          "name": "LOG_LEVEL",
+          "value": "info"
+        },
+        {
+          "name": "MAILGUN_DOMAIN",
+          "value": "mg.ai-blockchain-analytics.com"
+        },
+        {
+          "name": "MAILGUN_ENDPOINT",
+          "value": "api.mailgun.net"
+        },
+        {
+          "name": "ONBOARDING_ENABLED",
+          "value": "true"
+        },
+        {
+          "name": "ONBOARDING_FROM_EMAIL",
+          "value": "welcome@blockchain-analytics.com"
+        },
+        {
+          "name": "ONBOARDING_FROM_NAME",
+          "value": "AI Blockchain Analytics Team"
+        },
+        {
+          "name": "ONBOARDING_REPLY_TO",
+          "value": "support@blockchain-analytics.com"
+        },
+        {
+          "name": "ONBOARDING_WEBHOOKS_ENABLED",
+          "value": "true"
+        },
+        {
+          "name": "ONBOARDING_TRACK_OPENS",
+          "value": "true"
+        },
+        {
+          "name": "ONBOARDING_TRACK_CLICKS",
+          "value": "true"
+        },
+        {
+          "name": "TELESCOPE_ENABLED",
+          "value": "true"
+        },
+        {
+          "name": "TELESCOPE_DOMAIN",
+          "value": "monitoring.ai-blockchain-analytics.com"
+        },
+        {
+          "name": "TELESCOPE_PATH",
+          "value": "telescope"
+        },
+        {
+          "name": "TELESCOPE_DRIVER",
+          "value": "database"
+        },
+        {
+          "name": "TELESCOPE_QUEUE_CONNECTION",
+          "value": "redis"
+        },
+        {
+          "name": "SENTRY_ENVIRONMENT",
+          "value": "production"
+        },
+        {
+          "name": "SENTRY_RELEASE",
+          "value": "v1.0.0"
+        },
+        {
+          "name": "SENTRY_SAMPLE_RATE",
+          "value": "0.1"
+        },
+        {
+          "name": "SENTRY_TRACES_SAMPLE_RATE",
+          "value": "0.05"
+        },
+        {
+          "name": "SENTRY_PROFILES_SAMPLE_RATE",
+          "value": "0.01"
+        },
+        {
+          "name": "SENTRY_ENABLE_LOGS",
+          "value": "true"
+        },
+        {
+          "name": "SENTRY_SEND_DEFAULT_PII",
+          "value": "false"
+        },
+        {
+          "name": "BROWSERLESS_ENABLED",
+          "value": "true"
+        },
+        {
+          "name": "BROWSERLESS_URL",
+          "value": "http://localhost:3000"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "APP_KEY",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/app-key"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/db-password"
+        },
+        {
+          "name": "REDIS_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/redis-password"
+        },
+        {
+          "name": "OPENAI_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/openai-api-key"
+        },
+        {
+          "name": "STRIPE_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/stripe-secret"
+        },
+        {
+          "name": "MAILGUN_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/mailgun-secret"
+        },
+        {
+          "name": "SENTRY_LARAVEL_DSN",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/sentry-dsn"
+        },
+        {
+          "name": "TELESCOPE_AUTH_TOKEN",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/telescope-auth-token"
+        },
+        {
+          "name": "MAILGUN_WEBHOOK_SIGNING_KEY",
+          "valueFrom": "arn:aws:secretsmanager:region:account:secret:ai-blockchain-analytics/mailgun-webhook-signing-key"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "roadrunner-config",
+          "containerPath": "/var/www/.rr.yaml",
+          "readOnly": true
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-blockchain-analytics-roadrunner-app",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "roadrunner-app"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:2114/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "ulimits": [
+        {
+          "name": "nofile",
+          "softLimit": 65536,
+          "hardLimit": 65536
+        }
+      ],
+      "linuxParameters": {
+        "initProcessEnabled": true
+      }
+    },
+    {
+      "name": "browserless",
+      "image": "browserless/chrome:1.61.0-puppeteer-19.2.2",
+      "essential": false,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp",
+          "name": "browserless"
+        }
+      ],
+      "environment": [
+        {
+          "name": "MAX_CONCURRENT_SESSIONS",
+          "value": "10"
+        },
+        {
+          "name": "CONNECTION_TIMEOUT",
+          "value": "60000"
+        },
+        {
+          "name": "MAX_QUEUE_LENGTH",
+          "value": "50"
+        },
+        {
+          "name": "PREBOOT_CHROME",
+          "value": "true"
+        },
+        {
+          "name": "DEFAULT_BLOCK_ADS",
+          "value": "true"
+        },
+        {
+          "name": "DEFAULT_IGNORE_HTTPS_ERRORS",
+          "value": "true"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ai-blockchain-analytics-browserless",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "browserless"
+        }
+      },
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl -f http://localhost:3000/health || exit 1"
+        ],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 30
+      },
+      "cpu": 256,
+      "memoryReservation": 512,
+      "ulimits": [
+        {
+          "name": "nofile",
+          "softLimit": 65536,
+          "hardLimit": 65536
+        }
+      ]
+    }
+  ],
+  "volumes": [
+    {
+      "name": "roadrunner-config",
+      "host": {}
+    }
+  ],
+  "placementConstraints": [],
+  "tags": [
+    {
+      "key": "Environment",
+      "value": "production"
+    },
+    {
+      "key": "Application",
+      "value": "ai-blockchain-analytics"
+    },
+    {
+      "key": "Component",
+      "value": "roadrunner-app"
+    }
+  ]
+}

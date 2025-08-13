@@ -1,0 +1,234 @@
+config:
+  target: 'http://localhost:8003'
+  phases:
+    # Warm-up phase: Gradually increase load
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm-up phase"
+    
+    # Ramp-up phase: Build to target load
+    - duration: 120
+      arrivalRate: 50
+      rampTo: 200
+      name: "Ramp-up phase"
+    
+    # Peak load phase: 500 concurrent analyses
+    - duration: 300
+      arrivalRate: 500
+      name: "Peak load - 500 concurrent analyses"
+    
+    # Sustained load phase: Maintain high load
+    - duration: 180
+      arrivalRate: 300
+      name: "Sustained high load"
+    
+    # Cool-down phase: Gradual reduction
+    - duration: 60
+      arrivalRate: 300
+      rampTo: 50
+      name: "Cool-down phase"
+
+  # Load testing configuration
+  defaults:
+    headers:
+      'User-Agent': 'Artillery Load Test - AI Blockchain Analytics'
+      'Accept': 'application/json'
+      'Content-Type': 'application/json'
+      'X-Test-Run': 'artillery-load-test'
+
+  # Performance and reliability settings
+  http:
+    timeout: 30
+    pool: 50
+    maxSockets: 500
+    extendedMetrics: true
+
+  # Test data and variables
+  variables:
+    contract_addresses:
+      - "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984"  # Uniswap
+      - "0xA0b86a33E6417c75C3E5C0D6a0d7B4e30a7c8F12"  # Aave
+      - "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"  # Polygon
+      - "0x514910771af9ca656af840dff83e8264ecf986ca"  # Chainlink
+      - "0x6b175474e89094c44da98b954eedeac495271d0f"  # DAI
+      - "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"  # WETH
+      - "0xdac17f958d2ee523a2206206994597c13d831ec7"  # USDT
+      - "0xa0b73e1ff0b80914ab6fe0444e65848c4c34450b"  # Cronos
+      - "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce"  # Shiba
+      - "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"  # WBTC
+
+    project_names:
+      - "DeFi Protocol Analysis"
+      - "Smart Contract Audit"
+      - "Token Security Review"
+      - "NFT Contract Analysis"
+      - "Yield Farming Protocol"
+      - "Cross-chain Bridge Analysis"
+      - "DAO Governance Review"
+      - "Oracle Security Audit"
+      - "Staking Protocol Analysis"
+      - "AMM Security Review"
+
+    solidity_code_samples:
+      - |
+        pragma solidity ^0.8.0;
+        contract TestContract {
+            uint256 public value;
+            function setValue(uint256 _value) public {
+                value = _value;
+            }
+        }
+      - |
+        pragma solidity ^0.8.0;
+        import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+        contract Token extends ERC20 {
+            constructor() ERC20("Test", "TEST") {
+                _mint(msg.sender, 1000000 * 10**18);
+            }
+        }
+      - |
+        pragma solidity ^0.8.0;
+        contract Vulnerable {
+            mapping(address => uint) balances;
+            function withdraw() public {
+                require(balances[msg.sender] > 0);
+                (bool sent,) = msg.sender.call{value: balances[msg.sender]}("");
+                require(sent);
+                balances[msg.sender] = 0;
+            }
+        }
+
+  # Enable detailed metrics and reporting
+  plugins:
+    - expect
+    - metrics-by-endpoint
+    - publish-metrics:
+        - type: datadog
+          host: localhost
+          port: 8125
+          prefix: 'artillery.ai_blockchain'
+        - type: statsd
+          host: localhost
+          port: 8125
+          prefix: 'artillery'
+
+  # Custom functions for dynamic data
+  processor: "./artillery-processor.js"
+
+scenarios:
+  # Main contract analysis scenario (60% of traffic)
+  - name: "Live Contract Analysis"
+    weight: 60
+    flow:
+      - post:
+          url: "/api/contracts/analyze"
+          headers:
+            X-Forwarded-For: "{{ $randomIP() }}"
+          json:
+            contract_address: "{{ contract_addresses[$randomNumber(0,9)] }}"
+            network: "ethereum"
+            analysis_type: "comprehensive"
+            include_source: true
+          expect:
+            - statusCode: [200, 202]
+            - hasProperty: "data"
+          capture:
+            - json: "$.data.analysis_id"
+              as: "analysis_id"
+      
+      # Follow up with status check
+      - get:
+          url: "/api/contracts/analysis/{{ analysis_id }}/status"
+          expect:
+            - statusCode: [200, 404]
+
+  # Verification badge generation scenario (15% of traffic)
+  - name: "Verification Badge Generation"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/verification-badge/generate"
+          json:
+            project_name: "{{ project_names[$randomNumber(0,9)] }}"
+            contract_address: "{{ contract_addresses[$randomNumber(0,9)] }}"
+            verification_data:
+              contract_verified: "{{ $randomBoolean() }}"
+              audit_passed: "{{ $randomBoolean() }}"
+              kyc_completed: "{{ $randomBoolean() }}"
+              team_verified: "{{ $randomBoolean() }}"
+          expect:
+            - statusCode: [200, 201]
+            - hasProperty: "data.badge_id"
+          capture:
+            - json: "$.data.badge_id"
+              as: "badge_id"
+            - json: "$.data.signature"
+              as: "signature"
+      
+      # Verify the generated badge
+      - post:
+          url: "/api/verification-badge/verify"
+          json:
+            badge_id: "{{ badge_id }}"
+            signature: "{{ signature }}"
+          expect:
+            - statusCode: [200, 400]
+
+  # Solidity cleaner scenario (10% of traffic)
+  - name: "Solidity Code Cleaning"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/solidity-cleaner/clean"
+          json:
+            code: "{{ solidity_code_samples[$randomNumber(0,2)] }}"
+            options:
+              strip_comments: true
+              flatten_imports: true
+              minify_whitespace: true
+              preserve_natspec: false
+          expect:
+            - statusCode: [200]
+            - hasProperty: "data.cleaned_code"
+
+  # Sentiment analysis scenario (10% of traffic)
+  - name: "Sentiment Analysis"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/sentiment/timeline"
+          qs:
+            token: "{{ ['ethereum', 'bitcoin', 'chainlink', 'uniswap'][$randomNumber(0,3)] }}"
+            timeframe: "{{ ['7d', '30d', '90d'][$randomNumber(0,2)] }}"
+            granularity: "{{ ['hourly', 'daily'][$randomNumber(0,1)] }}"
+          expect:
+            - statusCode: [200]
+            - hasProperty: "data"
+
+  # API health checks and info endpoints (5% of traffic)
+  - name: "System Health Checks"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/verification-badge/levels"
+          expect:
+            - statusCode: [200]
+            - hasProperty: "data.levels"
+      
+      - get:
+          url: "/api/solidity-cleaner/options"
+          expect:
+            - statusCode: [200]
+            - hasProperty: "data"
+
+# Test execution settings
+before:
+  flow:
+    - log: "Starting Artillery load test for AI Blockchain Analytics"
+    - log: "Target: 500 concurrent analyses"
+    - log: "Duration: ~11 minutes total"
+
+after:
+  flow:
+    - log: "Load test completed"
+    - log: "Check metrics for performance analysis"

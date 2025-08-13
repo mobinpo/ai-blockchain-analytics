@@ -1,0 +1,32 @@
+config:
+  target: 'http://localhost:8000'
+  phases:
+    - duration: 60
+      arrivalRate: 100
+      name: "Ramp up"
+    - duration: 120
+      arrivalRate: 500
+      name: "500 concurrent requests"
+    - duration: 30
+      arrivalRate: 50
+      name: "Cool down"
+  http:
+    timeout: 10
+
+scenarios:
+  - name: "Basic Load Test"
+    weight: 100
+    flow:
+      - get:
+          url: "/"
+          expect:
+            - statusCode: [200, 404, 500]
+      
+      - think: 0.1
+      
+      - get:
+          url: "/api/health"
+          expect:
+            - statusCode: [200, 404, 500]
+      
+      - think: 0.1

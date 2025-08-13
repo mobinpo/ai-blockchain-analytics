@@ -1,0 +1,878 @@
+{
+  "aggregate": {
+    "counters": {
+      "vusers.created_by_name.Health Check": 20690,
+      "vusers.created": 52050,
+      "http.requests": 52050,
+      "plugins.metrics-by-endpoint./.errors.ECONNRESET": 20690,
+      "errors.ECONNRESET": 52050,
+      "vusers.failed": 52050,
+      "vusers.created_by_name.API Test": 15600,
+      "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 15600,
+      "vusers.created_by_name.Dashboard Access": 15760,
+      "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 15760
+    },
+    "rates": {
+      "http.request_rate": 201
+    },
+    "firstCounterAt": 1754509502902,
+    "lastCounterAt": 1754509833789,
+    "firstMetricAt": 1754509502902,
+    "lastMetricAt": 1754509833789,
+    "period": 1754509830000,
+    "summaries": {},
+    "histograms": {}
+  },
+  "intermediate": [
+    {
+      "counters": {
+        "vusers.created_by_name.Health Check": 19,
+        "vusers.created": 37,
+        "http.requests": 37,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 17,
+        "errors.ECONNRESET": 35,
+        "vusers.failed": 35,
+        "vusers.created_by_name.API Test": 11,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 11,
+        "vusers.created_by_name.Dashboard Access": 7,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 7
+      },
+      "rates": {
+        "http.request_rate": 5
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509502902,
+      "lastCounterAt": 1754509509953,
+      "firstMetricAt": 1754509502902,
+      "lastMetricAt": 1754509509953,
+      "period": "1754509500000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 15,
+        "errors.ECONNRESET": 50,
+        "vusers.failed": 50,
+        "vusers.created_by_name.Dashboard Access": 22,
+        "vusers.created": 50,
+        "http.requests": 50,
+        "vusers.created_by_name.API Test": 14,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 21,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 14,
+        "vusers.created_by_name.Health Check": 14
+      },
+      "rates": {
+        "http.request_rate": 5
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509510001,
+      "lastCounterAt": 1754509519958,
+      "firstMetricAt": 1754509510001,
+      "lastMetricAt": 1754509519958,
+      "period": "1754509510000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 18,
+        "errors.ECONNRESET": 50,
+        "vusers.failed": 50,
+        "vusers.created_by_name.Dashboard Access": 14,
+        "vusers.created": 50,
+        "http.requests": 50,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 15,
+        "vusers.created_by_name.Health Check": 17,
+        "vusers.created_by_name.API Test": 19,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 17
+      },
+      "rates": {
+        "http.request_rate": 5
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509520001,
+      "lastCounterAt": 1754509529953,
+      "firstMetricAt": 1754509520001,
+      "lastMetricAt": 1754509529953,
+      "period": "1754509520000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 26,
+        "errors.ECONNRESET": 85,
+        "vusers.failed": 85,
+        "vusers.created_by_name.Dashboard Access": 30,
+        "vusers.created": 85,
+        "http.requests": 85,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 30,
+        "vusers.created_by_name.Health Check": 29,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 29,
+        "vusers.created_by_name.API Test": 26
+      },
+      "rates": {
+        "http.request_rate": 10
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509530001,
+      "lastCounterAt": 1754509539954,
+      "firstMetricAt": 1754509530001,
+      "lastMetricAt": 1754509539954,
+      "period": "1754509530000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 32,
+        "errors.ECONNRESET": 100,
+        "vusers.failed": 100,
+        "vusers.created_by_name.Health Check": 45,
+        "vusers.created": 100,
+        "http.requests": 100,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 44,
+        "vusers.created_by_name.API Test": 31,
+        "vusers.created_by_name.Dashboard Access": 24,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 24
+      },
+      "rates": {
+        "http.request_rate": 10
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509540002,
+      "lastCounterAt": 1754509549954,
+      "firstMetricAt": 1754509540002,
+      "lastMetricAt": 1754509549954,
+      "period": "1754509540000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 42,
+        "errors.ECONNRESET": 100,
+        "vusers.failed": 100,
+        "vusers.created_by_name.Health Check": 41,
+        "vusers.created": 100,
+        "http.requests": 100,
+        "vusers.created_by_name.Dashboard Access": 32,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 32,
+        "vusers.created_by_name.API Test": 27,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 26
+      },
+      "rates": {
+        "http.request_rate": 10
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509550002,
+      "lastCounterAt": 1754509559954,
+      "firstMetricAt": 1754509550002,
+      "lastMetricAt": 1754509559954,
+      "period": "1754509550000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 50,
+        "errors.ECONNRESET": 165,
+        "vusers.failed": 165,
+        "vusers.created_by_name.Dashboard Access": 53,
+        "vusers.created": 170,
+        "http.requests": 170,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 51,
+        "vusers.created_by_name.Health Check": 68,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 64,
+        "vusers.created_by_name.API Test": 49
+      },
+      "rates": {
+        "http.request_rate": 20
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509560002,
+      "lastCounterAt": 1754509569968,
+      "firstMetricAt": 1754509560002,
+      "lastMetricAt": 1754509569968,
+      "period": "1754509560000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 84,
+        "errors.ECONNRESET": 202,
+        "vusers.failed": 202,
+        "vusers.created_by_name.API Test": 66,
+        "vusers.created": 200,
+        "http.requests": 200,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 65,
+        "vusers.created_by_name.Health Check": 81,
+        "vusers.created_by_name.Dashboard Access": 53,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 53
+      },
+      "rates": {
+        "http.request_rate": 20
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509570003,
+      "lastCounterAt": 1754509579986,
+      "firstMetricAt": 1754509570003,
+      "lastMetricAt": 1754509579986,
+      "period": "1754509570000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 65,
+        "errors.ECONNRESET": 197,
+        "vusers.failed": 197,
+        "vusers.created_by_name.API Test": 53,
+        "vusers.created": 200,
+        "http.requests": 200,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 53,
+        "vusers.created_by_name.Dashboard Access": 64,
+        "vusers.created_by_name.Health Check": 83,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 79
+      },
+      "rates": {
+        "http.request_rate": 20
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509580003,
+      "lastCounterAt": 1754509589955,
+      "firstMetricAt": 1754509580003,
+      "lastMetricAt": 1754509589955,
+      "period": "1754509580000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 175,
+        "errors.ECONNRESET": 407,
+        "vusers.failed": 407,
+        "vusers.created_by_name.Health Check": 176,
+        "vusers.created": 413,
+        "http.requests": 413,
+        "vusers.created_by_name.API Test": 116,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 116,
+        "vusers.created_by_name.Dashboard Access": 121,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 116
+      },
+      "rates": {
+        "http.request_rate": 50
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509590003,
+      "lastCounterAt": 1754509599967,
+      "firstMetricAt": 1754509590003,
+      "lastMetricAt": 1754509599967,
+      "period": "1754509590000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 197,
+        "errors.ECONNRESET": 498,
+        "vusers.failed": 498,
+        "vusers.created_by_name.Dashboard Access": 149,
+        "vusers.created": 500,
+        "http.requests": 500,
+        "vusers.created_by_name.Health Check": 198,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 151,
+        "vusers.created_by_name.API Test": 153,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 150
+      },
+      "rates": {
+        "http.request_rate": 50
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509600004,
+      "lastCounterAt": 1754509609967,
+      "firstMetricAt": 1754509600004,
+      "lastMetricAt": 1754509609967,
+      "period": "1754509600000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 206,
+        "errors.ECONNRESET": 502,
+        "vusers.failed": 502,
+        "vusers.created_by_name.API Test": 138,
+        "vusers.created": 500,
+        "http.requests": 500,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 139,
+        "vusers.created_by_name.Dashboard Access": 157,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 157,
+        "vusers.created_by_name.Health Check": 205
+      },
+      "rates": {
+        "http.request_rate": 50
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509610004,
+      "lastCounterAt": 1754509619995,
+      "firstMetricAt": 1754509610004,
+      "lastMetricAt": 1754509619995,
+      "period": "1754509610000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 153,
+        "errors.ECONNRESET": 502,
+        "vusers.failed": 502,
+        "vusers.created_by_name.Health Check": 185,
+        "vusers.created": 500,
+        "http.requests": 500,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 187,
+        "vusers.created_by_name.API Test": 159,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 162,
+        "vusers.created_by_name.Dashboard Access": 156
+      },
+      "rates": {
+        "http.request_rate": 50
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509620004,
+      "lastCounterAt": 1754509629979,
+      "firstMetricAt": 1754509620004,
+      "lastMetricAt": 1754509629979,
+      "period": "1754509620000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 186,
+        "errors.ECONNRESET": 490,
+        "vusers.failed": 490,
+        "vusers.created_by_name.API Test": 143,
+        "vusers.created": 500,
+        "http.requests": 500,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 134,
+        "vusers.created_by_name.Health Check": 191,
+        "vusers.created_by_name.Dashboard Access": 166,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 170
+      },
+      "rates": {
+        "http.request_rate": 50
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509630004,
+      "lastCounterAt": 1754509639966,
+      "firstMetricAt": 1754509630004,
+      "lastMetricAt": 1754509639966,
+      "period": "1754509630000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 141,
+        "errors.ECONNRESET": 506,
+        "vusers.failed": 506,
+        "vusers.created_by_name.Dashboard Access": 167,
+        "vusers.created": 500,
+        "http.requests": 500,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 164,
+        "vusers.created_by_name.API Test": 134,
+        "vusers.created_by_name.Health Check": 199,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 201
+      },
+      "rates": {
+        "http.request_rate": 50
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509640004,
+      "lastCounterAt": 1754509649966,
+      "firstMetricAt": 1754509640004,
+      "lastMetricAt": 1754509649966,
+      "period": "1754509640000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 271,
+        "errors.ECONNRESET": 852,
+        "vusers.failed": 852,
+        "vusers.created_by_name.Dashboard Access": 276,
+        "vusers.created": 868,
+        "http.requests": 868,
+        "vusers.created_by_name.Health Check": 331,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 329,
+        "vusers.created_by_name.API Test": 261,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 252
+      },
+      "rates": {
+        "http.request_rate": 91
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509650004,
+      "lastCounterAt": 1754509659995,
+      "firstMetricAt": 1754509650004,
+      "lastMetricAt": 1754509659995,
+      "period": "1754509650000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.API Test": 303,
+        "vusers.created": 1000,
+        "http.requests": 1000,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 309,
+        "errors.ECONNRESET": 999,
+        "vusers.failed": 999,
+        "vusers.created_by_name.Health Check": 419,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 412,
+        "vusers.created_by_name.Dashboard Access": 278,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 278
+      },
+      "rates": {
+        "http.request_rate": 100
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509660005,
+      "lastCounterAt": 1754509669995,
+      "firstMetricAt": 1754509660005,
+      "lastMetricAt": 1754509669995,
+      "period": "1754509660000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Health Check": 411,
+        "vusers.created": 1000,
+        "http.requests": 1000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 412,
+        "errors.ECONNRESET": 997,
+        "vusers.failed": 997,
+        "vusers.created_by_name.Dashboard Access": 310,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 310,
+        "vusers.created_by_name.API Test": 279,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 275
+      },
+      "rates": {
+        "http.request_rate": 100
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509670005,
+      "lastCounterAt": 1754509679995,
+      "firstMetricAt": 1754509670005,
+      "lastMetricAt": 1754509679995,
+      "period": "1754509670000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 340,
+        "errors.ECONNRESET": 1006,
+        "vusers.failed": 1006,
+        "vusers.created_by_name.Dashboard Access": 337,
+        "vusers.created": 1000,
+        "http.requests": 1000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 371,
+        "vusers.created_by_name.Health Check": 370,
+        "vusers.created_by_name.API Test": 293,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 295
+      },
+      "rates": {
+        "http.request_rate": 100
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509680005,
+      "lastCounterAt": 1754509689999,
+      "firstMetricAt": 1754509680005,
+      "lastMetricAt": 1754509689999,
+      "period": "1754509680000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Health Check": 413,
+        "vusers.created": 1000,
+        "http.requests": 1000,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 277,
+        "errors.ECONNRESET": 998,
+        "vusers.failed": 998,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 411,
+        "vusers.created_by_name.API Test": 308,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 310,
+        "vusers.created_by_name.Dashboard Access": 279
+      },
+      "rates": {
+        "http.request_rate": 100
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509690005,
+      "lastCounterAt": 1754509699995,
+      "firstMetricAt": 1754509690005,
+      "lastMetricAt": 1754509699995,
+      "period": "1754509690000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Health Check": 421,
+        "vusers.created": 1000,
+        "http.requests": 1000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 422,
+        "errors.ECONNRESET": 993,
+        "vusers.failed": 993,
+        "vusers.created_by_name.Dashboard Access": 295,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 296,
+        "vusers.created_by_name.API Test": 284,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 275
+      },
+      "rates": {
+        "http.request_rate": 100
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509700005,
+      "lastCounterAt": 1754509709995,
+      "firstMetricAt": 1754509700005,
+      "lastMetricAt": 1754509709995,
+      "period": "1754509700000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 509,
+        "errors.ECONNRESET": 1707,
+        "vusers.failed": 1707,
+        "vusers.created_by_name.Dashboard Access": 522,
+        "vusers.created": 1735,
+        "http.requests": 1735,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 680,
+        "vusers.created_by_name.API Test": 515,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 518,
+        "vusers.created_by_name.Health Check": 698
+      },
+      "rates": {
+        "http.request_rate": 171
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509710005,
+      "lastCounterAt": 1754509719996,
+      "firstMetricAt": 1754509710005,
+      "lastMetricAt": 1754509719996,
+      "period": "1754509710000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Health Check": 846,
+        "vusers.created": 2000,
+        "http.requests": 2000,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 572,
+        "errors.ECONNRESET": 1963,
+        "vusers.failed": 1963,
+        "vusers.created_by_name.API Test": 575,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 832,
+        "vusers.created_by_name.Dashboard Access": 579,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 559
+      },
+      "rates": {
+        "http.request_rate": 200
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509720001,
+      "lastCounterAt": 1754509729995,
+      "firstMetricAt": 1754509720001,
+      "lastMetricAt": 1754509729995,
+      "period": "1754509720000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 606,
+        "errors.ECONNRESET": 2032,
+        "vusers.failed": 2032,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 614,
+        "vusers.created_by_name.Dashboard Access": 605,
+        "vusers.created": 2000,
+        "http.requests": 2000,
+        "vusers.created_by_name.Health Check": 790,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 812,
+        "vusers.created_by_name.API Test": 605
+      },
+      "rates": {
+        "http.request_rate": 200
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509730001,
+      "lastCounterAt": 1754509739995,
+      "firstMetricAt": 1754509730001,
+      "lastMetricAt": 1754509739995,
+      "period": "1754509730000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Health Check": 802,
+        "vusers.created": 2000,
+        "http.requests": 2000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 796,
+        "errors.ECONNRESET": 2002,
+        "vusers.failed": 2002,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 590,
+        "vusers.created_by_name.Dashboard Access": 616,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 616,
+        "vusers.created_by_name.API Test": 582
+      },
+      "rates": {
+        "http.request_rate": 200
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509740001,
+      "lastCounterAt": 1754509749996,
+      "firstMetricAt": 1754509740001,
+      "lastMetricAt": 1754509749996,
+      "period": "1754509740000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Dashboard Access": 597,
+        "vusers.created": 2000,
+        "http.requests": 2000,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 516,
+        "errors.ECONNRESET": 1748,
+        "vusers.failed": 1748,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 696,
+        "vusers.created_by_name.API Test": 624,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 536,
+        "vusers.created_by_name.Health Check": 779
+      },
+      "rates": {
+        "http.request_rate": 200
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509750001,
+      "lastCounterAt": 1754509759995,
+      "firstMetricAt": 1754509750001,
+      "lastMetricAt": 1754509759995,
+      "period": "1754509750000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.API Test": 620,
+        "vusers.created": 2000,
+        "http.requests": 2000,
+        "vusers.created_by_name.Dashboard Access": 580,
+        "vusers.created_by_name.Health Check": 800,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 706,
+        "errors.ECONNRESET": 2252,
+        "vusers.failed": 2252,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 661,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 885
+      },
+      "rates": {
+        "http.request_rate": 200
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509760001,
+      "lastCounterAt": 1754509769995,
+      "firstMetricAt": 1754509760001,
+      "lastMetricAt": 1754509769995,
+      "period": "1754509760000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.API Test": 1226,
+        "vusers.created": 4197,
+        "http.requests": 4197,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 1241,
+        "errors.ECONNRESET": 4051,
+        "vusers.failed": 4051,
+        "vusers.created_by_name.Health Check": 1682,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 1176,
+        "vusers.created_by_name.Dashboard Access": 1289,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1634
+      },
+      "rates": {
+        "http.request_rate": 423
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509770001,
+      "lastCounterAt": 1754509779999,
+      "firstMetricAt": 1754509770001,
+      "lastMetricAt": 1754509779999,
+      "period": "1754509770000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.API Test": 1480,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2016,
+        "errors.ECONNRESET": 5037,
+        "vusers.failed": 5037,
+        "vusers.created_by_name.Dashboard Access": 1518,
+        "vusers.created_by_name.Health Check": 2002,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 1530,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 1491
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509780000,
+      "lastCounterAt": 1754509789999,
+      "firstMetricAt": 1754509780000,
+      "lastMetricAt": 1754509789999,
+      "period": "1754509780000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Health Check": 1939,
+        "vusers.created": 5000,
+        "http.requests": 4999,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1953,
+        "errors.ECONNRESET": 5039,
+        "vusers.failed": 5039,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 1532,
+        "vusers.created_by_name.Dashboard Access": 1540,
+        "vusers.created_by_name.API Test": 1521,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 1554
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509790000,
+      "lastCounterAt": 1754509799999,
+      "firstMetricAt": 1754509790000,
+      "lastMetricAt": 1754509799999,
+      "period": "1754509790000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Dashboard Access": 1534,
+        "vusers.created": 5000,
+        "http.requests": 5000,
+        "vusers.created_by_name.API Test": 1534,
+        "vusers.created_by_name.Health Check": 1932,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 1444,
+        "errors.ECONNRESET": 4700,
+        "vusers.failed": 4700,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 1442,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1814
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509800000,
+      "lastCounterAt": 1754509809999,
+      "firstMetricAt": 1754509800000,
+      "lastMetricAt": 1754509809999,
+      "period": "1754509800000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 1272,
+        "errors.ECONNRESET": 4230,
+        "vusers.failed": 4230,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 1322,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 1636,
+        "vusers.created_by_name.Dashboard Access": 1486,
+        "vusers.created": 4999,
+        "http.requests": 5000,
+        "vusers.created_by_name.API Test": 1552,
+        "vusers.created_by_name.Health Check": 1961
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509810000,
+      "lastCounterAt": 1754509819999,
+      "firstMetricAt": 1754509810000,
+      "lastMetricAt": 1754509819999,
+      "period": "1754509810000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "vusers.created_by_name.Dashboard Access": 1484,
+        "vusers.created": 5001,
+        "http.requests": 5000,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 2275,
+        "errors.ECONNRESET": 5691,
+        "vusers.failed": 5691,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 1738,
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 1678,
+        "vusers.created_by_name.API Test": 1523,
+        "vusers.created_by_name.Health Check": 1994
+      },
+      "rates": {
+        "http.request_rate": 500
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509820000,
+      "lastCounterAt": 1754509829999,
+      "firstMetricAt": 1754509820000,
+      "lastMetricAt": 1754509829999,
+      "period": "1754509820000",
+      "summaries": {},
+      "histograms": {}
+    },
+    {
+      "counters": {
+        "plugins.metrics-by-endpoint./dashboard.errors.ECONNRESET": 572,
+        "errors.ECONNRESET": 1864,
+        "vusers.failed": 1864,
+        "vusers.created_by_name.Dashboard Access": 420,
+        "vusers.created": 1345,
+        "http.requests": 1346,
+        "plugins.metrics-by-endpoint./.errors.ECONNRESET": 760,
+        "vusers.created_by_name.Health Check": 549,
+        "vusers.created_by_name.API Test": 376,
+        "plugins.metrics-by-endpoint./api/dashboard/metrics.errors.ECONNRESET": 532
+      },
+      "rates": {
+        "http.request_rate": 503
+      },
+      "http.request_rate": null,
+      "firstCounterAt": 1754509830000,
+      "lastCounterAt": 1754509833789,
+      "firstMetricAt": 1754509830000,
+      "lastMetricAt": 1754509833789,
+      "period": "1754509830000",
+      "summaries": {},
+      "histograms": {}
+    }
+  ]
+}

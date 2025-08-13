@@ -1,0 +1,152 @@
+# RoadRunner Development Configuration
+# Optimized for development with hot reload and debugging
+
+version: '2.7'
+
+# RPC configuration
+rpc:
+  listen: tcp://0.0.0.0:6001
+
+# Server configuration
+server:
+  command: 'php psr-worker.php'
+  relay: pipes
+  relay_timeout: 20s
+
+# HTTP server configuration (reduced workers for development)
+http:
+  address: 0.0.0.0:8000
+  max_request_size: 200MB
+  upload:
+    forbid: ['.php', '.exe', '.bat']
+  
+  middleware:
+    - headers
+    - gzip
+  
+  pool:
+    num_workers: 4  # Reduced for development
+    max_jobs: 100   # Reduced for development
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+    supervisor:
+      max_worker_memory: 512  # Increased for debugging
+      exec_ttl: 0s  # Disabled timeout for debugging
+
+# Headers middleware
+headers:
+  response:
+    X-Powered-By: "RoadRunner-Dev"
+    Server: "AI-Blockchain-Analytics-Dev/1.0"
+
+# Gzip compression (disabled for easier debugging)
+gzip:
+  level: 1
+  vary: true
+
+# Static files serving
+static:
+  dir: public
+  forbid: ['.htaccess', '.env']
+
+# Status page
+status:
+  address: 0.0.0.0:9090
+
+# Metrics (simplified for dev)
+metrics:
+  address: 0.0.0.0:9091
+  path: /metrics
+
+# Enhanced logging for development
+logs:
+  mode: development
+  level: debug
+  encoding: console
+  output: [stdout]
+  channels:
+    http:
+      level: debug
+      encoding: console
+    jobs:
+      level: debug
+      encoding: console
+
+# Jobs configuration (reduced for development)
+jobs:
+  num_pollers: 2
+  pipeline_size: 10
+  pool:
+    num_workers: 4  # Reduced for development
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+    supervisor:
+      max_worker_memory: 512
+
+  pipelines:
+    default:
+      driver: memory
+      config:
+        priority: 1
+        prefetch: 100  # Reduced for development
+
+    crawler:
+      driver: memory
+      config:
+        priority: 5
+        prefetch: 50   # Reduced for development
+
+# KV storage
+kv:
+  default:
+    driver: memory
+    config:
+      interval: 10  # Shorter interval for development
+
+# WebSocket for development
+websockets:
+  address: 0.0.0.0:6001
+  max_connections: 100  # Reduced for development
+
+# Health checks
+health:
+  address: 0.0.0.0:2114
+
+# Hot reload configuration for development
+reload:
+  interval: 1s
+  patterns: ['.php', '.env']
+  services:
+    http:
+      recursive: true
+      ignore: ['vendor', 'node_modules', '.git']
+      patterns: ['.php', '.env']
+      dirs: ['app', 'config', 'routes', 'resources']
+    jobs:
+      recursive: true
+      ignore: ['vendor', 'node_modules', '.git']
+      patterns: ['.php', '.env']
+      dirs: ['app', 'config']
+
+# Velox for hot reload
+velox:
+  stream: true
+
+# Development-friendly resetter
+resetter:
+  services:
+    http:
+      after_request: []  # Disabled for easier debugging
+      patterns:
+        - "app/**.php"
+        - "config/**.php"
+        - "resources/**.php"
+        - ".env"
+
+# OpenTelemetry (simplified for development)
+otel:
+  resource:
+    service_name: ai-blockchain-analytics-dev
+    service_version: dev
+    service_namespace: development

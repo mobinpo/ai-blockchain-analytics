@@ -1,0 +1,220 @@
+{
+    "timestamp": "2025-08-03T10:46:51.700049Z",
+    "total_contracts": 11,
+    "detection_rate": 90.91,
+    "average_risk_score": 58,
+    "average_analysis_time": 0,
+    "results": {
+        "reentrancy_basic": {
+            "detected": true,
+            "risk_score": 90,
+            "findings_count": 4,
+            "analysis_time": 0.01,
+            "simulated": true
+        },
+        "integer_overflow": {
+            "detected": true,
+            "risk_score": 70,
+            "findings_count": 3,
+            "analysis_time": 0,
+            "simulated": true
+        },
+        "unprotected_selfdestruct": {
+            "detected": true,
+            "risk_score": 95,
+            "findings_count": 4,
+            "analysis_time": 0,
+            "simulated": true
+        },
+        "tx_origin_authentication": {
+            "detected": true,
+            "risk_score": 43,
+            "findings_count": 1,
+            "analysis_time": 0,
+            "simulated": true
+        },
+        "unchecked_external_call": {
+            "detected": false,
+            "risk_score": 59,
+            "findings_count": 1,
+            "analysis_time": 0,
+            "simulated": true
+        },
+        "weak_randomness": {
+            "detected": true,
+            "risk_score": 71,
+            "findings_count": 3,
+            "analysis_time": 0,
+            "simulated": true
+        },
+        "denial_of_service_gas": {
+            "detected": true,
+            "risk_score": 47,
+            "findings_count": 1,
+            "analysis_time": 0,
+            "simulated": true
+        },
+        "timestamp_dependence": {
+            "detected": true,
+            "risk_score": 32,
+            "findings_count": 1,
+            "analysis_time": 0,
+            "simulated": true
+        },
+        "unvalidated_input": {
+            "detected": true,
+            "risk_score": 41,
+            "findings_count": 2,
+            "analysis_time": 0,
+            "simulated": true
+        },
+        "front_running": {
+            "detected": true,
+            "risk_score": 44,
+            "findings_count": 2,
+            "analysis_time": 0,
+            "simulated": true
+        },
+        "signature_replay": {
+            "detected": true,
+            "risk_score": 46,
+            "findings_count": 2,
+            "analysis_time": 0,
+            "simulated": true
+        }
+    },
+    "contracts": {
+        "reentrancy_basic": {
+            "name": "Basic Reentrancy Vulnerability",
+            "severity": "critical",
+            "category": "Re-entrancy",
+            "description": "Classic reentrancy attack in withdraw function",
+            "code": "\n\/\/ SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract VulnerableBank {\n    mapping(address => uint256) public balances;\n    \n    function deposit() public payable {\n        balances[msg.sender] += msg.value;\n    }\n    \n    function withdraw(uint256 amount) public {\n        require(balances[msg.sender] >= amount, \"Insufficient balance\");\n        \n        \/\/ Vulnerable: External call before state change\n        (bool success, ) = msg.sender.call{value: amount}(\"\");\n        require(success, \"Transfer failed\");\n        \n        \/\/ State change after external call - reentrancy possible\n        balances[msg.sender] -= amount;\n    }\n    \n    function getBalance() public view returns (uint256) {\n        return balances[msg.sender];\n    }\n}",
+            "expected_findings": [
+                "reentrancy in withdraw function",
+                "external call before state change",
+                "missing reentrancy guard"
+            ]
+        },
+        "integer_overflow": {
+            "name": "Integer Overflow Vulnerability",
+            "severity": "high",
+            "category": "Integer Overflow\/Underflow",
+            "description": "Arithmetic operations without SafeMath protection",
+            "code": "\n\/\/ SPDX-License-Identifier: MIT\npragma solidity ^0.7.6; \/\/ Vulnerable version without built-in overflow protection\n\ncontract IntegerOverflow {\n    mapping(address => uint256) public balances;\n    uint256 public totalSupply;\n    \n    function mint(address to, uint256 amount) public {\n        \/\/ Vulnerable: No overflow check\n        balances[to] += amount;\n        totalSupply += amount;\n    }\n    \n    function transfer(address to, uint256 amount) public {\n        require(balances[msg.sender] >= amount, \"Insufficient balance\");\n        \n        \/\/ Vulnerable: Potential underflow\/overflow\n        balances[msg.sender] -= amount;\n        balances[to] += amount;\n    }\n    \n    function batchTransfer(address[] memory recipients, uint256 amount) public {\n        \/\/ Vulnerable: amount * recipients.length can overflow\n        uint256 totalAmount = amount * recipients.length;\n        require(balances[msg.sender] >= totalAmount, \"Insufficient balance\");\n        \n        balances[msg.sender] -= totalAmount;\n        for (uint256 i = 0; i < recipients.length; i++) {\n            balances[recipients[i]] += amount;\n        }\n    }\n}",
+            "expected_findings": [
+                "integer overflow",
+                "unchecked arithmetic",
+                "missing safemath"
+            ]
+        },
+        "unprotected_selfdestruct": {
+            "name": "Unprotected Selfdestruct",
+            "severity": "critical",
+            "category": "A01:2021-Broken Access Control",
+            "description": "Anyone can destroy the contract",
+            "code": "\n\/\/ SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract UnprotectedDestruct {\n    address public owner;\n    mapping(address => uint256) public balances;\n    \n    constructor() {\n        owner = msg.sender;\n    }\n    \n    function deposit() public payable {\n        balances[msg.sender] += msg.value;\n    }\n    \n    \/\/ Vulnerable: Anyone can call this function\n    function kill() public {\n        selfdestruct(payable(msg.sender));\n    }\n    \n    \/\/ Even this \"protected\" version is vulnerable to tx.origin attacks\n    function killWithAuth() public {\n        require(tx.origin == owner, \"Only owner\");\n        selfdestruct(payable(owner));\n    }\n}",
+            "expected_findings": [
+                "unprotected selfdestruct",
+                "missing access control",
+                "public selfdestruct"
+            ]
+        },
+        "tx_origin_authentication": {
+            "name": "tx.origin Authentication",
+            "severity": "medium",
+            "category": "A07:2021-Identification and Authentication Failures",
+            "description": "Using tx.origin for authentication instead of msg.sender",
+            "code": "\n\/\/ SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract TxOriginAuth {\n    address public owner;\n    uint256 public balance;\n    \n    constructor() {\n        owner = msg.sender;\n    }\n    \n    modifier onlyOwner() {\n        \/\/ Vulnerable: tx.origin can be different from msg.sender\n        require(tx.origin == owner, \"Only owner can call this\");\n        _;\n    }\n    \n    function deposit() public payable {\n        balance += msg.value;\n    }\n    \n    function withdraw(uint256 amount) public onlyOwner {\n        require(amount <= balance, \"Insufficient funds\");\n        balance -= amount;\n        payable(tx.origin).transfer(amount);\n    }\n    \n    function changeOwner(address newOwner) public onlyOwner {\n        owner = newOwner;\n    }\n}",
+            "expected_findings": [
+                "tx.origin authentication",
+                "phishing vulnerability",
+                "use msg.sender instead"
+            ]
+        },
+        "unchecked_external_call": {
+            "name": "Unchecked External Call",
+            "severity": "high",
+            "category": "A08:2021-Software and Data Integrity Failures",
+            "description": "External call without checking return value",
+            "code": "\n\/\/ SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract UncheckedCalls {\n    mapping(address => uint256) public balances;\n    \n    function deposit() public payable {\n        balances[msg.sender] += msg.value;\n    }\n    \n    function withdraw(uint256 amount) public {\n        require(balances[msg.sender] >= amount, \"Insufficient balance\");\n        \n        balances[msg.sender] -= amount;\n        \n        \/\/ Vulnerable: Not checking return value\n        msg.sender.call{value: amount}(\"\");\n    }\n    \n    function batchTransfer(address[] memory recipients, uint256[] memory amounts) public {\n        require(recipients.length == amounts.length, \"Array length mismatch\");\n        \n        for (uint256 i = 0; i < recipients.length; i++) {\n            require(balances[msg.sender] >= amounts[i], \"Insufficient balance\");\n            balances[msg.sender] -= amounts[i];\n            \n            \/\/ Vulnerable: Not checking if call succeeds\n            recipients[i].call{value: amounts[i]}(\"\");\n        }\n    }\n}",
+            "expected_findings": [
+                "unchecked external call",
+                "missing return value check",
+                "silent failure"
+            ]
+        },
+        "weak_randomness": {
+            "name": "Weak Randomness",
+            "severity": "high",
+            "category": "A02:2021-Cryptographic Failures",
+            "description": "Predictable randomness using block properties",
+            "code": "\n\/\/ SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract WeakRandomness {\n    uint256 public prize = 1 ether;\n    address[] public players;\n    \n    function enter() public payable {\n        require(msg.value == 0.1 ether, \"Entry fee is 0.1 ether\");\n        players.push(msg.sender);\n    }\n    \n    function pickWinner() public {\n        require(players.length > 0, \"No players\");\n        \n        \/\/ Vulnerable: Predictable randomness\n        uint256 randomIndex = uint256(keccak256(abi.encodePacked(\n            block.timestamp,\n            block.difficulty,\n            block.number,\n            players.length\n        ))) % players.length;\n        \n        address winner = players[randomIndex];\n        payable(winner).transfer(prize);\n        \n        \/\/ Reset game\n        delete players;\n    }\n    \n    function lottery() public view returns (uint256) {\n        \/\/ Vulnerable: blockhash can be manipulated for recent blocks\n        return uint256(blockhash(block.number - 1)) % 100;\n    }\n}",
+            "expected_findings": [
+                "weak randomness",
+                "predictable random",
+                "blockhash vulnerability"
+            ]
+        },
+        "denial_of_service_gas": {
+            "name": "Gas Limit DoS",
+            "severity": "medium",
+            "category": "Denial of Service",
+            "description": "Unbounded loop causing gas limit issues",
+            "code": "\n\/\/ SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract GasLimitDoS {\n    address[] public investors;\n    mapping(address => uint256) public investments;\n    uint256 public totalInvestment;\n    \n    function invest() public payable {\n        require(msg.value > 0, \"Must send ether\");\n        \n        if (investments[msg.sender] == 0) {\n            investors.push(msg.sender);\n        }\n        \n        investments[msg.sender] += msg.value;\n        totalInvestment += msg.value;\n    }\n    \n    \/\/ Vulnerable: Unbounded loop can exceed gas limit\n    function distributeReturns() public {\n        uint256 returnPerInvestor = address(this).balance \/ investors.length;\n        \n        for (uint256 i = 0; i < investors.length; i++) {\n            payable(investors[i]).transfer(returnPerInvestor);\n        }\n    }\n    \n    \/\/ Vulnerable: Gas cost increases with array size\n    function removeInvestor(address investor) public {\n        for (uint256 i = 0; i < investors.length; i++) {\n            if (investors[i] == investor) {\n                investors[i] = investors[investors.length - 1];\n                investors.pop();\n                break;\n            }\n        }\n    }\n}",
+            "expected_findings": [
+                "gas limit dos",
+                "unbounded loop",
+                "block gas limit"
+            ]
+        },
+        "timestamp_dependence": {
+            "name": "Timestamp Dependence",
+            "severity": "medium",
+            "category": "A02:2021-Cryptographic Failures",
+            "description": "Logic depends on block.timestamp which can be manipulated",
+            "code": "\n\/\/ SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract TimestampDependence {\n    uint256 public constant GAME_DURATION = 1 hours;\n    uint256 public gameStart;\n    uint256 public gameEnd;\n    mapping(address => uint256) public bets;\n    \n    constructor() {\n        gameStart = block.timestamp;\n        gameEnd = gameStart + GAME_DURATION;\n    }\n    \n    function placeBet() public payable {\n        \/\/ Vulnerable: Depends on block.timestamp\n        require(block.timestamp < gameEnd, \"Game has ended\");\n        require(msg.value > 0, \"Must send ether\");\n        \n        bets[msg.sender] += msg.value;\n    }\n    \n    function determineWinner() public {\n        \/\/ Vulnerable: block.timestamp can be manipulated by miners\n        require(block.timestamp >= gameEnd, \"Game still ongoing\");\n        \n        \/\/ Simple random based on timestamp\n        uint256 winningNumber = block.timestamp % 10;\n        \n        if (winningNumber > 5) {\n            \/\/ Pay winners logic here\n        }\n    }\n    \n    function claimPrize() public {\n        \/\/ Vulnerable: Time-based logic\n        require(block.timestamp > gameEnd + 1 days, \"Claim period not started\");\n        \/\/ Prize claiming logic\n    }\n}",
+            "expected_findings": [
+                "timestamp dependence",
+                "block.timestamp manipulation",
+                "miner manipulation"
+            ]
+        },
+        "unvalidated_input": {
+            "name": "Unvalidated Input",
+            "severity": "medium",
+            "category": "Unvalidated Input",
+            "description": "Missing input validation and bounds checking",
+            "code": "\n\/\/ SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract UnvalidatedInput {\n    mapping(address => uint256) public balances;\n    address[] public users;\n    \n    function setBalance(address user, uint256 amount) public {\n        \/\/ Vulnerable: No validation of input parameters\n        balances[user] = amount;\n        users.push(user);\n    }\n    \n    function transfer(address to, uint256 amount) public {\n        \/\/ Vulnerable: No validation that 'to' is not zero address\n        require(balances[msg.sender] >= amount, \"Insufficient balance\");\n        \n        balances[msg.sender] -= amount;\n        balances[to] += amount;\n    }\n    \n    function batchUpdate(address[] memory addresses, uint256[] memory amounts) public {\n        \/\/ Vulnerable: No array length validation\n        for (uint256 i = 0; i < addresses.length; i++) {\n            balances[addresses[i]] = amounts[i];\n        }\n    }\n    \n    function withdraw(uint256 amount) public {\n        \/\/ Vulnerable: No bounds checking\n        balances[msg.sender] -= amount;\n        payable(msg.sender).transfer(amount);\n    }\n}",
+            "expected_findings": [
+                "unvalidated input",
+                "missing bounds check",
+                "input validation"
+            ]
+        },
+        "front_running": {
+            "name": "Front-running Vulnerability",
+            "severity": "medium",
+            "category": "A04:2021-Insecure Design",
+            "description": "Transaction ordering dependency allowing front-running",
+            "code": "\n\/\/ SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract FrontRunning {\n    mapping(address => uint256) public commitments;\n    mapping(address => uint256) public reveals;\n    uint256 public revealDeadline;\n    \n    function commitGuess(uint256 hashedGuess) public payable {\n        require(msg.value == 1 ether, \"Must send 1 ether\");\n        commitments[msg.sender] = hashedGuess;\n    }\n    \n    \/\/ Vulnerable: Can be front-run to see the reveal value\n    function revealGuess(uint256 guess, uint256 nonce) public {\n        require(commitments[msg.sender] != 0, \"No commitment found\");\n        require(\n            commitments[msg.sender] == keccak256(abi.encodePacked(guess, nonce)),\n            \"Invalid reveal\"\n        );\n        \n        reveals[msg.sender] = guess;\n    }\n    \n    \/\/ Vulnerable: Transaction ordering dependency\n    function claim() public {\n        require(reveals[msg.sender] == block.number % 100, \"Wrong guess\");\n        payable(msg.sender).transfer(address(this).balance);\n    }\n    \n    \/\/ Vulnerable: Price oracle manipulation\n    uint256 public price = 100;\n    \n    function updatePrice(uint256 newPrice) public {\n        \/\/ Vulnerable: Can be front-run\n        price = newPrice;\n    }\n    \n    function trade() public payable {\n        \/\/ Uses current price which can be manipulated\n        uint256 tokens = msg.value \/ price;\n        \/\/ Transfer tokens logic\n    }\n}",
+            "expected_findings": [
+                "front running",
+                "transaction ordering",
+                "mev vulnerability"
+            ]
+        },
+        "signature_replay": {
+            "name": "Signature Replay Attack",
+            "severity": "high",
+            "category": "SWC-121-Missing Protection against Signature Replay Attacks",
+            "description": "Missing nonce validation allowing signature replay attacks",
+            "code": "\n\/\/ SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract SignatureReplay {\n    mapping(address => uint256) public balances;\n    \/\/ Missing: mapping(address => uint256) public nonces;\n    \n    function deposit() public payable {\n        balances[msg.sender] += msg.value;\n    }\n    \n    \/\/ Vulnerable: Missing nonce validation\n    function withdrawWithSignature(\n        uint256 amount,\n        uint8 v,\n        bytes32 r,\n        bytes32 s\n    ) public {\n        bytes32 message = keccak256(abi.encodePacked(msg.sender, amount));\n        address signer = ecrecover(message, v, r, s);\n        \n        require(signer == msg.sender, \"Invalid signature\");\n        require(balances[signer] >= amount, \"Insufficient balance\");\n        \n        \/\/ Vulnerable: No nonce check - signature can be replayed!\n        balances[signer] -= amount;\n        payable(signer).transfer(amount);\n    }\n    \n    \/\/ Vulnerable: No domain separator, allowing cross-chain replay\n    function transfer(\n        address to,\n        uint256 amount,\n        uint8 v,\n        bytes32 r,\n        bytes32 s\n    ) public {\n        bytes32 message = keccak256(abi.encodePacked(to, amount));\n        address from = ecrecover(message, v, r, s);\n        \n        require(balances[from] >= amount, \"Insufficient balance\");\n        \n        \/\/ Missing domain separator and chain ID validation\n        balances[from] -= amount;\n        balances[to] += amount;\n    }\n}",
+            "expected_findings": [
+                "signature replay",
+                "missing nonce",
+                "replay attack"
+            ]
+        }
+    }
+}

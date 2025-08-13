@@ -1,0 +1,18 @@
+# AI Blockchain Analytics - Automated Demo Scripts
+# Generated on Mon Aug 11 03:08:25 PM +0330 2025
+
+# Daily Demo Script - Run every day at 9:00 AM
+0 9 * * * cd /home/mobin/PhpstormProjects/ai_blockchain_analytics && docker compose exec app php artisan demo:daily --output-file=storage/logs/daily-demo-$(date +\%Y-\%m-\%d).json >> storage/logs/cron-demo.log 2>&1
+
+# Weekly Demo Script - Run every Monday at 10:00 AM  
+0 10 * * 1 cd /home/mobin/PhpstormProjects/ai_blockchain_analytics && docker compose exec app php artisan demo:daily --detailed --output-file=storage/logs/weekly-demo-$(date +\%Y-\%m-\%d).json >> storage/logs/cron-demo.log 2>&1
+
+# Health Check Demo - Run every 6 hours
+0 */6 * * * cd /home/mobin/PhpstormProjects/ai_blockchain_analytics && docker compose exec app php artisan demo:daily --skip-crawling --skip-reports --skip-famous --output-file=storage/logs/health-check-$(date +\%Y-\%m-\%d-\%H).json >> storage/logs/cron-health.log 2>&1
+
+# Marketing Demo - Run every day at 2:00 PM (for demo purposes)
+0 14 * * * cd /home/mobin/PhpstormProjects/ai_blockchain_analytics && docker compose exec app php artisan demo:daily --detailed --output-file=storage/logs/marketing-demo-$(date +\%Y-\%m-\%d).json >> storage/logs/cron-marketing.log 2>&1
+
+# Log Cleanup - Run every Sunday at 2:00 AM
+0 2 * * 0 cd /home/mobin/PhpstormProjects/ai_blockchain_analytics && find storage/logs -name "daily-demo-*.json" -mtime +30 -delete && find storage/logs -name "*.log" -mtime +7 -delete
+

@@ -1,0 +1,1314 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Complete ECS Production Deployment for AI Blockchain Analytics with RoadRunner, Redis, and PostgreSQL",
+  "Parameters": {
+    "VpcId": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "VPC ID where resources will be created"
+    },
+    "PrivateSubnetIds": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "Private subnet IDs for ECS tasks and RDS"
+    },
+    "PublicSubnetIds": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "Public subnet IDs for ALB"
+    },
+    "CertificateArn": {
+      "Type": "String",
+      "Description": "ACM certificate ARN for HTTPS"
+    },
+    "DomainName": {
+      "Type": "String",
+      "Default": "analytics.yourdomain.com",
+      "Description": "Domain name for the application"
+    },
+    "DBPassword": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "Database password"
+    },
+    "AppKey": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "Laravel application key"
+    },
+    "OpenAIApiKey": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "OpenAI API key"
+    },
+    "EtherscanApiKey": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "Etherscan API key"
+    },
+    "ImageTag": {
+      "Type": "String",
+      "Default": "latest",
+      "Description": "Docker image tag"
+    }
+  },
+  "Resources": {
+    "ECSCluster": {
+      "Type": "AWS::ECS::Cluster",
+      "Properties": {
+        "ClusterName": "ai-blockchain-analytics-cluster",
+        "CapacityProviders": ["FARGATE", "FARGATE_SPOT"],
+        "DefaultCapacityProviderStrategy": [
+          {
+            "CapacityProvider": "FARGATE",
+            "Weight": 1,
+            "Base": 2
+          },
+          {
+            "CapacityProvider": "FARGATE_SPOT",
+            "Weight": 4
+          }
+        ],
+        "ClusterSettings": [
+          {
+            "Name": "containerInsights",
+            "Value": "enabled"
+          }
+        ],
+        "Configuration": {
+          "ExecuteCommandConfiguration": {
+            "Logging": "OVERRIDE",
+            "LogConfiguration": {
+              "CloudWatchLogGroupName": "/ecs/ai-blockchain-analytics/exec"
+            }
+          }
+        },
+        "ServiceConnectDefaults": {
+          "Namespace": "ai-blockchain-analytics"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ai-blockchain-analytics-cluster"
+          },
+          {
+            "Key": "Environment",
+            "Value": "production"
+          }
+        ]
+      }
+    },
+    "DBSubnetGroup": {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupDescription": "Subnet group for RDS database",
+        "DBSubnetGroupName": "ai-blockchain-analytics-db-subnet-group",
+        "SubnetIds": {
+          "Ref": "PrivateSubnetIds"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ai-blockchain-analytics-db-subnet-group"
+          }
+        ]
+      }
+    },
+    "DBSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupName": "ai-blockchain-analytics-db-sg",
+        "GroupDescription": "Security group for PostgreSQL database",
+        "VpcId": {
+          "Ref": "VpcId"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 5432,
+            "ToPort": 5432,
+            "SourceSecurityGroupId": {
+              "Ref": "ECSSecurityGroup"
+            },
+            "Description": "PostgreSQL access from ECS tasks"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ai-blockchain-analytics-db-sg"
+          }
+        ]
+      }
+    },
+    "PostgreSQLDatabase": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "DBInstanceIdentifier": "ai-blockchain-analytics-postgres",
+        "DBInstanceClass": "db.r6g.xlarge",
+        "Engine": "postgres",
+        "EngineVersion": "16.3",
+        "MasterUsername": "postgres",
+        "MasterUserPassword": {
+          "Ref": "DBPassword"
+        },
+        "DBName": "ai_blockchain_analytics",
+        "AllocatedStorage": "100",
+        "MaxAllocatedStorage": "1000",
+        "StorageType": "gp3",
+        "StorageEncrypted": true,
+        "VpcSecurityGroups": [
+          {
+            "Ref": "DBSecurityGroup"
+          }
+        ],
+        "DBSubnetGroupName": {
+          "Ref": "DBSubnetGroup"
+        },
+        "BackupRetentionPeriod": 7,
+        "PreferredBackupWindow": "03:00-04:00",
+        "PreferredMaintenanceWindow": "Sun:04:00-Sun:05:00",
+        "MultiAZ": true,
+        "PubliclyAccessible": false,
+        "EnablePerformanceInsights": true,
+        "PerformanceInsightsRetentionPeriod": 7,
+        "MonitoringInterval": 60,
+        "MonitoringRoleArn": {
+          "Fn::GetAtt": ["RDSEnhancedMonitoringRole", "Arn"]
+        },
+        "DeletionProtection": true,
+        "DBParameterGroupName": {
+          "Ref": "PostgreSQLParameterGroup"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ai-blockchain-analytics-postgres"
+          },
+          {
+            "Key": "Environment",
+            "Value": "production"
+          }
+        ]
+      }
+    },
+    "PostgreSQLParameterGroup": {
+      "Type": "AWS::RDS::DBParameterGroup",
+      "Properties": {
+        "Family": "postgres16",
+        "Description": "PostgreSQL parameter group for AI Blockchain Analytics",
+        "Parameters": {
+          "shared_preload_libraries": "pg_stat_statements",
+          "log_statement": "all",
+          "log_min_duration_statement": "1000",
+          "log_checkpoints": "1",
+          "log_connections": "1",
+          "log_disconnections": "1",
+          "log_lock_waits": "1",
+          "log_temp_files": "0",
+          "checkpoint_completion_target": "0.9",
+          "wal_buffers": "16MB",
+          "effective_cache_size": "6GB",
+          "maintenance_work_mem": "512MB",
+          "work_mem": "32MB",
+          "random_page_cost": "1.1"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ai-blockchain-analytics-postgres-params"
+          }
+        ]
+      }
+    },
+    "RedisSubnetGroup": {
+      "Type": "AWS::ElastiCache::SubnetGroup",
+      "Properties": {
+        "Description": "Subnet group for Redis cluster",
+        "SubnetIds": {
+          "Ref": "PrivateSubnetIds"
+        },
+        "CacheSubnetGroupName": "ai-blockchain-analytics-redis-subnet-group"
+      }
+    },
+    "RedisSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupName": "ai-blockchain-analytics-redis-sg",
+        "GroupDescription": "Security group for Redis cluster",
+        "VpcId": {
+          "Ref": "VpcId"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 6379,
+            "ToPort": 6379,
+            "SourceSecurityGroupId": {
+              "Ref": "ECSSecurityGroup"
+            },
+            "Description": "Redis access from ECS tasks"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ai-blockchain-analytics-redis-sg"
+          }
+        ]
+      }
+    },
+    "RedisCluster": {
+      "Type": "AWS::ElastiCache::ReplicationGroup",
+      "Properties": {
+        "ReplicationGroupId": "ai-blockchain-analytics-redis",
+        "Description": "Redis cluster for AI Blockchain Analytics",
+        "Engine": "redis",
+        "EngineVersion": "7.0",
+        "CacheNodeType": "cache.r7g.xlarge",
+        "Port": 6379,
+        "NumCacheClusters": 3,
+        "MultiAZEnabled": true,
+        "AutomaticFailoverEnabled": true,
+        "AtRestEncryptionEnabled": true,
+        "TransitEncryptionEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Ref": "RedisSecurityGroup"
+          }
+        ],
+        "CacheSubnetGroupName": {
+          "Ref": "RedisSubnetGroup"
+        },
+        "CacheParameterGroupName": {
+          "Ref": "RedisParameterGroup"
+        },
+        "SnapshotRetentionLimit": 7,
+        "SnapshotWindow": "03:00-04:00",
+        "PreferredMaintenanceWindow": "Sun:04:00-Sun:05:00",
+        "LogDeliveryConfigurations": [
+          {
+            "DestinationType": "cloudwatch-logs",
+            "DestinationDetails": {
+              "LogGroup": "/aws/elasticache/ai-blockchain-analytics"
+            },
+            "LogFormat": "json",
+            "LogType": "slow-log"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ai-blockchain-analytics-redis"
+          },
+          {
+            "Key": "Environment",
+            "Value": "production"
+          }
+        ]
+      }
+    },
+    "RedisParameterGroup": {
+      "Type": "AWS::ElastiCache::ParameterGroup",
+      "Properties": {
+        "CacheParameterGroupFamily": "redis7.x",
+        "Description": "Redis parameter group for AI Blockchain Analytics",
+        "Properties": {
+          "maxmemory-policy": "allkeys-lru",
+          "timeout": "300",
+          "tcp-keepalive": "300",
+          "save": "900 1 300 10 60 10000"
+        }
+      }
+    },
+    "ECSSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupName": "ai-blockchain-analytics-ecs-sg",
+        "GroupDescription": "Security group for ECS tasks",
+        "VpcId": {
+          "Ref": "VpcId"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 8000,
+            "ToPort": 8000,
+            "SourceSecurityGroupId": {
+              "Ref": "ALBSecurityGroup"
+            },
+            "Description": "HTTP access from ALB"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 6001,
+            "ToPort": 6001,
+            "SourceSecurityGroupId": {
+              "Ref": "ALBSecurityGroup"
+            },
+            "Description": "WebSocket access from ALB"
+          }
+        ],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "-1",
+            "CidrIp": "0.0.0.0/0",
+            "Description": "All outbound traffic"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ai-blockchain-analytics-ecs-sg"
+          }
+        ]
+      }
+    },
+    "ALBSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupName": "ai-blockchain-analytics-alb-sg",
+        "GroupDescription": "Security group for Application Load Balancer",
+        "VpcId": {
+          "Ref": "VpcId"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "CidrIp": "0.0.0.0/0",
+            "Description": "HTTP access from internet"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "CidrIp": "0.0.0.0/0",
+            "Description": "HTTPS access from internet"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ai-blockchain-analytics-alb-sg"
+          }
+        ]
+      }
+    },
+    "ApplicationLoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties": {
+        "Name": "ai-blockchain-analytics-alb",
+        "Type": "application",
+        "Scheme": "internet-facing",
+        "SecurityGroups": [
+          {
+            "Ref": "ALBSecurityGroup"
+          }
+        ],
+        "Subnets": {
+          "Ref": "PublicSubnetIds"
+        },
+        "LoadBalancerAttributes": [
+          {
+            "Key": "idle_timeout.timeout_seconds",
+            "Value": "60"
+          },
+          {
+            "Key": "access_logs.s3.enabled",
+            "Value": "true"
+          },
+          {
+            "Key": "access_logs.s3.bucket",
+            "Value": {
+              "Ref": "ALBAccessLogsBucket"
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ai-blockchain-analytics-alb"
+          }
+        ]
+      }
+    },
+    "ALBTargetGroup": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "Name": "ai-blockchain-analytics-tg",
+        "Port": 8000,
+        "Protocol": "HTTP",
+        "VpcId": {
+          "Ref": "VpcId"
+        },
+        "TargetType": "ip",
+        "HealthCheckEnabled": true,
+        "HealthCheckPath": "/api/health",
+        "HealthCheckProtocol": "HTTP",
+        "HealthCheckIntervalSeconds": 30,
+        "HealthCheckTimeoutSeconds": 10,
+        "HealthyThresholdCount": 2,
+        "UnhealthyThresholdCount": 3,
+        "Matcher": {
+          "HttpCode": "200"
+        },
+        "TargetGroupAttributes": [
+          {
+            "Key": "deregistration_delay.timeout_seconds",
+            "Value": "30"
+          },
+          {
+            "Key": "stickiness.enabled",
+            "Value": "false"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ai-blockchain-analytics-tg"
+          }
+        ]
+      }
+    },
+    "ALBListener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "DefaultActions": [
+          {
+            "Type": "forward",
+            "TargetGroupArn": {
+              "Ref": "ALBTargetGroup"
+            }
+          }
+        ],
+        "LoadBalancerArn": {
+          "Ref": "ApplicationLoadBalancer"
+        },
+        "Port": 443,
+        "Protocol": "HTTPS",
+        "Certificates": [
+          {
+            "CertificateArn": {
+              "Ref": "CertificateArn"
+            }
+          }
+        ],
+        "SslPolicy": "ELBSecurityPolicy-TLS-1-2-2017-01"
+      }
+    },
+    "ALBListenerHTTPRedirect": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "DefaultActions": [
+          {
+            "Type": "redirect",
+            "RedirectConfig": {
+              "Protocol": "HTTPS",
+              "Port": "443",
+              "StatusCode": "HTTP_301"
+            }
+          }
+        ],
+        "LoadBalancerArn": {
+          "Ref": "ApplicationLoadBalancer"
+        },
+        "Port": 80,
+        "Protocol": "HTTP"
+      }
+    },
+    "ECSTaskExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "ECSTaskExecutionRolePolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ecr:GetAuthorizationToken",
+                    "ecr:BatchCheckLayerAvailability",
+                    "ecr:GetDownloadUrlForLayer",
+                    "ecr:BatchGetImage",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                    "ssm:GetParameters",
+                    "secretsmanager:GetSecretValue"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "ECSTaskRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "ECSTaskRolePolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:DeleteObject",
+                    "ses:SendEmail",
+                    "ses:SendRawEmail",
+                    "ssm:GetParameter",
+                    "ssm:GetParameters",
+                    "ssm:GetParametersByPath",
+                    "cloudwatch:PutMetricData",
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                    "xray:PutTraceSegments",
+                    "xray:PutTelemetryRecords"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "RDSEnhancedMonitoringRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "monitoring.rds.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+        ]
+      }
+    },
+    "EFSFileSystem": {
+      "Type": "AWS::EFS::FileSystem",
+      "Properties": {
+        "CreationToken": "ai-blockchain-analytics-efs",
+        "PerformanceMode": "generalPurpose",
+        "ThroughputMode": "provisioned",
+        "ProvisionedThroughputInMibps": 500,
+        "Encrypted": true,
+        "FileSystemTags": [
+          {
+            "Key": "Name",
+            "Value": "ai-blockchain-analytics-efs"
+          }
+        ]
+      }
+    },
+    "EFSMountTarget1": {
+      "Type": "AWS::EFS::MountTarget",
+      "Properties": {
+        "FileSystemId": {
+          "Ref": "EFSFileSystem"
+        },
+        "SubnetId": {
+          "Fn::Select": [0, {"Ref": "PrivateSubnetIds"}]
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "EFSSecurityGroup"
+          }
+        ]
+      }
+    },
+    "EFSMountTarget2": {
+      "Type": "AWS::EFS::MountTarget",
+      "Properties": {
+        "FileSystemId": {
+          "Ref": "EFSFileSystem"
+        },
+        "SubnetId": {
+          "Fn::Select": [1, {"Ref": "PrivateSubnetIds"}]
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "EFSSecurityGroup"
+          }
+        ]
+      }
+    },
+    "EFSSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for EFS",
+        "VpcId": {
+          "Ref": "VpcId"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 2049,
+            "ToPort": 2049,
+            "SourceSecurityGroupId": {
+              "Ref": "ECSSecurityGroup"
+            }
+          }
+        ]
+      }
+    },
+    "ALBAccessLogsBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": {
+          "Fn::Sub": "ai-blockchain-analytics-alb-logs-${AWS::AccountId}-${AWS::Region}"
+        },
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true
+        },
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "Id": "DeleteOldLogs",
+              "Status": "Enabled",
+              "ExpirationInDays": 30
+            }
+          ]
+        }
+      }
+    },
+    "CloudWatchLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/ecs/ai-blockchain-analytics",
+        "RetentionInDays": 14
+      }
+    },
+    "RoadRunnerTaskDefinition": {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties": {
+        "Family": "ai-blockchain-analytics-roadrunner",
+        "NetworkMode": "awsvpc",
+        "RequiresCompatibilities": ["FARGATE"],
+        "Cpu": "4096",
+        "Memory": "8192",
+        "ExecutionRoleArn": {
+          "Ref": "ECSTaskExecutionRole"
+        },
+        "TaskRoleArn": {
+          "Ref": "ECSTaskRole"
+        },
+        "ContainerDefinitions": [
+          {
+            "Name": "roadrunner-app",
+            "Image": {
+              "Fn::Sub": "your-account.dkr.ecr.${AWS::Region}.amazonaws.com/ai-blockchain-analytics:${ImageTag}"
+            },
+            "Essential": true,
+            "PortMappings": [
+              {
+                "ContainerPort": 8000,
+                "Protocol": "tcp",
+                "Name": "http"
+              },
+              {
+                "ContainerPort": 6001,
+                "Protocol": "tcp",
+                "Name": "websocket"
+              },
+              {
+                "ContainerPort": 2112,
+                "Protocol": "tcp",
+                "Name": "metrics"
+              }
+            ],
+            "Environment": [
+              {
+                "Name": "APP_NAME",
+                "Value": "AI Blockchain Analytics"
+              },
+              {
+                "Name": "APP_ENV",
+                "Value": "production"
+              },
+              {
+                "Name": "APP_DEBUG",
+                "Value": "false"
+              },
+              {
+                "Name": "APP_URL",
+                "Value": {
+                  "Fn::Sub": "https://${DomainName}"
+                }
+              },
+              {
+                "Name": "DB_CONNECTION",
+                "Value": "pgsql"
+              },
+              {
+                "Name": "DB_HOST",
+                "Value": {
+                  "Fn::GetAtt": ["PostgreSQLDatabase", "Endpoint.Address"]
+                }
+              },
+              {
+                "Name": "DB_PORT",
+                "Value": "5432"
+              },
+              {
+                "Name": "DB_DATABASE",
+                "Value": "ai_blockchain_analytics"
+              },
+              {
+                "Name": "DB_USERNAME",
+                "Value": "postgres"
+              },
+              {
+                "Name": "REDIS_HOST",
+                "Value": {
+                  "Fn::GetAtt": ["RedisCluster", "PrimaryEndPoint.Address"]
+                }
+              },
+              {
+                "Name": "REDIS_PORT",
+                "Value": "6379"
+              },
+              {
+                "Name": "CACHE_DRIVER",
+                "Value": "redis"
+              },
+              {
+                "Name": "SESSION_DRIVER",
+                "Value": "redis"
+              },
+              {
+                "Name": "QUEUE_CONNECTION",
+                "Value": "redis"
+              },
+              {
+                "Name": "OCTANE_SERVER",
+                "Value": "roadrunner"
+              },
+              {
+                "Name": "RR_WORKERS",
+                "Value": "16"
+              },
+              {
+                "Name": "RR_MAX_JOBS",
+                "Value": "4000"
+              },
+              {
+                "Name": "RR_MEMORY_LIMIT",
+                "Value": "512"
+              },
+              {
+                "Name": "CONTAINER_ROLE",
+                "Value": "app"
+              },
+              {
+                "Name": "VERIFICATION_URL_LIFETIME",
+                "Value": "3600"
+              },
+              {
+                "Name": "VERIFICATION_RATE_LIMIT",
+                "Value": "10"
+              },
+                          {
+              "Name": "SENTRY_ENVIRONMENT",
+              "Value": "production"
+            },
+            {
+              "Name": "SENTRY_SAMPLE_RATE",
+              "Value": "0.1"
+            },
+            {
+              "Name": "SENTRY_TRACES_SAMPLE_RATE",
+              "Value": "0.05"
+            },
+            {
+              "Name": "SENTRY_PROFILES_SAMPLE_RATE",
+              "Value": "0.01"
+            },
+            {
+              "Name": "SENTRY_SEND_DEFAULT_PII",
+              "Value": "false"
+            },
+            {
+              "Name": "SENTRY_ENABLE_LOGS",
+              "Value": "false"
+            },
+            {
+              "Name": "TELESCOPE_ENABLED",
+              "Value": "false"
+            },
+            {
+              "Name": "TELESCOPE_PRODUCTION_ENABLED",
+              "Value": "false"
+            },
+            {
+              "Name": "TELESCOPE_DRIVER",
+              "Value": "database"
+            },
+            {
+              "Name": "TELESCOPE_QUEUE_CONNECTION",
+              "Value": "redis"
+            },
+            {
+              "Name": "TELESCOPE_RETENTION_HOURS",
+              "Value": "24"
+            },
+            {
+              "Name": "TELESCOPE_LOG_LEVEL",
+              "Value": "error"
+            },
+            {
+              "Name": "MONITORING_ENABLED",
+              "Value": "true"
+            },
+            {
+              "Name": "ERROR_TRACKING_ENABLED",
+              "Value": "true"
+            }
+            ],
+            "Secrets": [
+              {
+                "Name": "APP_KEY",
+                "ValueFrom": {
+                  "Fn": "Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ai-blockchain-analytics/app-key"
+                }
+              },
+              {
+                "Name": "DB_PASSWORD",
+                "ValueFrom": {
+                  "Fn": "Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ai-blockchain-analytics/db-password"
+                }
+              },
+              {
+                "Name": "OPENAI_API_KEY",
+                "ValueFrom": {
+                  "Fn": "Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ai-blockchain-analytics/openai-api-key"
+                }
+              },
+              {
+                "Name": "ETHERSCAN_API_KEY",
+                "ValueFrom": {
+                  "Fn": "Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ai-blockchain-analytics/etherscan-api-key"
+                }
+              },
+              {
+                "Name": "VERIFICATION_SECRET_KEY",
+                "ValueFrom": {
+                  "Fn": "Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ai-blockchain-analytics/verification-secret-key"
+                }
+              },
+              {
+                "Name": "VERIFICATION_HMAC_KEY",
+                "ValueFrom": {
+                  "Fn": "Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ai-blockchain-analytics/verification-hmac-key"
+                }
+              },
+              {
+                "Name": "SENTRY_LARAVEL_DSN",
+                "ValueFrom": {
+                  "Fn": "Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ai-blockchain-analytics/sentry-dsn"
+                }
+              },
+              {
+                "Name": "TELESCOPE_ADMIN_TOKEN",
+                "ValueFrom": {
+                  "Fn": "Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ai-blockchain-analytics/telescope-admin-token"
+                }
+              },
+              {
+                "Name": "TELESCOPE_ALLOWED_EMAILS",
+                "ValueFrom": {
+                  "Fn": "Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ai-blockchain-analytics/telescope-allowed-emails"
+                }
+              },
+              {
+                "Name": "TELESCOPE_ALLOWED_IPS",
+                "ValueFrom": {
+                  "Fn": "Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ai-blockchain-analytics/telescope-allowed-ips"
+                }
+              }
+            ],
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "CloudWatchLogGroup"
+                },
+                "awslogs-region": {
+                  "Ref": "AWS::Region"
+                },
+                "awslogs-stream-prefix": "roadrunner-app"
+              }
+            },
+            "HealthCheck": {
+              "Command": [
+                "CMD-SHELL",
+                "curl -f http://localhost:8000/api/health || exit 1"
+              ],
+              "Interval": 30,
+              "Timeout": 10,
+              "Retries": 3,
+              "StartPeriod": 60
+            },
+            "MountPoints": [
+              {
+                "SourceVolume": "app-storage",
+                "ContainerPath": "/var/www/storage",
+                "ReadOnly": false
+              }
+            ],
+            "Ulimits": [
+              {
+                "Name": "nofile",
+                "SoftLimit": 65536,
+                "HardLimit": 65536
+              }
+            ],
+            "StopTimeout": 30,
+            "LinuxParameters": {
+              "Capabilities": {
+                "Drop": ["ALL"]
+              }
+            }
+          }
+        ],
+        "Volumes": [
+          {
+            "Name": "app-storage",
+            "EfsVolumeConfiguration": {
+              "FileSystemId": {
+                "Ref": "EFSFileSystem"
+              },
+              "RootDirectory": "/",
+              "TransitEncryption": "ENABLED"
+            }
+          }
+        ]
+      }
+    },
+    "HorizonTaskDefinition": {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties": {
+        "Family": "ai-blockchain-analytics-horizon",
+        "NetworkMode": "awsvpc",
+        "RequiresCompatibilities": ["FARGATE"],
+        "Cpu": "1024",
+        "Memory": "2048",
+        "ExecutionRoleArn": {
+          "Ref": "ECSTaskExecutionRole"
+        },
+        "TaskRoleArn": {
+          "Ref": "ECSTaskRole"
+        },
+        "ContainerDefinitions": [
+          {
+            "Name": "horizon-worker",
+            "Image": {
+              "Fn::Sub": "your-account.dkr.ecr.${AWS::Region}.amazonaws.com/ai-blockchain-analytics:${ImageTag}"
+            },
+            "Essential": true,
+            "Command": ["php", "artisan", "horizon"],
+            "Environment": [
+              {
+                "Name": "CONTAINER_ROLE",
+                "Value": "worker"
+              },
+              {
+                "Name": "APP_ENV",
+                "Value": "production"
+              },
+              {
+                "Name": "DB_HOST",
+                "Value": {
+                  "Fn::GetAtt": ["PostgreSQLDatabase", "Endpoint.Address"]
+                }
+              },
+              {
+                "Name": "REDIS_HOST",
+                "Value": {
+                  "Fn::GetAtt": ["RedisCluster", "PrimaryEndPoint.Address"]
+                }
+              }
+            ],
+            "Secrets": [
+              {
+                "Name": "APP_KEY",
+                "ValueFrom": {
+                  "Fn": "Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ai-blockchain-analytics/app-key"
+                }
+              },
+              {
+                "Name": "DB_PASSWORD",
+                "ValueFrom": {
+                  "Fn": "Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ai-blockchain-analytics/db-password"
+                }
+              }
+            ],
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "CloudWatchLogGroup"
+                },
+                "awslogs-region": {
+                  "Ref": "AWS::Region"
+                },
+                "awslogs-stream-prefix": "horizon-worker"
+              }
+            },
+            "MountPoints": [
+              {
+                "SourceVolume": "app-storage",
+                "ContainerPath": "/var/www/storage",
+                "ReadOnly": false
+              }
+            ]
+          }
+        ],
+        "Volumes": [
+          {
+            "Name": "app-storage",
+            "EfsVolumeConfiguration": {
+              "FileSystemId": {
+                "Ref": "EFSFileSystem"
+              },
+              "RootDirectory": "/",
+              "TransitEncryption": "ENABLED"
+            }
+          }
+        ]
+      }
+    },
+    "RoadRunnerService": {
+      "Type": "AWS::ECS::Service",
+      "DependsOn": ["ALBListener"],
+      "Properties": {
+        "ServiceName": "ai-blockchain-analytics-roadrunner",
+        "Cluster": {
+          "Ref": "ECSCluster"
+        },
+        "TaskDefinition": {
+          "Ref": "RoadRunnerTaskDefinition"
+        },
+        "DesiredCount": 4,
+        "LaunchType": "FARGATE",
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "AssignPublicIp": "DISABLED",
+            "SecurityGroups": [
+              {
+                "Ref": "ECSSecurityGroup"
+              }
+            ],
+            "Subnets": {
+              "Ref": "PrivateSubnetIds"
+            }
+          }
+        },
+        "LoadBalancers": [
+          {
+            "ContainerName": "roadrunner-app",
+            "ContainerPort": 8000,
+            "TargetGroupArn": {
+              "Ref": "ALBTargetGroup"
+            }
+          }
+        ],
+        "HealthCheckGracePeriodSeconds": 120,
+        "DeploymentConfiguration": {
+          "MaximumPercent": 200,
+          "MinimumHealthyPercent": 50,
+          "DeploymentCircuitBreaker": {
+            "Enable": true,
+            "Rollback": true
+          }
+        },
+        "PlacementStrategies": [
+          {
+            "Type": "spread",
+            "Field": "attribute:ecs.availability-zone"
+          }
+        ],
+        "ServiceTags": [
+          {
+            "Key": "Name",
+            "Value": "ai-blockchain-analytics-roadrunner"
+          }
+        ]
+      }
+    },
+    "HorizonService": {
+      "Type": "AWS::ECS::Service",
+      "Properties": {
+        "ServiceName": "ai-blockchain-analytics-horizon",
+        "Cluster": {
+          "Ref": "ECSCluster"
+        },
+        "TaskDefinition": {
+          "Ref": "HorizonTaskDefinition"
+        },
+        "DesiredCount": 2,
+        "LaunchType": "FARGATE",
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "AssignPublicIp": "DISABLED",
+            "SecurityGroups": [
+              {
+                "Ref": "ECSSecurityGroup"
+              }
+            ],
+            "Subnets": {
+              "Ref": "PrivateSubnetIds"
+            }
+          }
+        },
+        "DeploymentConfiguration": {
+          "MaximumPercent": 200,
+          "MinimumHealthyPercent": 50
+        },
+        "ServiceTags": [
+          {
+            "Key": "Name",
+            "Value": "ai-blockchain-analytics-horizon"
+          }
+        ]
+      }
+    },
+    "ApplicationAutoScalingRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "application-autoscaling.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AmazonECSServiceRolePolicy"
+        ]
+      }
+    },
+    "ServiceScalingTarget": {
+      "Type": "AWS::ApplicationAutoScaling::ScalableTarget",
+      "Properties": {
+        "MaxCapacity": 50,
+        "MinCapacity": 4,
+        "ResourceId": {
+          "Fn::Sub": "service/${ECSCluster}/${RoadRunnerService.Name}"
+        },
+        "RoleARN": {
+          "Fn::GetAtt": ["ApplicationAutoScalingRole", "Arn"]
+        },
+        "ScalableDimension": "ecs:service:DesiredCount",
+        "ServiceNamespace": "ecs"
+      }
+    },
+    "ServiceScalingPolicy": {
+      "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+      "Properties": {
+        "PolicyName": "ai-blockchain-analytics-scaling-policy",
+        "PolicyType": "TargetTrackingScaling",
+        "ScalingTargetId": {
+          "Ref": "ServiceScalingTarget"
+        },
+        "TargetTrackingScalingPolicyConfiguration": {
+          "PredefinedMetricSpecification": {
+            "PredefinedMetricType": "ECSServiceAverageCPUUtilization"
+          },
+          "TargetValue": 70,
+          "ScaleOutCooldown": 300,
+          "ScaleInCooldown": 300
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "LoadBalancerURL": {
+      "Description": "Application Load Balancer URL",
+      "Value": {
+        "Fn::Sub": "https://${ApplicationLoadBalancer.DNSName}"
+      }
+    },
+    "DatabaseEndpoint": {
+      "Description": "PostgreSQL database endpoint",
+      "Value": {
+        "Fn::GetAtt": ["PostgreSQLDatabase", "Endpoint.Address"]
+      }
+    },
+    "RedisEndpoint": {
+      "Description": "Redis cluster endpoint",
+      "Value": {
+        "Fn::GetAtt": ["RedisCluster", "PrimaryEndPoint.Address"]
+      }
+    },
+    "EFSFileSystemId": {
+      "Description": "EFS File System ID",
+      "Value": {
+        "Ref": "EFSFileSystem"
+      }
+    },
+    "ClusterName": {
+      "Description": "ECS Cluster Name",
+      "Value": {
+        "Ref": "ECSCluster"
+      }
+    }
+  }
+}

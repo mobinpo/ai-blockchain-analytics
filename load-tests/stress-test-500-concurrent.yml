@@ -1,0 +1,210 @@
+config:
+  target: 'http://localhost:8003'
+  phases:
+    # Immediate ramp to 500 concurrent users
+    - duration: 30
+      arrivalRate: 100
+      rampTo: 500
+      name: "Fast ramp to 500 concurrent"
+    
+    # Sustain 500 concurrent analyses for 5 minutes
+    - duration: 300
+      arrivalRate: 500
+      name: "PEAK STRESS: 500 concurrent analyses"
+    
+    # Brief spike to test maximum capacity
+    - duration: 60
+      arrivalRate: 750
+      name: "SPIKE TEST: 750 concurrent"
+    
+    # Return to sustained high load
+    - duration: 120
+      arrivalRate: 500
+      name: "Sustained 500 concurrent"
+
+  # Aggressive load testing configuration
+  defaults:
+    headers:
+      'User-Agent': 'Artillery-StressTest-500-Concurrent'
+      'Accept': 'application/json'
+      'Content-Type': 'application/json'
+      'X-Load-Test': 'stress-test-500'
+      'X-Test-Phase': 'maximum-stress'
+
+  # High-performance HTTP settings
+  http:
+    timeout: 45
+    pool: 100
+    maxSockets: 1000
+    extendedMetrics: true
+    keepAlive: true
+
+  # Stress test variables
+  variables:
+    # Large set of contract addresses for variety
+    stress_contracts:
+      - "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984"  # Uniswap
+      - "0xA0b86a33E6417c75C3E5C0D6a0d7B4e30a7c8F12"  # Aave V2
+      - "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"  # Polygon
+      - "0x514910771af9ca656af840dff83e8264ecf986ca"  # Chainlink
+      - "0x6b175474e89094c44da98b954eedeac495271d0f"  # DAI
+      - "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"  # WETH
+      - "0xdac17f958d2ee523a2206206994597c13d831ec7"  # USDT
+      - "0xa0b73e1ff0b80914ab6fe0444e65848c4c34450b"  # Cronos
+      - "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce"  # Shiba
+      - "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"  # WBTC
+      - "0xbb0e17ef65f82ab018d8edd776e8dd940327b28b"  # AXS
+      - "0x4fabb145d64652a948d72533023f6e7a623c7c53"  # BUSD
+      - "0x1985365e9f78359a9b6ad760e32412f4a445e862"  # REP
+      - "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2"  # MKR
+      - "0xf629cbd94d3791c9250152bd8dfbdf380e2a3b9c"  # ENJ
+      - "0x0f5d2fb29fb7d3cfee444a200298f468908cc942"  # MEME
+      - "0x3845badade8e6dff049820680d1f14bd3903a5d0"  # SAND
+      - "0x15d4c048f83bd7e37d49ea4c83a07267ec4203da"  # GALA
+      - "0x6f259637dcd74c767781e37bc6133cd6a68aa161"  # HT
+      - "0x1776e1f26f98b1a5df9cd347953a26dd3cb46671"  # NMR
+
+    # Network variations for testing
+    networks:
+      - "ethereum"
+      - "polygon"
+      - "bsc"
+      - "arbitrum"
+      - "optimism"
+
+    # Analysis types for comprehensive testing
+    analysis_types:
+      - "comprehensive"
+      - "security_audit"
+      - "gas_optimization"
+      - "vulnerability_scan"
+      - "compliance_check"
+
+  processor: "./artillery-processor.js"
+
+  # Advanced metrics and monitoring
+  plugins:
+    - expect
+    - metrics-by-endpoint:
+        useOnlyRequestNames: true
+    - publish-metrics:
+        - type: statsd
+          host: localhost
+          port: 8125
+          prefix: 'artillery.stress500'
+
+scenarios:
+  # Intensive contract analysis (80% of load)
+  - name: "Stress Test - Contract Analysis"
+    weight: 80
+    flow:
+      - function: "beforeRequest"
+      
+      - post:
+          url: "/api/contracts/analyze"
+          headers:
+            X-Stress-Test: "500-concurrent"
+            X-Request-ID: "{{ requestId }}"
+          json:
+            contract_address: "{{ stress_contracts[$randomNumber(0,19)] }}"
+            network: "{{ networks[$randomNumber(0,4)] }}"
+            analysis_type: "{{ analysis_types[$randomNumber(0,4)] }}"
+            include_source: true
+            priority: "high"
+            stress_test: true
+          expect:
+            - statusCode: [200, 202, 429]
+          capture:
+            - json: "$.data.analysis_id"
+              as: "analysis_id"
+          
+      - function: "afterResponse"
+      
+      # Immediate status check (simulates user waiting)
+      - get:
+          url: "/api/contracts/analysis/{{ analysis_id }}/status"
+          expect:
+            - statusCode: [200, 404, 429]
+
+  # Verification badge stress test (15% of load)
+  - name: "Stress Test - Badge Generation"
+    weight: 15
+    flow:
+      - function: "beforeRequest"
+      
+      - post:
+          url: "/api/verification-badge/generate"
+          headers:
+            X-Stress-Test: "500-concurrent"
+          json:
+            project_name: "Stress Test Project {{ $randomNumber(1,1000) }}"
+            contract_address: "{{ stress_contracts[$randomNumber(0,19)] }}"
+            verification_data:
+              contract_verified: "{{ $randomBoolean() }}"
+              audit_passed: "{{ $randomBoolean() }}"
+              kyc_completed: "{{ $randomBoolean() }}"
+              team_verified: "{{ $randomBoolean() }}"
+              social_verified: "{{ $randomBoolean() }}"
+          expect:
+            - statusCode: [200, 201, 422, 429]
+          capture:
+            - json: "$.data.badge_id"
+              as: "badge_id"
+            - json: "$.data.signature"
+              as: "signature"
+      
+      - function: "afterResponse"
+
+  # High-volume API calls (5% of load)
+  - name: "Stress Test - High Volume APIs"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/verification-badge/levels"
+          expect:
+            - statusCode: [200, 429]
+      
+      - get:
+          url: "/api/sentiment/timeline"
+          qs:
+            token: "ethereum"
+            timeframe: "7d"
+          expect:
+            - statusCode: [200, 429]
+      
+      - get:
+          url: "/api/solidity-cleaner/options"
+          expect:
+            - statusCode: [200, 429]
+
+# Performance thresholds and alerts
+expect:
+  # Response time thresholds
+  - responseTime: 
+      max: 5000  # 5 seconds max response time
+      median: 2000  # 2 seconds median
+      p95: 8000  # 95th percentile under 8 seconds
+      p99: 15000  # 99th percentile under 15 seconds
+
+  # Error rate thresholds
+  - errorRate: 
+      max: 0.05  # Maximum 5% error rate
+
+  # Throughput expectations
+  - throughput:
+      min: 400  # Minimum 400 requests per second
+
+before:
+  flow:
+    - log: "🚀 STARTING STRESS TEST: 500 CONCURRENT ANALYSES"
+    - log: "⚠️  WARNING: This is a high-intensity load test"
+    - log: "📊 Monitor system resources during execution"
+    - log: "🎯 Target: 500 concurrent users for 5+ minutes"
+    - function: "logMetrics"
+
+after:
+  flow:
+    - log: "✅ STRESS TEST COMPLETED"
+    - log: "📈 Analyze metrics for performance bottlenecks"
+    - log: "🔍 Check logs for errors and timeouts"
+    - function: "logMetrics"

@@ -1,0 +1,66 @@
+config:
+  target: "http://localhost:8000"
+  phases:
+    # Quick warm-up
+    - duration: 30
+      arrivalRate: 2
+      name: "Warm-up"
+    
+    # Ramp to target load
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 50
+      name: "Ramp-up to 500 concurrent"
+    
+    # Sustain target load - 500 concurrent analyses
+    - duration: 120
+      arrivalRate: 50
+      name: "Sustain 500 concurrent analyses"
+    
+    # Cool down
+    - duration: 30
+      arrivalRate: 10
+      name: "Cool down"
+
+  # Performance expectations
+  ensure:
+    thresholds:
+      - http.response_time.p95: 5000
+      - http.response_time.median: 2000
+
+scenarios:
+  # Basic health check
+  - name: "Health Check"
+    weight: 10
+    flow:
+      - get:
+          url: "/"
+          expect:
+            - statusCode: [200, 404]
+
+  # Welcome page test
+  - name: "Welcome Page"
+    weight: 20
+    flow:
+      - get:
+          url: "/welcome"
+          expect:
+            - statusCode: [200, 404, 500]
+
+  # Dashboard access
+  - name: "Dashboard"
+    weight: 30
+    flow:
+      - get:
+          url: "/dashboard"
+          expect:
+            - statusCode: [200, 302, 404]
+
+  # API endpoints
+  - name: "API Health"
+    weight: 40
+    flow:
+      - get:
+          url: "/api/health"
+          expect:
+            - statusCode: [200, 404, 500]
