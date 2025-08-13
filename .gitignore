@@ -109,3 +109,6 @@ logs/
 *.backup
 *.bak
 *.orig.history/
+
+# Large binary files  
+rr
