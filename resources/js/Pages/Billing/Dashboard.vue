@@ -284,14 +284,14 @@
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     <tr v-for="invoice in invoices.slice(0, 5)" :key="invoice.id">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ formatDate(invoice.date) }}
+                                            {{ invoice.date }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            ${{ (invoice.total / 100).toFixed(2) }}
+                                            {{ invoice.total }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span :class="getInvoiceStatusClass(invoice.status)">
-                                                {{ invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1) }}
+                                                {{ invoice.status }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">

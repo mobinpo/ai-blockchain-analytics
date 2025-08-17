@@ -4,6 +4,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="payment-method-type" content="credit-card">
+        <meta name="supported-payment-networks" content="visa,mastercard,amex,discover,diners,jcb,unionpay">
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 

@@ -249,7 +249,12 @@ abstract class AbstractBlockchainExplorer implements BlockchainExplorerInterface
      */
     public function makeRequest(string $endpoint, array $params = []): array
     {
-        $url = rtrim($this->apiUrl, '/') . '/' . ltrim($endpoint, '/');
+        // If endpoint is 'api' and apiUrl already ends with '/api', use apiUrl as-is
+        if ($endpoint === 'api' && str_ends_with(rtrim($this->apiUrl, '/'), '/api')) {
+            $url = rtrim($this->apiUrl, '/');
+        } else {
+            $url = rtrim($this->apiUrl, '/') . '/' . ltrim($endpoint, '/');
+        }
         
         // Add API key to params
         $params['apikey'] = $this->apiKey;

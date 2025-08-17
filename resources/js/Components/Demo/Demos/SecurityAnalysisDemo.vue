@@ -207,6 +207,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import api from '@/services/api'
 
 // Demo state
 const selectedAnalysisType = ref('realtime')
@@ -236,67 +237,71 @@ const analysisTypes = [
     }
 ]
 
-const liveThreats = ref([
-    {
-        id: 1,
-        type: 'Reentrancy Attack',
-        contract: '0x1234...5678',
-        severity: 'critical',
-        timeAgo: '2m ago'
-    },
-    {
-        id: 2,
-        type: 'Flash Loan Exploit',
-        contract: '0xabcd...efgh',
-        severity: 'high',
-        timeAgo: '5m ago'
-    },
-    {
-        id: 3,
-        type: 'Access Control Issue',
-        contract: '0x9876...5432',
-        severity: 'medium',
-        timeAgo: '12m ago'
-    }
-])
+const liveThreats = ref([])
 
-const securityMetrics = ref([
-    { name: 'Detection Rate', value: 98.7, unit: '%', percentage: 98.7, color: 'bg-green-500' },
-    { name: 'Response Time', value: 1.2, unit: 's', percentage: 85, color: 'bg-blue-500' },
-    { name: 'False Positives', value: 0.3, unit: '%', percentage: 15, color: 'bg-yellow-500' },
-    { name: 'Coverage', value: 99.1, unit: '%', percentage: 99.1, color: 'bg-purple-500' }
-])
+const securityMetrics = ref([])
 
-const complianceStandards = ref([
-    {
-        id: 'owasp',
-        name: 'OWASP Smart Contract',
-        description: 'Security verification against OWASP Smart Contract Top 10',
-        status: 'Compliant',
-        score: 94,
-        checks: [
-            { id: 1, name: 'Access Control', passed: true },
-            { id: 2, name: 'Arithmetic Issues', passed: true },
-            { id: 3, name: 'Reentrancy', passed: false },
-            { id: 4, name: 'Unchecked Calls', passed: true }
-        ]
-    },
-    {
-        id: 'defi',
-        name: 'DeFi Security Standard',
-        description: 'Decentralized finance protocol security requirements',
-        status: 'Partial',
-        score: 76,
-        checks: [
-            { id: 1, name: 'Oracle Security', passed: true },
-            { id: 2, name: 'Flash Loan Protection', passed: false },
-            { id: 3, name: 'Governance Security', passed: true },
-            { id: 4, name: 'Emergency Procedures', passed: false }
-        ]
-    }
-])
+const complianceStandards = ref([])
 
 let threatUpdateInterval
+
+// API Functions
+const fetchLiveThreats = async () => {
+    try {
+        const response = await api.get('/security/findings')
+        const findings = response.data.findings || []
+        
+        // Convert findings to threat format
+        liveThreats.value = findings.map(finding => ({
+            id: finding.id,
+            type: finding.title || finding.category,
+            contract: finding.contract_address || '0x...',
+            severity: finding.severity,
+            timeAgo: finding.timeAgo || 'Recently'
+        }))
+    } catch (error) {
+        console.error('Error fetching live threats:', error)
+        liveThreats.value = []
+    }
+}
+
+const fetchSecurityMetrics = async () => {
+    try {
+        const response = await api.get('/analytics/security-trend')
+        const data = response.data
+        
+        if (data.success && data.metrics) {
+            securityMetrics.value = [
+                { name: 'Detection Rate', value: data.metrics.detection_rate || 0, unit: '%', percentage: data.metrics.detection_rate || 0, color: 'bg-green-500' },
+                { name: 'Response Time', value: data.metrics.response_time || 0, unit: 's', percentage: Math.min(100, (data.metrics.response_time || 0) * 10), color: 'bg-blue-500' },
+                { name: 'False Positives', value: data.metrics.false_positive_rate || 0, unit: '%', percentage: data.metrics.false_positive_rate || 0, color: 'bg-yellow-500' },
+                { name: 'Coverage', value: data.metrics.coverage || 0, unit: '%', percentage: data.metrics.coverage || 0, color: 'bg-purple-500' }
+            ]
+        }
+    } catch (error) {
+        console.error('Error fetching security metrics:', error)
+        securityMetrics.value = []
+    }
+}
+
+const fetchComplianceStandards = async () => {
+    try {
+        const response = await api.get('/security/categories')
+        const categories = response.data.categories || []
+        
+        complianceStandards.value = categories.map(category => ({
+            id: category.code,
+            name: category.name,
+            description: category.description,
+            status: category.status || 'Unknown',
+            score: category.score || 0,
+            checks: category.checks || []
+        }))
+    } catch (error) {
+        console.error('Error fetching compliance standards:', error)
+        complianceStandards.value = []
+    }
+}
 
 // Methods
 const getThreatColor = (severity) => {
@@ -351,21 +356,41 @@ const runVulnerabilityAssessment = async () => {
         }
     }
     
-    // Generate mock results
-    vulnerabilityResults.value = {
-        summary: {
-            critical: 2,
-            high: 1,
-            medium: 3,
-            low: 0
-        },
-        owaspTop10: [
-            { id: 1, name: 'SC01 - Access Control', description: 'Improper access control mechanisms', found: true },
-            { id: 2, name: 'SC02 - Arithmetic', description: 'Integer overflow/underflow issues', found: false },
-            { id: 3, name: 'SC03 - Reentrancy', description: 'Reentrancy attack vulnerabilities', found: true },
-            { id: 4, name: 'SC04 - Unchecked Calls', description: 'Unchecked external calls', found: false },
-            { id: 5, name: 'SC05 - Denial of Service', description: 'DoS attack vectors', found: false }
-        ]
+    // Use real API for vulnerability assessment
+    try {
+        const response = await api.post('/security/analyze', {
+            source_code: '// Sample contract for demo\npragma solidity ^0.8.0;\ncontract Demo { }',
+            contract_name: 'Demo Contract',
+            include_summary: true
+        })
+        
+        if (response.data.success) {
+            const findings = response.data.findings || []
+            
+            // Process findings into summary
+            const summary = {
+                critical: findings.filter(f => f.severity === 'critical').length,
+                high: findings.filter(f => f.severity === 'high').length,
+                medium: findings.filter(f => f.severity === 'medium').length,
+                low: findings.filter(f => f.severity === 'low').length
+            }
+            
+            vulnerabilityResults.value = {
+                summary,
+                owaspTop10: findings.map((finding, index) => ({
+                    id: index + 1,
+                    name: finding.title,
+                    description: finding.description,
+                    found: finding.severity !== 'info'
+                }))
+            }
+        }
+    } catch (error) {
+        console.error('Error running vulnerability assessment:', error)
+        vulnerabilityResults.value = {
+            summary: { critical: 0, high: 0, medium: 0, low: 0 },
+            owaspTop10: []
+        }
     }
     
     isAssessing.value = false
@@ -401,42 +426,26 @@ const exportSecurityReport = () => {
     URL.revokeObjectURL(url)
 }
 
-const addRandomThreat = () => {
-    const threatTypes = [
-        'Reentrancy Attack',
-        'Flash Loan Exploit', 
-        'Price Manipulation',
-        'Access Control Issue',
-        'Integer Overflow',
-        'Unchecked Call'
-    ]
-    
-    const severities = ['critical', 'high', 'medium', 'low']
-    
-    const newThreat = {
-        id: Date.now(),
-        type: threatTypes[Math.floor(Math.random() * threatTypes.length)],
-        contract: '0x' + Math.random().toString(16).substr(2, 8) + '...' + Math.random().toString(16).substr(2, 4),
-        severity: severities[Math.floor(Math.random() * severities.length)],
-        timeAgo: 'Just now'
-    }
-    
-    liveThreats.value.unshift(newThreat)
-    
-    // Keep only last 10 threats
-    if (liveThreats.value.length > 10) {
-        liveThreats.value = liveThreats.value.slice(0, 10)
-    }
-}
+// Removed addRandomThreat - now using real API data
 
 // Lifecycle
-onMounted(() => {
-    // Simulate live threat updates
-    threatUpdateInterval = setInterval(() => {
-        if (selectedAnalysisType.value === 'realtime' && Math.random() < 0.3) {
-            addRandomThreat()
+onMounted(async () => {
+    // Load initial data
+    await Promise.all([
+        fetchLiveThreats(),
+        fetchSecurityMetrics(),
+        fetchComplianceStandards()
+    ])
+    
+    // Set up real-time data refresh
+    threatUpdateInterval = setInterval(async () => {
+        if (selectedAnalysisType.value === 'realtime') {
+            await Promise.all([
+                fetchLiveThreats(),
+                fetchSecurityMetrics()
+            ])
         }
-    }, 8000)
+    }, 10000)
 })
 
 onUnmounted(() => {

@@ -565,15 +565,19 @@ function getSeverityBgColor(severity) {
 }
 
 function viewFullReport() {
-    if (!analysisResult.value?.projectId) return
+    if (!analysisResult.value?.analysisId) return
     
-    router.visit(`/projects/${analysisResult.value.projectId}/analyses/${analysisResult.value.analysisId}`)
+    // Redirect to dashboard where users can view their analyses
+    // Note: Analysis detail pages are not yet implemented
+    router.visit('/dashboard')
 }
 
 function downloadReport() {
-    if (!analysisResult.value?.projectId) return
+    if (!analysisResult.value?.analysisId) return
     
-    window.open(`/projects/${analysisResult.value.projectId}/analyses/${analysisResult.value.analysisId}/pdf`, '_blank')
+    // TODO: Implement PDF download functionality
+    // For now, redirect to dashboard
+    router.visit('/dashboard')
 }
 
 function getExampleButtonClass(riskLevel) {

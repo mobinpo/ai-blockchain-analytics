@@ -32,7 +32,7 @@
                     <span class="text-xs text-green-600 font-medium">Active</span>
                 </div>
                 
-                <button class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                <button @click="tryDemo" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
                     Try Demo
                     <svg class="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -142,6 +142,19 @@ const getMetricColor = (index) => {
 const handleDemoClick = () => {
     emit('demo-click')
 }
+
+// Demo actions
+const tryDemo = () => {
+    console.log('Try demo for:', props.title);
+    // Navigate to relevant demo or trigger demo mode
+    if (props.title.includes('Security')) {
+        window.location.href = '/security';
+    } else if (props.title.includes('Sentiment')) {
+        window.location.href = '/sentiment-analysis';
+    } else {
+        window.location.href = '/dashboard';
+    }
+};
 
 // Lifecycle
 onMounted(() => {

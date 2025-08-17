@@ -98,62 +98,46 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+
+const props = defineProps({
+  initialNetworks: {
+    type: Array,
+    default: () => []
+  }
+});
 
 const refreshing = ref(false)
+const networks = ref(props.initialNetworks)
 
-const networks = ref([
-  {
-    id: 'ethereum',
-    name: 'Ethereum',
-    explorer: 'Etherscan.io',
-    logo: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE2IiBmaWxsPSIjNjI3RUVBIi8+PHBhdGggZD0iTTguNzEyIDkuMTA2IDEyLjgzNyA5LjQ5M2EuNS41IDAgMCAxIC4zOTguNzI0bC0yLjA2NSA0LjEzIDIuMDY1IDQuMTNhLjUuNSAwIDAgMS0uMzk4LjcyNGwtNC4xMjUuMzg3YS41LjUgMCAwIDEtLjU0LS40OTdsLS4zODctNC4xMjVhLjUuNSAwIDAgMSAwLS4wOTlsLjM4Ny00LjEyNWEuNS41IDAgMCAxIC41NC0uNDk3eiIgZmlsbD0iI0ZGRiIvPjwvZz48L3N2Zz4=',
-    status: 'active',
-    responseTime: 120,
-    requestsToday: 1247,
-    successRate: 99.2
-  },
-  {
-    id: 'polygon',
-    name: 'Polygon',
-    explorer: 'PolygonScan.com',
-    logo: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE2IiBmaWxsPSIjODI0N0U1Ii8+PHBhdGggZD0iTTEyLjggOC4yNGE0IDQgMCAwIDEgNi40IDBsNi40IDguOGE0IDQgMCAwIDEtMy4yIDYuNGgtMTIuOGE0IDQgMCAwIDEtMy4yLTYuNGw2LjQtOC44eiIgZmlsbD0iI0ZGRiIvPjwvZz48L3N2Zz4=',
-    status: 'active',
-    responseTime: 95,
-    requestsToday: 856,
-    successRate: 98.7
-  },
-  {
-    id: 'bsc',
-    name: 'BSC',
-    explorer: 'BscScan.com',
-    logo: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE2IiBmaWxsPSIjRjNCQjAwIi8+PHBhdGggZD0iTTE2IDZsNi4xODQgNi4xODQtMi4yNTcgMi4yNTdMMTYgMTAuNTE0bC0zLjkyNyAzLjkyNy0yLjI1Ny0yLjI1N0wxNiA2em02LjE4NCAxMC4xODRMMjQgMTQuNDM3di0yLjI1N2wtMi4yNTcgMi4yNTctMi4yNTctMi4yNTdWMTZsMS44MTYtMS44MTZ6bS0xMi4zNjggMGwyLjI1Ny0yLjI1N1YxNkwxMC4yNTcgMTcuODE2IDggMTZWMTZsMS44MTYtMS44MTZMMTIgMTYuMTg0eiIgZmlsbD0iI0ZGRiIvPjwvZz48L3N2Zz4=',
-    status: 'active',
-    responseTime: 180,
-    requestsToday: 634,
-    successRate: 97.8
-  },
-  {
-    id: 'arbitrum',
-    name: 'Arbitrum',
-    explorer: 'Arbiscan.io',
-    logo: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE2IiBmaWxsPSIjMkQ3NEJCIi8+PHBhdGggZD0iTTE2IDZhMTAgMTAgMCAxIDEgMCAyMEExMCAxMCAwIDAgMSAxNiA2eiIgZmlsbD0iI0ZGRiIvPjwvZz48L3N2Zz4=',
-    status: 'slow',
-    responseTime: 340,
-    requestsToday: 423,
-    successRate: 96.1
-  },
-  {
-    id: 'optimism',
-    name: 'Optimism',
-    explorer: 'Optimistic.etherscan.io',
-    logo: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjE2IiBjeT0iMTYiIHI9IjE2IiBmaWxsPSIjRkYwNDIwIi8+PHBhdGggZD0iTTE2IDZhMTAgMTAgMCAxIDEgMCAyMEExMCAxMCAwIDAgMSAxNiA2eiIgZmlsbD0iI0ZGRiIvPjwvZz48L3N2Zz4=',
-    status: 'maintenance',
-    responseTime: 0,
-    requestsToday: 0,
-    successRate: 0
+// Fetch network status from API if not provided via props
+const fetchNetworkStatus = async () => {
+  if (props.initialNetworks.length > 0) return;
+  
+  try {
+    const response = await fetch('/api/network/status', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        networks.value = data.networks || [];
+      } else {
+        console.error('Failed to fetch network status:', data.error);
+      }
+    } else {
+      console.error('HTTP error:', response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error('Error fetching network status:', error);
+    networks.value = [];
   }
-])
+};
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -215,24 +199,34 @@ const rateLimitStatus = computed(() => {
 const refreshStatus = async () => {
   refreshing.value = true
   
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  
-  // Simulate status updates
-  networks.value.forEach(network => {
-    if (network.status === 'maintenance' && Math.random() > 0.7) {
-      network.status = 'active'
-      network.responseTime = Math.floor(Math.random() * 200) + 80
-      network.successRate = Math.floor(Math.random() * 3) + 97
-    } else if (network.status === 'active' && Math.random() > 0.9) {
-      network.status = 'slow'
-      network.responseTime += Math.floor(Math.random() * 100) + 50
-    }
+  try {
+    const response = await fetch('/api/network/status?refresh=true', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
     
-    // Update request counts
-    network.requestsToday += Math.floor(Math.random() * 10) + 1
-  })
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        networks.value = data.networks || [];
+      } else {
+        console.error('Failed to refresh network status:', data.error);
+      }
+    } else {
+      console.error('HTTP error:', response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error('Error refreshing network status:', error);
+  }
   
   refreshing.value = false
 }
+
+// Initialize data on component mount
+onMounted(() => {
+  fetchNetworkStatus();
+});
 </script>

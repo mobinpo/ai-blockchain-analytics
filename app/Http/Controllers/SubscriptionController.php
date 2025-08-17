@@ -156,7 +156,7 @@ final class SubscriptionController extends Controller
         $user = auth()->user();
         $subscription = $user->subscription('default');
 
-        if (!$subscription || !$subscription->cancelled() || $subscription->ended()) {
+        if (!$subscription || !$subscription->canceled() || $subscription->ended()) {
             return back()->withErrors([
                 'subscription' => 'No cancelled subscription found or subscription has already ended.'
             ]);

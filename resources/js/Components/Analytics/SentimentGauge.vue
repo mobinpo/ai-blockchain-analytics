@@ -62,15 +62,15 @@
       <!-- Recent changes -->
       <div class="grid grid-cols-3 gap-4 text-center">
         <div>
-          <div class="text-lg font-semibold text-green-600">+12%</div>
+          <div :class="['text-lg font-semibold', sentimentChangeColor]">{{ sentimentChange }}</div>
           <div class="text-xs text-gray-500">24h Change</div>
         </div>
         <div>
-          <div class="text-lg font-semibold text-blue-600">{{ projectCount }}</div>
+          <div class="text-lg font-semibold text-blue-600">{{ projectCount || '...' }}</div>
           <div class="text-xs text-gray-500">Projects</div>
         </div>
         <div>
-          <div class="text-lg font-semibold text-purple-600">{{ analysisCount }}</div>
+          <div class="text-lg font-semibold text-purple-600">{{ analysisCount || '...' }}</div>
           <div class="text-xs text-gray-500">Analyses</div>
         </div>
       </div>
@@ -84,15 +84,19 @@ import { computed } from 'vue'
 const props = defineProps({
   sentiment: {
     type: Number,
-    default: 0.72
+    default: 0
   },
   projectCount: {
     type: Number,
-    default: 47
+    default: 0
   },
   analysisCount: {
     type: Number,
-    default: 156
+    default: 0
+  },
+  sentimentChange24h: {
+    type: Number,
+    default: 0
   }
 })
 
@@ -145,5 +149,17 @@ const sentimentLabel = computed(() => {
   if (props.sentiment >= 0.4) return 'Neutral'
   if (props.sentiment >= 0.2) return 'Negative'
   return 'Very Negative'
+})
+
+const sentimentChange = computed(() => {
+  const change = props.sentimentChange24h * 100
+  const sign = change >= 0 ? '+' : ''
+  return `${sign}${change.toFixed(0)}%`
+})
+
+const sentimentChangeColor = computed(() => {
+  if (props.sentimentChange24h > 0) return 'text-green-600'
+  if (props.sentimentChange24h < 0) return 'text-red-600'
+  return 'text-gray-600'
 })
 </script>

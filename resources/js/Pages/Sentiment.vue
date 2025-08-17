@@ -1,9 +1,12 @@
 <script setup>
 import AppLayout from '../Layouts/AppLayout.vue';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import api from '@/services/api';
 
 const selectedTimeframe = ref('24h');
 const selectedProtocol = ref('all');
+const loading = ref(false);
+const error = ref(null);
 
 const timeframes = [
   { value: '1h', label: 'Last Hour' },
@@ -12,119 +15,11 @@ const timeframes = [
   { value: '30d', label: 'Last 30 Days' }
 ];
 
-const protocolSentiments = ref([
-  {
-    protocol: 'Uniswap',
-    current: 0.73,
-    change: 0.05,
-    trend: 'up',
-    volume: 1247,
-    sources: ['Twitter', 'Reddit', 'Discord', 'Telegram'],
-    lastUpdated: '2 minutes ago',
-    color: 'bg-green-500',
-    details: {
-      positive: 73,
-      neutral: 19,
-      negative: 8
-    }
-  },
-  {
-    protocol: 'Aave',
-    current: 0.85,
-    change: 0.12,
-    trend: 'up',
-    volume: 892,
-    sources: ['Twitter', 'Reddit', 'Medium'],
-    lastUpdated: '3 minutes ago',
-    color: 'bg-green-600',
-    details: {
-      positive: 85,
-      neutral: 12,
-      negative: 3
-    }
-  },
-  {
-    protocol: 'Compound',
-    current: 0.42,
-    change: -0.08,
-    trend: 'down',
-    volume: 634,
-    sources: ['Twitter', 'Discord'],
-    lastUpdated: '1 minute ago',
-    color: 'bg-yellow-500',
-    details: {
-      positive: 42,
-      neutral: 35,
-      negative: 23
-    }
-  },
-  {
-    protocol: 'MakerDAO',
-    current: 0.68,
-    change: 0.02,
-    trend: 'up',
-    volume: 456,
-    sources: ['Twitter', 'Reddit'],
-    lastUpdated: '4 minutes ago',
-    color: 'bg-green-400',
-    details: {
-      positive: 68,
-      neutral: 22,
-      negative: 10
-    }
-  }
-]);
+const protocolSentiments = ref([]);
 
-const recentMentions = ref([
-  {
-    id: 1,
-    protocol: 'Uniswap',
-    platform: 'Twitter',
-    author: '@DefiWhale',
-    content: 'Uniswap V4 hooks are revolutionary! This will change the DeFi landscape forever. Amazing innovation from the team. 🚀',
-    sentiment: 0.92,
-    timestamp: '5 minutes ago',
-    engagement: { likes: 247, retweets: 89, replies: 34 }
-  },
-  {
-    id: 2,
-    protocol: 'Aave',
-    platform: 'Reddit',
-    author: 'u/CryptoAnalyst',
-    content: 'AAVE\'s new governance proposal looks solid. The risk parameters are well thought out and the community response has been overwhelmingly positive.',
-    sentiment: 0.78,
-    timestamp: '12 minutes ago',
-    engagement: { likes: 156, retweets: 0, replies: 23 }
-  },
-  {
-    id: 3,
-    protocol: 'Compound',
-    platform: 'Discord',
-    author: 'LiquidityProvider#1234',
-    content: 'Not sure about the latest Compound update. Gas fees seem higher and the UI changes are confusing. Hope they fix these issues soon.',
-    sentiment: 0.15,
-    timestamp: '18 minutes ago',
-    engagement: { likes: 12, retweets: 0, replies: 8 }
-  },
-  {
-    id: 4,
-    protocol: 'MakerDAO',
-    platform: 'Twitter',
-    author: '@DeFiResearcher',
-    content: 'MakerDAO\'s stability through market volatility continues to impress. The DAI peg mechanism is working beautifully.',
-    sentiment: 0.84,
-    timestamp: '25 minutes ago',
-    engagement: { likes: 98, retweets: 45, replies: 12 }
-  }
-]);
+const recentMentions = ref([]);
 
-const trendingTopics = ref([
-  { topic: '#UniswapV4', sentiment: 0.89, mentions: 1247, change: '+15%' },
-  { topic: '#LiquidStaking', sentiment: 0.76, mentions: 892, change: '+8%' },
-  { topic: '#DeFiSummer', sentiment: 0.82, mentions: 634, change: '+22%' },
-  { topic: '#YieldFarming', sentiment: 0.58, mentions: 456, change: '-3%' },
-  { topic: '#CrossChain', sentiment: 0.71, mentions: 334, change: '+12%' }
-]);
+const trendingTopics = ref([]);
 
 const getSentimentColor = (sentiment) => {
   if (sentiment >= 0.7) return 'text-green-600 bg-green-50';
@@ -147,6 +42,65 @@ const getPlatformIcon = (platform) => {
     'Medium': '📝'
   };
   return icons[platform] || '💬';
+};
+
+// API Functions
+const fetchProtocolSentiments = async () => {
+  try {
+    const response = await api.get('/sentiment/protocols', {
+      params: {
+        timeframe: selectedTimeframe.value,
+        protocol: selectedProtocol.value !== 'all' ? selectedProtocol.value : undefined
+      }
+    });
+    protocolSentiments.value = response.data.protocols || response.data || [];
+  } catch (err) {
+    console.error('Error fetching protocol sentiments:', err);
+    protocolSentiments.value = [];
+  }
+};
+
+const fetchRecentMentions = async () => {
+  try {
+    const response = await api.get('/sentiment/mentions', {
+      params: {
+        limit: 10,
+        protocol: selectedProtocol.value !== 'all' ? selectedProtocol.value : undefined
+      }
+    });
+    recentMentions.value = response.data.mentions || response.data || [];
+  } catch (err) {
+    console.error('Error fetching recent mentions:', err);
+    recentMentions.value = [];
+  }
+};
+
+const fetchTrendingTopics = async () => {
+  try {
+    const response = await api.get('/sentiment/trending');
+    trendingTopics.value = response.data.topics || response.data || [];
+  } catch (err) {
+    console.error('Error fetching trending topics:', err);
+    trendingTopics.value = [];
+  }
+};
+
+const fetchAllSentimentData = async () => {
+  loading.value = true;
+  error.value = null;
+  
+  try {
+    await Promise.all([
+      fetchProtocolSentiments(),
+      fetchRecentMentions(),
+      fetchTrendingTopics()
+    ]);
+  } catch (err) {
+    error.value = 'Failed to load sentiment data';
+    console.error('Error fetching sentiment data:', err);
+  } finally {
+    loading.value = false;
+  }
 };
 
 // Safe interval management for sentiment updates

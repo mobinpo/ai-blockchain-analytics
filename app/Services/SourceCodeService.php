@@ -38,7 +38,7 @@ class SourceCodeService
      */
     public function fetchFromSpecificNetwork(string $contractAddress, string $network): array
     {
-        $explorer = $this->explorerManager->getExplorer($network);
+        $explorer = $this->explorerManager->getBestExplorer($network);
         
         if (!$explorer) {
             throw new InvalidArgumentException("Unsupported network: {$network}");
@@ -102,7 +102,7 @@ class SourceCodeService
         
         return Cache::remember($cacheKey, 3600, function () use ($contractAddress, $network) {
             if ($network) {
-                $explorer = $this->explorerManager->getExplorer($network);
+                $explorer = $this->explorerManager->getBestExplorer($network);
             } else {
                 $detectedChains = $this->explorerManager->detectChainForAddress($contractAddress);
                 $explorer = $this->explorerManager->getExplorer($detectedChains['best_match']['network'] ?? 'ethereum');
@@ -125,7 +125,7 @@ class SourceCodeService
         
         return Cache::remember($cacheKey, 7200, function () use ($contractAddress, $network) {
             if ($network) {
-                $explorer = $this->explorerManager->getExplorer($network);
+                $explorer = $this->explorerManager->getBestExplorer($network);
             } else {
                 $detectedChains = $this->explorerManager->detectChainForAddress($contractAddress);
                 $explorer = $this->explorerManager->getExplorer($detectedChains['best_match']['network'] ?? 'ethereum');
@@ -145,7 +145,7 @@ class SourceCodeService
     public function isContractVerified(string $contractAddress, ?string $network = null): array
     {
         if ($network) {
-            $explorer = $this->explorerManager->getExplorer($network);
+            $explorer = $this->explorerManager->getBestExplorer($network);
             return [
                 'is_verified' => $explorer?->isContractVerified($contractAddress) ?? false,
                 'network' => $network,

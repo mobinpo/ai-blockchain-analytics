@@ -327,7 +327,7 @@ final class MultiChainExplorerManager
             }
             
             $responseTime = (microtime(true) - $startTime) * 1000;
-            $this->recordHealthCheck($network, true, $responseTime);
+            $this->recordHealthCheck($network, true, (int) round($responseTime));
             
         } catch (\Exception $e) {
             $this->recordHealthCheck($network, false);

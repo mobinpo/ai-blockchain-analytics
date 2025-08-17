@@ -134,18 +134,18 @@ final class QuickAnalysisController extends Controller
             // Check if analysis already exists
             $existingAnalysis = $this->quickAnalysisService->getExistingAnalysis($contractAddress, $network);
             
-            if ($existingAnalysis) {
+            if ($existingAnalysis && is_array($existingAnalysis) && isset($existingAnalysis['id'])) {
                 return response()->json([
                     'success' => true,
                     'data' => [
                         'analysis_id' => $existingAnalysis['id'],
-                        'security_score' => $existingAnalysis['security_score'],
-                        'critical_issues' => $existingAnalysis['critical_issues'],
-                        'high_issues' => $existingAnalysis['high_issues'],
-                        'medium_issues' => $existingAnalysis['medium_issues'],
-                        'functions_count' => $existingAnalysis['functions_count'],
-                        'lines_of_code' => $existingAnalysis['lines_of_code'],
-                        'verified' => $existingAnalysis['verified'],
+                        'security_score' => $existingAnalysis['security_score'] ?? 0,
+                        'critical_issues' => $existingAnalysis['critical_issues'] ?? 0,
+                        'high_issues' => $existingAnalysis['high_issues'] ?? 0,
+                        'medium_issues' => $existingAnalysis['medium_issues'] ?? 0,
+                        'functions_count' => $existingAnalysis['functions_count'] ?? 0,
+                        'lines_of_code' => $existingAnalysis['lines_of_code'] ?? 0,
+                        'verified' => $existingAnalysis['verified'] ?? false,
                         'cached' => true,
                         'completed_at' => $existingAnalysis['completed_at']
                     ]
@@ -182,11 +182,30 @@ final class QuickAnalysisController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
+            // Provide specific error messages for common issues
+            $errorMessage = $e->getMessage();
+            $statusCode = 500;
+            
+            if (str_contains($errorMessage, 'source code is not verified') || 
+                str_contains($errorMessage, 'unverified contract')) {
+                $statusCode = 422; // Unprocessable Entity
+                $errorMessage = 'This contract\'s source code is not verified on the blockchain explorer. We can only analyze contracts with verified source code for security purposes.';
+            } elseif (str_contains($errorMessage, 'EOA') || str_contains($errorMessage, 'wallet address')) {
+                $statusCode = 422;
+                $errorMessage = 'This appears to be a wallet address (EOA), not a smart contract. Please provide a valid smart contract address.';
+            }
+
             return response()->json([
                 'success' => false,
-                'message' => 'Analysis failed. Please try again later.',
-                'error' => app()->environment('local') ? $e->getMessage() : null
-            ], 500);
+                'message' => $errorMessage,
+                'error_type' => str_contains($e->getMessage(), 'verified') ? 'unverified_contract' : 'analysis_error',
+                'suggestions' => str_contains($e->getMessage(), 'verified') ? [
+                    'Please verify the contract source code on Etherscan first',
+                    'Try a different contract that has verified source code',
+                    'Check if the address is correct'
+                ] : null,
+                'debug_error' => app()->environment('local') ? $e->getMessage() : null
+            ], $statusCode);
         }
     }
 
@@ -247,59 +266,81 @@ final class QuickAnalysisController extends Controller
     }
 
     /**
-     * Get popular contracts for examples
+     * Get popular contracts for examples (from recent analyses)
      */
     public function getPopularContracts(): JsonResponse
     {
-        $popularContracts = [
-            [
-                'name' => 'Uniswap V2 Factory',
-                'address' => '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f',
-                'network' => 'ethereum',
-                'category' => 'DeFi',
-                'description' => 'Decentralized exchange factory contract'
-            ],
-            [
-                'name' => 'USDC Token',
-                'address' => '0xA0b86a33E6417c7e4E6b42b0Db8FC0a41F34a3B4',
-                'network' => 'ethereum',
-                'category' => 'Token',
-                'description' => 'USD Coin stablecoin contract'
-            ],
-            [
-                'name' => 'PancakeSwap Factory',
-                'address' => '0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73',
-                'network' => 'bsc',
-                'category' => 'DeFi',
-                'description' => 'BSC decentralized exchange factory'
-            ],
-            [
-                'name' => 'AAVE Protocol',
-                'address' => '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9',
-                'network' => 'ethereum',
-                'category' => 'DeFi',
-                'description' => 'Lending protocol contract'
-            ],
-            [
-                'name' => 'Compound Finance',
-                'address' => '0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B',
-                'network' => 'ethereum',
-                'category' => 'DeFi',
-                'description' => 'Compound comptroller contract'
-            ],
-            [
-                'name' => 'OpenSea Registry',
-                'address' => '0xa5409ec958C83C3f309868babACA7c86DCB077c1',
-                'network' => 'ethereum',
-                'category' => 'NFT',
-                'description' => 'OpenSea marketplace registry'
-            ]
-        ];
+        try {
+            // Get most analyzed contracts from database
+            $popularContracts = \DB::table('analyses')
+                ->join('projects', 'analyses.project_id', '=', 'projects.id')
+                ->select([
+                    'projects.name',
+                    'analyses.target_address as address',
+                    'projects.blockchain_network as network',
+                    'projects.description',
+                    \DB::raw('COUNT(*) as analysis_count')
+                ])
+                ->where('analyses.target_type', 'contract')
+                ->where('analyses.status', 'completed')
+                ->whereNotNull('projects.name')
+                ->whereNotNull('analyses.target_address')
+                ->groupBy(['projects.name', 'analyses.target_address', 'projects.blockchain_network', 'projects.description'])
+                ->orderBy('analysis_count', 'desc')
+                ->limit(6)
+                ->get()
+                ->map(function ($contract) {
+                    return [
+                        'name' => $contract->name,
+                        'address' => $contract->address,
+                        'network' => $contract->network ?? 'ethereum',
+                        'category' => $this->guessCategory($contract->name, $contract->description),
+                        'description' => $contract->description ?? 'Smart contract analysis project',
+                        'analysis_count' => $contract->analysis_count
+                    ];
+                })
+                ->toArray();
 
-        return response()->json([
-            'success' => true,
-            'data' => $popularContracts
-        ]);
+            // If no real contracts found, return empty array instead of hardcoded examples
+            return response()->json([
+                'success' => true,
+                'data' => $popularContracts
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch popular contracts', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch popular contracts',
+                'data' => []
+            ], 500);
+        }
+    }
+
+    /**
+     * Guess contract category based on name and description
+     */
+    private function guessCategory(string $name, ?string $description): string
+    {
+        $text = strtolower($name . ' ' . ($description ?? ''));
+        
+        if (str_contains($text, 'token') || str_contains($text, 'erc20') || str_contains($text, 'coin')) {
+            return 'Token';
+        }
+        if (str_contains($text, 'nft') || str_contains($text, 'erc721') || str_contains($text, 'collectible')) {
+            return 'NFT';
+        }
+        if (str_contains($text, 'defi') || str_contains($text, 'swap') || str_contains($text, 'dex') || 
+            str_contains($text, 'lending') || str_contains($text, 'liquidity')) {
+            return 'DeFi';
+        }
+        if (str_contains($text, 'gaming') || str_contains($text, 'game')) {
+            return 'Gaming';
+        }
+        
+        return 'Contract';
     }
 
     /**

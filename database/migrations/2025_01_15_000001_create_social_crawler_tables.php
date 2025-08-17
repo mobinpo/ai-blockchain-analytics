@@ -71,7 +71,11 @@ return new class extends Migration
             $table->index(['is_processed', 'is_relevant']);
             $table->index('relevance_score');
             $table->index('author_username');
-            $table->fullText(['content', 'author_username']);
+            
+            // Only add fulltext index for MySQL/PostgreSQL
+            if (config('database.default') !== 'sqlite') {
+                $table->fullText(['content', 'author_username']);
+            }
         });
 
         // Keyword matches for analytics

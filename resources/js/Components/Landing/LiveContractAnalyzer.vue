@@ -469,7 +469,9 @@ export default {
     // View full report
     const viewFullReport = () => {
       if (quickResults.value?.analysisId) {
-        router.visit(`/analysis/${quickResults.value.analysisId}`)
+        // Redirect to dashboard where users can view their analyses
+        // Note: Analysis detail pages are not yet implemented
+        router.visit('/dashboard')
       }
     }
 

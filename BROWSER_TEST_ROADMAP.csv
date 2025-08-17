@@ -1,0 +1,187 @@
+Step,Method,Path,Sample URL,Access,Trigger From,How to Trigger,Expected Result,Required Data,Notes
+1,GET,/,http://localhost:8003/,Public,Direct,Direct browser visit,Landing page displays with live contract analyzer,None,Start here - main entry point
+2,POST,/api/contracts/analyze-demo,http://localhost:8003/api/contracts/analyze-demo,Public,Landing page,Click "Analyze Contract" button,Returns mock analysis results,contract_input=0x1234... network=ethereum,Demo endpoint for landing page
+3,GET,/welcome,http://localhost:8003/welcome,Public,Landing page,Click "Welcome" link,Welcome page with Laravel info,None,Alternative entry point
+4,GET,/pricing,http://localhost:8003/pricing,Public,Landing page,Click "Pricing" link,Subscription plans display,None,Shows billing plans
+5,GET,/projects,http://localhost:8003/projects,Public,Navigation,Direct visit or nav link,Project showcase page,None,Marketing content
+6,GET,/security,http://localhost:8003/security,Public,Navigation,Direct visit or nav link,Security features page,None,Security information
+7,GET,/sentiment,http://localhost:8003/sentiment,Public,Navigation,Direct visit or nav link,Sentiment analysis info,None,Feature overview
+8,GET,/sentiment-dashboard,http://localhost:8003/sentiment-dashboard,Public,Direct,Direct browser visit,Public sentiment dashboard,None,Public analytics dashboard
+9,GET,/sentiment-price-chart,http://localhost:8003/sentiment-price-chart,Public,Direct,Direct browser visit,Price chart display,None,Public price charts
+10,GET,/verification/badge-demo,http://localhost:8003/verification/badge-demo?contract=0x1234567890123456789012345678901234567890,Public,Direct,Direct browser visit with contract param,Badge demo interface,contract=0x1234... parameter,Verification badge showcase
+11,GET,/api/health,http://localhost:8003/api/health,Public,Direct,Direct API call or health check,JSON health status,None,API health check
+12,GET,/api/famous-contracts,http://localhost:8003/api/famous-contracts,Public,Direct,API call from components,JSON list of famous contracts,None,Contract database
+13,GET,/register,http://localhost:8003/register,Public,Landing page,Click "Get Started" or "Register",Registration form,None,Must complete to proceed to auth flow
+14,POST,/register,http://localhost:8003/register,Public,Registration form,Submit registration form,Redirect to verification notice,name email password password_confirmation,Creates user account
+15,GET,/verify-email,http://localhost:8003/verify-email,Auth,After registration,Auto redirect or manual visit,Email verification prompt,User must be logged in,Shows verification notice
+16,POST,/email/verification-notification,http://localhost:8003/email/verification-notification,Auth,Verification page,Click "Resend Verification",Email sent confirmation,User logged in,Throttled 6 requests per minute
+17,GET,/verify-email/{id}/{hash},http://localhost:8003/verify-email/1/abc123hash,Auth,Email link,Click link from email,Email verified confirmation,Valid signed URL from email,Signed URL with throttling
+18,GET,/login,http://localhost:8003/login,Public,Landing page,Click "Login" link,Login form display,None,Authentication form
+19,POST,/login,http://localhost:8003/login,Public,Login form,Submit login credentials,Redirect to dashboard,email password,User authentication
+20,GET,/dashboard,http://localhost:8003/dashboard,Auth+Verified,After login,Auto redirect or direct visit,Main dashboard display,User authenticated and verified,Main authenticated interface
+21,GET,/profile,http://localhost:8003/profile,Auth,Dashboard navigation,Click profile link,Profile edit form,User authenticated,User profile management
+22,PATCH,/profile,http://localhost:8003/profile,Auth,Profile page,Submit profile form,Profile updated confirmation,name email updated fields,Updates user info
+23,DELETE,/profile,http://localhost:8003/profile,Auth,Profile page,Click delete account button,Account deletion confirmation,User confirmation,Deletes user account
+24,GET,/demo,http://localhost:8003/demo,Auth,Dashboard,Click "Demo" link,North Star demo dashboard,User authenticated,Feature demonstration
+25,GET,/sentiment-timeline-demo,http://localhost:8003/sentiment-timeline-demo,Auth,Dashboard,Click sentiment demo link,Sentiment timeline interface,User authenticated,Demo visualization
+26,GET,/pdf-generation-demo,http://localhost:8003/pdf-generation-demo,Auth,Dashboard,Click PDF demo link,PDF generation interface,User authenticated,PDF demo features
+27,GET,/verification-badge-demo,http://localhost:8003/verification-badge-demo,Auth,Dashboard,Click verification demo link,Badge demo interface,User authenticated,Verification demo
+28,GET,/sentiment-chart-demo,http://localhost:8003/sentiment-chart-demo,Auth+Verified,Dashboard,Click sentiment chart link,Sentiment chart display,User authenticated and verified,Requires email verification
+29,GET,/billing,http://localhost:8003/billing,Auth,Dashboard,Click billing link,Billing dashboard,User authenticated,Subscription management
+30,GET,/billing/plans,http://localhost:8003/billing/plans,Auth,Billing page,Click "View Plans",Available plans list,User authenticated,Subscription options
+31,GET,/billing/usage,http://localhost:8003/billing/usage,Auth,Billing page,Click "View Usage",Usage metrics display,User authenticated,Usage tracking
+32,GET,/billing/history,http://localhost:8003/billing/history,Auth,Billing page,Click "Billing History",Invoice history,User authenticated,Past invoices
+33,POST,/billing/subscribe,http://localhost:8003/billing/subscribe,Auth,Plans page,Click "Subscribe" button,Subscription created,plan_id payment_method,Creates subscription
+34,GET,/billing/payment-methods,http://localhost:8003/billing/payment-methods,Auth,Billing page,Click payment methods,Payment methods list,User authenticated,Payment management
+35,POST,/billing/payment-methods,http://localhost:8003/billing/payment-methods,Auth,Payment methods page,Click "Add Payment Method",Payment method added,payment_method_data,Adds payment method
+36,PUT,/billing/payment-methods/default,http://localhost:8003/billing/payment-methods/default,Auth,Payment methods page,Click "Set as Default",Default method updated,payment_method_id,Updates default payment
+37,DELETE,/billing/payment-methods,http://localhost:8003/billing/payment-methods,Auth,Payment methods page,Click "Delete",Payment method removed,payment_method_id,Removes payment method
+38,PUT,/billing/subscription,http://localhost:8003/billing/subscription,Auth,Billing page,Click "Update Subscription",Subscription updated,plan_id,Changes subscription plan
+39,DELETE,/billing/subscription,http://localhost:8003/billing/subscription,Auth,Billing page,Click "Cancel Subscription",Subscription cancelled,None,Cancels subscription
+40,POST,/billing/subscription/resume,http://localhost:8003/billing/subscription/resume,Auth,Billing page,Click "Resume Subscription",Subscription resumed,None,Resumes cancelled subscription
+41,GET,/billing/invoices/{invoice}/download,http://localhost:8003/billing/invoices/inv_001/download,Auth,Billing history,Click "Download Invoice",PDF invoice download,invoice=inv_001,Downloads invoice PDF
+42,GET,/sentiment-analysis,http://localhost:8003/sentiment-analysis,Auth,Dashboard,Click sentiment analysis link,Sentiment analysis dashboard,User authenticated,Main sentiment interface
+43,GET,/sentiment-analysis/chart,http://localhost:8003/sentiment-analysis/chart,Auth,Sentiment page,Click "View Chart",Sentiment price chart,User authenticated,Chart visualization
+44,GET,/sentiment-analysis/platform,http://localhost:8003/sentiment-analysis/platform,Auth,Sentiment page,Click "Platform Analysis",Platform analysis view,User authenticated,Platform-specific data
+45,GET,/sentiment-analysis/trends,http://localhost:8003/sentiment-analysis/trends,Auth,Sentiment page,Click "View Trends",Sentiment trends display,User authenticated,Trend analysis
+46,GET,/sentiment-analysis/correlations,http://localhost:8003/sentiment-analysis/correlations,Auth,Sentiment page,Click "Correlations",Correlation analysis,User authenticated,Correlation data
+47,GET,/api/sentiment/price-correlation,http://localhost:8003/api/sentiment/price-correlation,Public,Sentiment components,Chart component API call,JSON price correlation data,coin symbol date range,Triggered by chart components
+48,GET,/api/sentiment/available-coins,http://localhost:8003/api/sentiment/available-coins,Public,Chart components,Dropdown population,JSON list of available coins,None,For coin selection dropdowns
+49,POST,/api/sentiment-charts/data,http://localhost:8003/api/sentiment-charts/data,Public,Chart components,Chart data request,JSON chart data,coin symbol date_range filters,Chart data with filters
+50,GET,/api/sentiment-price-timeline,http://localhost:8003/api/sentiment-price-timeline,Public,Timeline components,Timeline data request,JSON timeline data,coin symbol period,Timeline visualization data
+51,POST,/pdf/dashboard,http://localhost:8003/pdf/dashboard,Auth,Dashboard,Click "Generate Dashboard PDF",PDF file generated,dashboard_data options,Generates dashboard PDF
+52,POST,/pdf/sentiment,http://localhost:8003/pdf/sentiment,Auth,Sentiment page,Click "Generate PDF",PDF file generated,sentiment_data options,Generates sentiment PDF
+53,POST,/pdf/crawler,http://localhost:8003/pdf/crawler,Auth,Admin page,Click "Generate Crawler PDF",PDF file generated,crawler_data options,Generates crawler PDF
+54,GET,/pdf/statistics,http://localhost:8003/pdf/statistics,Auth,PDF pages,Click "Statistics",PDF statistics display,User authenticated,PDF generation stats
+55,DELETE,/pdf/cleanup,http://localhost:8003/pdf/cleanup,Auth,PDF management,Click "Cleanup",Old PDFs deleted,User authenticated,Cleans up old files
+56,GET,/pdf/engine-info,http://localhost:8003/pdf/engine-info,Auth,PDF pages,Click "Engine Info",PDF engine information,User authenticated,Engine status info
+57,GET,/pdf/download/{filename},http://localhost:8003/pdf/download/report_123.pdf,Auth,After PDF generation,Click download link,PDF file download,filename=report_123.pdf,Downloads generated PDF
+58,POST,/api/pdf/dashboard,http://localhost:8003/api/pdf/dashboard,Auth,Dashboard components,Component API call,JSON PDF generation response,dashboard_data,API version of PDF generation
+59,POST,/api/pdf/sentiment,http://localhost:8003/api/pdf/sentiment,Auth,Sentiment components,Component API call,JSON PDF generation response,sentiment_data,API version of sentiment PDF
+60,GET,/api/pdf/status,http://localhost:8003/api/pdf/status,Public,PDF components,Status check call,JSON service status,None,PDF service health check
+61,POST,/enhanced-pdf/preview/token,http://localhost:8003/enhanced-pdf/preview/token,Auth,Enhanced PDF page,Click "Generate Preview",Preview token generated,component_name data,Creates preview token
+62,POST,/enhanced-pdf/generate/route,http://localhost:8003/enhanced-pdf/generate/route,Auth,Enhanced PDF page,Click "Generate from Route",PDF from Vue route,route_name parameters,Generates PDF from Vue route
+63,POST,/enhanced-pdf/generate/component,http://localhost:8003/enhanced-pdf/generate/component,Auth,Enhanced PDF page,Click "Generate from Component",PDF from component,component_name props,Generates PDF from Vue component
+64,POST,/enhanced-pdf/generate/dashboard,http://localhost:8003/enhanced-pdf/generate/dashboard,Auth,Dashboard,Click enhanced PDF button,Enhanced dashboard PDF,dashboard_options,Enhanced dashboard PDF
+65,GET,/enhanced-pdf/status,http://localhost:8003/enhanced-pdf/status,Auth,Enhanced PDF page,Click "Status",Service status display,User authenticated,Enhanced PDF service status
+66,GET,/enhanced-pdf/files,http://localhost:8003/enhanced-pdf/files,Auth,Enhanced PDF page,Click "List Files",Generated files list,User authenticated,Lists generated PDF files
+67,DELETE,/enhanced-pdf/cleanup,http://localhost:8003/enhanced-pdf/cleanup,Auth,Enhanced PDF page,Click "Cleanup",Files cleaned up,User authenticated,Cleans up generated files
+68,GET,/enhanced-verification/manage,http://localhost:8003/enhanced-verification/manage,Auth,Dashboard,Click verification management,Verification management page,User authenticated,Enhanced verification interface
+69,POST,/enhanced-verification/generate,http://localhost:8003/enhanced-verification/generate,Auth,Verification page,Click "Generate URL",Verification URL generated,contract_address options,Generates verification URL
+70,GET,/enhanced-verification/my-verifications,http://localhost:8003/enhanced-verification/my-verifications,Auth,Verification page,Click "My Verifications",User verifications list,User authenticated,Lists user's verifications
+71,POST,/enhanced-verification/revoke,http://localhost:8003/enhanced-verification/revoke,Auth,Verification page,Click "Revoke",Verification revoked,verification_id,Revokes verification
+72,POST,/enhanced-verification/batch/generate,http://localhost:8003/enhanced-verification/batch/generate,Auth,Verification page,Click "Batch Generate",Multiple URLs generated,contracts_array options,Generates multiple verification URLs
+73,GET,/enhanced-verification/stats,http://localhost:8003/enhanced-verification/stats,Auth,Verification page,Click "Statistics",Verification statistics,User authenticated,Verification stats
+74,GET,/enhanced-verification/demo,http://localhost:8003/enhanced-verification/demo,Auth,Dashboard,Click verification demo,Enhanced verification demo,User authenticated,Demo interface
+75,GET,/email/preferences,http://localhost:8003/email/preferences,Auth,Profile menu,Click email preferences,Email preferences page,User authenticated,Email settings
+76,PATCH,/email/preferences,http://localhost:8003/email/preferences,Auth,Email preferences,Submit preferences form,Preferences updated,notification_settings,Updates email preferences
+77,POST,/email/preferences/pdf,http://localhost:8003/email/preferences/pdf,Auth,Email preferences,Click "Generate PDF",Preferences PDF generated,User authenticated,Generates preferences PDF
+78,POST,/email/preferences/pdf/{engine},http://localhost:8003/email/preferences/pdf/dompdf,Auth,Email preferences,Select engine and generate,PDF with specific engine,engine=dompdf,Uses specific PDF engine
+79,GET,/email/preferences/pdf/download/{filename},http://localhost:8003/email/preferences/pdf/download/preferences_123.pdf,Auth,After PDF generation,Click download,PDF download,filename=preferences_123.pdf,Downloads preferences PDF
+80,GET,/email/unsubscribe,http://localhost:8003/email/unsubscribe,Public,Email link,Click unsubscribe in email,Unsubscribe page,token from email,Email unsubscribe interface
+81,POST,/email/unsubscribe,http://localhost:8003/email/unsubscribe,Public,Unsubscribe page,Submit unsubscribe form,Unsubscribed confirmation,email token,Processes unsubscribe
+82,POST,/email/resubscribe,http://localhost:8003/email/resubscribe,Public,Unsubscribe page,Click resubscribe,Resubscribed confirmation,email token,Resubscribes to emails
+83,GET,/admin/cache,http://localhost:8003/admin/cache,Auth+Verified,Admin menu,Click cache management,Cache management dashboard,User authenticated and verified,Admin cache interface
+84,GET,/admin/cache/statistics,http://localhost:8003/admin/cache/statistics,Auth+Verified,Cache dashboard,Click "Statistics",Cache statistics display,User authenticated and verified,Cache performance metrics
+85,GET,/admin/cache/entries,http://localhost:8003/admin/cache/entries,Auth+Verified,Cache dashboard,Click "View Entries",Cache entries list,User authenticated and verified,Lists cache entries
+86,GET,/admin/cache/entries/{cacheId},http://localhost:8003/admin/cache/entries/cache_123,Auth+Verified,Cache entries,Click specific entry,Cache entry details,cacheId=cache_123,Shows specific cache entry
+87,POST,/admin/cache/entries/{cacheId}/invalidate,http://localhost:8003/admin/cache/entries/cache_123/invalidate,Auth+Verified,Cache entry page,Click "Invalidate Entry",Entry invalidated,cacheId=cache_123,Invalidates specific entry
+88,POST,/admin/cache/invalidate,http://localhost:8003/admin/cache/invalidate,Auth+Verified,Cache dashboard,Click "Invalidate Cache",Cache invalidated,cache_keys or patterns,Invalidates cache entries
+89,POST,/admin/cache/cleanup,http://localhost:8003/admin/cache/cleanup,Auth+Verified,Cache dashboard,Click "Cleanup",Cache cleaned up,cleanup_options,Cleans up old cache entries
+90,POST,/admin/cache/warm,http://localhost:8003/admin/cache/warm,Auth+Verified,Cache dashboard,Click "Warm Cache",Cache warmed,warm_options,Pre-populates cache
+91,GET,/admin/cache/export,http://localhost:8003/admin/cache/export,Auth+Verified,Cache dashboard,Click "Export",Cache data exported,User authenticated and verified,Exports cache data
+92,GET,/admin/cache/health,http://localhost:8003/admin/cache/health,Auth+Verified,Cache dashboard,Click "Health Check",Health status display,User authenticated and verified,Cache system health
+93,GET,/admin/cache/metrics,http://localhost:8003/admin/cache/metrics,Auth+Verified,Cache dashboard,Click "Metrics",Cache metrics display,User authenticated and verified,Performance metrics
+94,GET,/api/cache/stats,http://localhost:8003/api/cache/stats,Auth,Cache components,Component API call,JSON cache statistics,User authenticated,Cache stats API
+95,POST,/api/cache/warm,http://localhost:8003/api/cache/warm,Auth,Cache management,API warm call,JSON warm response,cache_keys,API cache warming
+96,POST,/api/cache/cleanup,http://localhost:8003/api/cache/cleanup,Auth,Cache management,API cleanup call,JSON cleanup response,cleanup_options,API cache cleanup
+97,DELETE,/api/cache/clear,http://localhost:8003/api/cache/clear,Auth,Cache management,API clear call,JSON clear response,cache_keys,API cache clearing
+98,GET,/horizon,http://localhost:8003/horizon,Internal,Direct,Direct browser visit,Horizon dashboard,Special authorization required,Laravel Horizon interface
+99,GET,/horizon/api/stats,http://localhost:8003/horizon/api/stats,Internal,Horizon UI,Horizon internal call,JSON dashboard stats,Driven by Horizon UI,Internal Horizon API
+100,GET,/horizon/api/workload,http://localhost:8003/horizon/api/workload,Internal,Horizon UI,Horizon internal call,JSON workload data,Driven by Horizon UI,Internal Horizon API
+101,GET,/horizon/api/jobs/pending,http://localhost:8003/horizon/api/jobs/pending,Internal,Horizon UI,Click "Jobs" tab,JSON pending jobs,Driven by Horizon UI,Horizon job management
+102,GET,/horizon/api/jobs/completed,http://localhost:8003/horizon/api/jobs/completed,Internal,Horizon UI,Click completed jobs,JSON completed jobs,Driven by Horizon UI,Horizon job history
+103,GET,/horizon/api/jobs/failed,http://localhost:8003/horizon/api/jobs/failed,Internal,Horizon UI,Click failed jobs,JSON failed jobs,Driven by Horizon UI,Failed job management
+104,POST,/horizon/api/jobs/retry/{id},http://localhost:8003/horizon/api/jobs/retry/job_123,Internal,Horizon UI,Click "Retry" button,Job retry initiated,jobId=job_123,Retries failed job
+105,GET,/horizon/api/batches,http://localhost:8003/horizon/api/batches,Internal,Horizon UI,Click "Batches" tab,JSON batch list,Driven by Horizon UI,Batch job management
+106,GET,/horizon/api/monitoring,http://localhost:8003/horizon/api/monitoring,Internal,Horizon UI,Click "Monitoring" tab,JSON monitoring data,Driven by Horizon UI,Job monitoring interface
+107,GET,/horizon/api/metrics/jobs,http://localhost:8003/horizon/api/metrics/jobs,Internal,Horizon UI,Click "Metrics" tab,JSON job metrics,Driven by Horizon UI,Performance metrics
+108,GET,/telescope,http://localhost:8003/telescope,Internal,Direct,Direct browser visit,Telescope dashboard,Enhanced authorization required,Laravel Telescope interface
+109,POST,/api/contracts/analyze,http://localhost:8003/api/contracts/analyze,Public,Analysis components,Click "Analyze" button,JSON analysis results,contract_input network,Real contract analysis
+110,POST,/api/contract/quick-info,http://localhost:8003/api/contract/quick-info,Public,Dashboard components,Quick info request,JSON contract info,contract_address network,Quick contract details
+111,GET,/api/contract/networks,http://localhost:8003/api/contract/networks,Public,Network dropdown,Populate networks,JSON supported networks,None,Network selection options
+112,GET,/api/contract/popular,http://localhost:8003/api/contract/popular,Public,Popular contracts,Show popular contracts,JSON popular contracts,None,Popular contract suggestions
+113,POST,/api/streaming/start,http://localhost:8003/api/streaming/start,Auth,Streaming components,Click "Start Analysis",JSON streaming job created,analysis_config,Starts streaming analysis
+114,GET,/api/streaming/{analysis}/status,http://localhost:8003/api/streaming/analysis_123/status,Auth,Streaming interface,Status polling,JSON analysis status,analysisId=analysis_123,Analysis status updates
+115,GET,/api/streaming/{analysis}/results,http://localhost:8003/api/streaming/analysis_123/results,Auth,Streaming interface,Click "View Results",JSON analysis results,analysisId=analysis_123,Streaming analysis results
+116,POST,/api/streaming/{analysis}/cancel,http://localhost:8003/api/streaming/analysis_123/cancel,Auth,Streaming interface,Click "Cancel",Analysis cancelled,analysisId=analysis_123,Cancels streaming analysis
+117,GET,/api/streaming/{analysis}/stream,http://localhost:8003/api/streaming/analysis_123/stream,Auth,Streaming interface,SSE connection,Server-sent events stream,analysisId=analysis_123,Real-time analysis stream
+118,POST,/api/openai-streaming/start,http://localhost:8003/api/openai-streaming/start,Auth,OpenAI components,Click "Start OpenAI Job",JSON OpenAI job created,job_config,Starts OpenAI streaming job
+119,GET,/api/openai-streaming/{jobId}/sse,http://localhost:8003/api/openai-streaming/job_123/sse,Auth,OpenAI interface,SSE connection,Server-sent events,jobId=job_123,OpenAI streaming updates
+120,GET,/api/openai-streaming/{jobId}/status,http://localhost:8003/api/openai-streaming/job_123/status,Auth,OpenAI interface,Status polling,JSON job status,jobId=job_123,OpenAI job status
+121,POST,/api/openai-streaming/{jobId}/cancel,http://localhost:8003/api/openai-streaming/job_123/cancel,Auth,OpenAI interface,Click "Cancel Job",Job cancelled,jobId=job_123,Cancels OpenAI job
+122,GET,/api/source-code/fetch,http://localhost:8003/api/source-code/fetch,Public,Source components,Click "Fetch Source",JSON source code,contract_address network,Fetches contract source
+123,GET,/api/source-code/abi,http://localhost:8003/api/source-code/abi,Public,ABI components,Click "Get ABI",JSON contract ABI,contract_address network,Gets contract ABI
+124,GET,/api/source-code/verify,http://localhost:8003/api/source-code/verify,Public,Verification components,Click "Check Verification",JSON verification status,contract_address network,Checks verification status
+125,GET,/api/source-code/networks,http://localhost:8003/api/source-code/networks,Public,Network components,Populate networks,JSON supported networks,None,Source code networks
+126,POST,/api/smart-explorer/detect,http://localhost:8003/api/smart-explorer/detect,Public,Explorer components,Auto-detect chain,JSON chain detection,contract_address,Detects blockchain network
+127,POST,/api/smart-explorer/contract/source,http://localhost:8003/api/smart-explorer/contract/source,Public,Explorer components,Click "Get Source",JSON source code,contract_address,Smart contract source
+128,GET,/api/social-media,http://localhost:8003/api/social-media,Auth,Social components,Load posts,JSON social media posts,User authenticated,Social media data
+129,POST,/api/social-media/crawl,http://localhost:8003/api/social-media/crawl,Auth,Social interface,Click "Start Crawl",Crawl job started,crawl_config,Starts social media crawling
+130,GET,/api/social-media/stats,http://localhost:8003/api/social-media/stats,Auth,Social dashboard,Load statistics,JSON crawler statistics,User authenticated,Social media analytics
+131,POST,/api/crawler/start,http://localhost:8003/api/crawler/start,Auth,Crawler interface,Click "Start Crawler",Crawler job started,crawler_config,Starts crawler microservice
+132,GET,/api/crawler/stats,http://localhost:8003/api/crawler/stats,Auth,Crawler dashboard,Load stats,JSON crawler stats,User authenticated,Crawler platform statistics
+133,POST,/api/verification/generate,http://localhost:8003/api/verification/generate,Auth,Verification components,Click "Generate Badge",JSON verification URL,contract_address options,Generates verification badge
+134,POST,/api/verification/verify,http://localhost:8003/api/verification/verify,Public,Badge components,Click "Verify Badge",JSON verification result,badge_token signature,Verifies badge authenticity
+135,GET,/api/verification/statistics,http://localhost:8003/api/verification/statistics,Public,Statistics components,Load stats,JSON verification stats,None,Public verification statistics
+136,POST,/api/verification/revoke,http://localhost:8003/api/verification/revoke,Auth,Verification management,Click "Revoke",Badge revoked,badge_id,Revokes verification badge
+137,GET,/api/verification/status,http://localhost:8003/api/verification/status,Public,Status components,Check status,JSON status response,contract_address,Checks verification status
+138,GET,/api/verification/badge,http://localhost:8003/api/verification/badge,Public,Badge display,Display badge,HTML/JSON badge,contract_address format,Gets badge display code
+139,GET,/forgot-password,http://localhost:8003/forgot-password,Public,Login page,Click "Forgot Password",Password reset form,None,Password reset interface
+140,POST,/forgot-password,http://localhost:8003/forgot-password,Public,Forgot password page,Submit email,Reset email sent,email,Sends password reset email
+141,GET,/reset-password/{token},http://localhost:8003/reset-password/abc123token,Public,Email link,Click reset link,Password reset form,token=abc123token,Password reset form with token
+142,POST,/reset-password,http://localhost:8003/reset-password,Public,Reset password page,Submit new password,Password reset success,token email password password_confirmation,Resets user password
+143,GET,/confirm-password,http://localhost:8003/confirm-password,Auth,Sensitive actions,Password confirmation required,Password confirmation form,User authenticated,Confirms user password
+144,POST,/confirm-password,http://localhost:8003/confirm-password,Auth,Confirmation page,Submit password,Password confirmed,password,Confirms current password
+145,PUT,/password,http://localhost:8003/password,Auth,Profile page,Submit password change,Password updated,current_password password password_confirmation,Updates user password
+146,POST,/logout,http://localhost:8003/logout,Auth,Navigation,Click "Logout",Logged out redirect,User authenticated,Ends user session
+147,GET,/verification/badge/{token},http://localhost:8003/verification/badge/badge_token_123,Public,Badge links,Click badge URL,Badge display page,token=badge_token_123,Shows verification badge
+148,GET,/verification/verify/{token},http://localhost:8003/verification/verify/verify_token_123,Public,Verification links,Click verification URL,Verification result page,token=verify_token_123,Verification result display
+149,GET,/verification/embed/{token},http://localhost:8003/verification/embed/embed_token_123,Public,Embed links,Embed badge request,Embeddable badge code,token=embed_token_123,Embeddable badge HTML
+150,GET,/enhanced-verification/verify/{token},http://localhost:8003/enhanced-verification/verify/enhanced_token_123,Public,Enhanced verification,Click enhanced verification,Enhanced verification result,token=enhanced_token_123,Enhanced verification display
+151,GET,/enhanced-verification/status/{contractAddress},http://localhost:8003/enhanced-verification/status/0x1234567890123456789012345678901234567890,Public,Status check,Status API call,JSON verification status,contractAddress=0x1234...,Enhanced verification status
+152,GET,/enhanced-verification/badge/{contractAddress},http://localhost:8003/enhanced-verification/badge/0x1234567890123456789012345678901234567890,Public,Badge display,Badge HTML request,HTML badge code,contractAddress=0x1234...,Enhanced badge HTML
+153,GET,/verify-contract,http://localhost:8003/verify-contract,Public,Verification pages,Direct visit with security,Verification page,Verification security middleware,Secure verification interface
+154,GET,/verify-contract/{token},http://localhost:8003/verify-contract/contract_token_123,Public,Contract verification,Click contract verify link,Contract verification result,token=contract_token_123,Contract verification display
+155,GET,/verify/{token},http://localhost:8003/verify/verify_token_123,Public,General verification,Click verify link,General verification result,token=verify_token_123,General verification interface
+156,GET,/enhanced-pdf/preview,http://localhost:8003/enhanced-pdf/preview,Public,PDF preview,PDF preview request,PDF preview display,preview_token,Enhanced PDF preview
+157,GET,/enhanced-pdf/download/{filename},http://localhost:8003/enhanced-pdf/download/enhanced_report_123.pdf,Public,After PDF generation,Click download,PDF file download,filename=enhanced_report_123.pdf,Enhanced PDF download
+158,GET,/pdf-preview/component/{token},http://localhost:8003/pdf-preview/component/component_token_123,Public,Component preview,Component preview request,Component preview display,token=component_token_123,Vue component PDF preview
+159,GET,/pdf-preview/route/{token},http://localhost:8003/pdf-preview/route/route_token_123,Public,Route preview,Route preview request,Route preview display,token=route_token_123,Vue route PDF preview
+160,GET,/pdf-preview/{token},http://localhost:8003/pdf-preview/legacy_token_123,Public,Legacy preview,Legacy preview request,Legacy preview display,token=legacy_token_123,Legacy PDF preview
+161,GET,/vue-pdf/download/{filename},http://localhost:8003/vue-pdf/download/vue_report_123.pdf,Public,After Vue PDF generation,Click download,Vue PDF download,filename=vue_report_123.pdf,Vue PDF file download
+162,GET,/vue-pdf/preview/{token},http://localhost:8003/vue-pdf/preview/vue_token_123,Public,Vue PDF preview,Vue preview request,Vue preview display,token=vue_token_123,Vue PDF preview
+163,GET,/pdf/analytics/{contractId},http://localhost:8003/pdf/analytics/contract_123,Public,Analytics PDF,Direct analytics PDF,PDF analytics report,contractId=contract_123,Contract analytics PDF
+164,GET,/pdf/sentiment-dashboard,http://localhost:8003/pdf/sentiment-dashboard,Public,Sentiment PDF,Direct sentiment PDF,PDF sentiment dashboard,None,Sentiment dashboard PDF
+165,GET,/pdf/preview/{component},http://localhost:8003/pdf/preview/SentimentChart,Public,Component PDF preview,Component preview,Component PDF preview,component=SentimentChart,PDF component preview
+166,GET,/pdf/download/{filename},http://localhost:8003/pdf/download/download_report_123.pdf,Auth,After PDF generation,Click download,PDF file download,filename=download_report_123.pdf,Authenticated PDF download
+167,GET,/pdf/temp-vue/{token},http://localhost:8003/pdf/temp-vue/temp_token_123,Public,Temporary Vue,Temporary Vue route,Temporary Vue display,token=temp_token_123,Temporary Vue PDF route
+168,GET,/pdf/sentiment-chart-preview,http://localhost:8003/pdf/sentiment-chart-preview,Public,Chart preview,Chart preview request,Chart preview display,None,Sentiment chart PDF preview
+169,GET,/pdf/test,http://localhost:8003/pdf/test,Public,PDF testing,Direct PDF test,PDF test response,None,PDF generation test
+170,GET,/pdf/test-dashboard,http://localhost:8003/pdf/test-dashboard,Public,Dashboard test,Dashboard PDF test,Dashboard PDF test response,None,Dashboard PDF test
+171,GET,/pdf/test-engines,http://localhost:8003/pdf/test-engines,Public,Engine testing,PDF engine test,Engine test response,None,PDF engine testing
+172,GET,/test-monitoring,http://localhost:8003/test-monitoring,Public,System monitoring,Monitoring system test,Monitoring test response,None,System monitoring test
+173,GET,/css-test,http://localhost:8003/css-test,Public,CSS testing,CSS test page,CSS test interface,None,CSS styling test page
+174,GET,/up,http://localhost:8003/up,Public,Health check,Application health,Health check response,None,Laravel application health
+175,GET,/sanctum/csrf-cookie,http://localhost:8003/sanctum/csrf-cookie,Public,CSRF token,CSRF cookie request,CSRF cookie set,None,Laravel Sanctum CSRF token
+176,GET,/storage/{path},http://localhost:8003/storage/file.pdf,Public,File access,Direct file access,File served,path=file.pdf,Public file storage access
+177,GET,/stripe/payment/{id},http://localhost:8003/stripe/payment/payment_123,Public,Stripe redirect,Stripe payment redirect,Payment page display,id=payment_123,Stripe payment handling
+178,POST,/stripe/webhook,http://localhost:8003/stripe/webhook,External,Stripe,Stripe webhook call,Webhook processed,Stripe webhook data,External webhook not browser testable
+179,POST,/webhooks/mailgun,http://localhost:8003/webhooks/mailgun,External,Mailgun,Mailgun webhook call,Webhook processed,Mailgun webhook data,External webhook not browser testable
+180,POST,/webhooks/mailgun/delivered,http://localhost:8003/webhooks/mailgun/delivered,External,Mailgun,Email delivered webhook,Webhook processed,Email event data,External webhook not browser testable
+181,POST,/webhooks/mailgun/opened,http://localhost:8003/webhooks/mailgun/opened,External,Mailgun,Email opened webhook,Webhook processed,Email event data,External webhook not browser testable
+182,POST,/webhooks/mailgun/clicked,http://localhost:8003/webhooks/mailgun/clicked,External,Mailgun,Email clicked webhook,Webhook processed,Email event data,External webhook not browser testable
+183,POST,/webhooks/mailgun/bounced,http://localhost:8003/webhooks/mailgun/bounced,External,Mailgun,Email bounced webhook,Webhook processed,Email event data,External webhook not browser testable
+184,POST,/webhooks/mailgun/complained,http://localhost:8003/webhooks/mailgun/complained,External,Mailgun,Email complained webhook,Webhook processed,Email event data,External webhook not browser testable
+185,POST,/webhooks/mailgun/unsubscribed,http://localhost:8003/webhooks/mailgun/unsubscribed,External,Mailgun,Email unsubscribed webhook,Webhook processed,Email event data,External webhook not browser testable
+186,GET,/email/tracking/pixel,http://localhost:8003/email/tracking/pixel,Public,Email tracking,Email pixel tracking,Tracking pixel served,email_id user_id,Email open tracking pixel

@@ -158,9 +158,9 @@
         
         <div class="footer">
             <div class="social-links">
-                <a href="#" title="Twitter">🐦</a>
-                <a href="#" title="GitHub">🐱</a>
-                <a href="#" title="Discord">💬</a>
+                <a href="https://twitter.com/sentimentshield" title="Twitter" target="_blank" rel="noopener">🐦</a>
+                <a href="https://github.com/mobinpo/ai-blockchain-analytics" title="GitHub" target="_blank" rel="noopener">🐱</a>
+                <a href="https://discord.gg/sentimentshield" title="Discord" target="_blank" rel="noopener">💬</a>
             </div>
             <p>&copy; {{ date('Y') }} AI Blockchain Analytics. All rights reserved.</p>
             <p>

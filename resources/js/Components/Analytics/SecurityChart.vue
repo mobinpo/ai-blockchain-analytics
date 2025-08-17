@@ -6,13 +6,14 @@
         <button 
           v-for="period in periods" 
           :key="period"
-          @click="selectedPeriod = period"
+          @click="changePeriod(period)"
           :class="[
             'px-3 py-1 text-xs font-medium rounded-md transition-colors',
             selectedPeriod === period 
               ? 'bg-indigo-100 text-indigo-700' 
               : 'text-gray-500 hover:text-gray-700'
           ]"
+          :disabled="loading"
         >
           {{ period }}
         </button>
@@ -100,52 +101,74 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import api from '@/services/api'
 
 const selectedPeriod = ref('7D')
 const periods = ['24H', '7D', '30D', '90D']
 const showTooltip = ref(null)
+const loading = ref(false)
+const error = ref(null)
 
-// Demo data for different severity levels
-const criticalData = [
-  { x: 50, y: 150, value: 2 },
-  { x: 100, y: 120, value: 4 },
-  { x: 150, y: 100, value: 6 },
-  { x: 200, y: 80, value: 3 },
-  { x: 250, y: 90, value: 1 },
-  { x: 300, y: 110, value: 2 },
-  { x: 350, y: 95, value: 0 }
-]
+// Chart data - will be fetched from API
+const criticalData = ref([])
+const highData = ref([])
+const mediumData = ref([])
 
-const highData = [
-  { x: 50, y: 140, value: 5 },
-  { x: 100, y: 110, value: 8 },
-  { x: 150, y: 90, value: 12 },
-  { x: 200, y: 70, value: 7 },
-  { x: 250, y: 80, value: 4 },
-  { x: 300, y: 100, value: 6 },
-  { x: 350, y: 85, value: 3 }
-]
+const fetchSecurityTrendData = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    const response = await api.get('/analytics/security-trend', {
+      params: { period: selectedPeriod.value }
+    })
+    const data = response.data
+    
+    criticalData.value = data.critical || []
+    highData.value = data.high || []
+    mediumData.value = data.medium || []
+  } catch (err) {
+    error.value = 'Failed to load security trend data'
+    console.error('Error fetching security trend:', err)
+    // Show empty data instead of fallback
+    criticalData.value = []
+    highData.value = []
+    mediumData.value = []
+  } finally {
+    loading.value = false
+  }
+}
 
-const mediumData = [
-  { x: 50, y: 130, value: 8 },
-  { x: 100, y: 100, value: 15 },
-  { x: 150, y: 80, value: 20 },
-  { x: 200, y: 60, value: 12 },
-  { x: 250, y: 70, value: 9 },
-  { x: 300, y: 90, value: 11 },
-  { x: 350, y: 75, value: 7 }
-]
+const generateFallbackData = (minValue, maxValue) => {
+  const points = []
+  for (let i = 0; i < 7; i++) {
+    const x = 50 + (i * 50)
+    const value = Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue
+    const y = 150 - (value * 3) // Scale value to Y coordinate
+    points.push({ x, y, value })
+  }
+  return points
+}
+
+// Watch for period changes and refetch data
+const changePeriod = async (period) => {
+  selectedPeriod.value = period
+  await fetchSecurityTrendData()
+}
 
 const criticalPoints = computed(() => 
-  criticalData.map(point => `${point.x},${point.y}`).join(' ')
+  criticalData.value.map(point => `${point.x},${point.y}`).join(' ')
 )
 
 const highPoints = computed(() => 
-  highData.map(point => `${point.x},${point.y}`).join(' ')
+  highData.value.map(point => `${point.x},${point.y}`).join(' ')
 )
 
 const mediumPoints = computed(() => 
-  mediumData.map(point => `${point.x},${point.y}`).join(' ')
+  mediumData.value.map(point => `${point.x},${point.y}`).join(' ')
 )
+
+onMounted(() => {
+  fetchSecurityTrendData()
+})
 </script>

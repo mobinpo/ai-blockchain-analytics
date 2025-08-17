@@ -24,8 +24,24 @@
       </div>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center py-8">
+      <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+      <span class="ml-2 text-sm text-gray-600">Loading real-time data...</span>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+      <div class="flex items-center">
+        <span class="text-red-700 text-sm">{{ error }}</span>
+        <button @click="fetchAllData" class="ml-4 text-red-600 hover:text-red-800 underline text-sm">
+          Retry
+        </button>
+      </div>
+    </div>
+
     <!-- Active Analyses -->
-    <div class="space-y-3 mb-6">
+    <div v-else class="space-y-3 mb-6">
       <div 
         v-for="analysis in activeAnalyses" 
         :key="analysis.id"
@@ -153,99 +169,22 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
+import api from '@/services/api'
 
 const isMonitoring = ref(true)
 const monitoringInterval = ref(null)
+const loading = ref(false)
+const error = ref(null)
 
-const activeAnalyses = ref([
-  {
-    id: 1,
-    contractName: 'UniswapV4Router',
-    network: 'Ethereum',
-    type: 'Security Audit',
-    status: 'analyzing',
-    progress: 67,
-    duration: 145, // seconds
-    findingsCount: 8,
-    gasAnalyzed: 2450000,
-    currentStep: 'Reentrancy Analysis',
-    eta: '2 min remaining',
-    recentFindings: [
-      { id: 1, title: 'Potential front-running in swap function', severity: 'medium', timestamp: '30s ago' },
-      { id: 2, title: 'Gas optimization opportunity found', severity: 'low', timestamp: '1m ago' }
-    ]
-  },
-  {
-    id: 2,
-    contractName: 'AAVE LendingPool',
-    network: 'Polygon',
-    type: 'Full Analysis',
-    status: 'analyzing',
-    progress: 23,
-    duration: 67,
-    findingsCount: 3,
-    gasAnalyzed: 890000,
-    currentStep: 'Function Mapping',
-    eta: '8 min remaining',
-    recentFindings: [
-      { id: 3, title: 'Access control validation required', severity: 'high', timestamp: '15s ago' }
-    ]
-  },
-  {
-    id: 3,
-    contractName: 'CompoundGovernor',
-    network: 'Ethereum',
-    type: 'Quick Scan',
-    status: 'finalizing',
-    progress: 94,
-    duration: 89,
-    findingsCount: 12,
-    gasAnalyzed: 1750000,
-    currentStep: 'Report Generation',
-    eta: '30s remaining',
-    recentFindings: [
-      { id: 4, title: 'Integer overflow protection needed', severity: 'critical', timestamp: '5s ago' },
-      { id: 5, title: 'Event emission optimization', severity: 'low', timestamp: '45s ago' }
-    ]
-  }
-])
+const activeAnalyses = ref([])
 
-const queuedAnalyses = ref([
-  {
-    id: 4,
-    contractName: 'SushiSwapV3Factory',
-    network: 'Ethereum',
-    type: 'Security Audit',
-    estimatedStart: '3 min'
-  },
-  {
-    id: 5,
-    contractName: 'PancakeSwapRouter',
-    network: 'BSC',
-    type: 'Full Analysis',
-    estimatedStart: '7 min'
-  },
-  {
-    id: 6,
-    contractName: 'YearnVaultV2',
-    network: 'Ethereum',
-    type: 'Quick Scan',
-    estimatedStart: '12 min'
-  },
-  {
-    id: 7,
-    contractName: 'CurveStableSwap',
-    network: 'Polygon',
-    type: 'Security Audit',
-    estimatedStart: '18 min'
-  }
-])
+const queuedAnalyses = ref([])
 
-// Performance metrics
-const totalAnalysesToday = ref(47)
-const averageCompletionTime = ref(156)
-const totalFindingsToday = ref(203)
-const systemLoad = ref(73)
+// Performance metrics - will be fetched from API
+const totalAnalysesToday = ref(0)
+const averageCompletionTime = ref(0)
+const totalFindingsToday = ref(0)
+const systemLoad = ref(0)
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -272,65 +211,60 @@ const formatDuration = (seconds) => {
   return minutes > 0 ? `${minutes}m ${remainingSeconds}s` : `${remainingSeconds}s`
 }
 
-const simulateProgress = () => {
-  activeAnalyses.value.forEach(analysis => {
-    if (analysis.progress < 100) {
-      // Simulate realistic progress increments
-      const increment = Math.random() * 3 + 0.5
-      analysis.progress = Math.min(100, analysis.progress + increment)
-      analysis.duration += 2
-      
-      // Simulate occasional new findings
-      if (Math.random() > 0.9) {
-        analysis.findingsCount += 1
-        const severities = ['low', 'medium', 'high', 'critical']
-        const titles = [
-          'Gas optimization opportunity',
-          'Access control check needed',
-          'State variable visibility issue',
-          'Potential reentrancy vulnerability',
-          'Integer overflow protection required',
-          'Event emission missing',
-          'Function modifier validation'
-        ]
-        
-        analysis.recentFindings.unshift({
-          id: Date.now(),
-          title: titles[Math.floor(Math.random() * titles.length)],
-          severity: severities[Math.floor(Math.random() * severities.length)],
-          timestamp: 'just now'
-        })
-        
-        // Keep only recent findings
-        analysis.recentFindings = analysis.recentFindings.slice(0, 5)
-      }
-      
-      // Update current step based on progress
-      if (analysis.progress > 90) {
-        analysis.currentStep = 'Report Generation'
-        analysis.eta = '30s remaining'
-      } else if (analysis.progress > 70) {
-        analysis.currentStep = 'Vulnerability Assessment'
-        analysis.eta = '2 min remaining'
-      } else if (analysis.progress > 40) {
-        analysis.currentStep = 'Code Pattern Analysis'
-        analysis.eta = '5 min remaining'
-      } else if (analysis.progress > 20) {
-        analysis.currentStep = 'Function Mapping'
-        analysis.eta = '8 min remaining'
-      } else {
-        analysis.currentStep = 'Contract Parsing'
-        analysis.eta = 'Calculating...'
-      }
-    }
-  })
-  
-  // Update performance metrics
-  if (Math.random() > 0.8) {
-    totalFindingsToday.value += Math.floor(Math.random() * 3)
-    systemLoad.value = Math.max(45, Math.min(95, systemLoad.value + (Math.random() - 0.5) * 10))
+// API Functions
+const fetchActiveAnalyses = async () => {
+  try {
+    const response = await api.get('/analyses/active')
+    activeAnalyses.value = response.data.analyses || response.data || []
+  } catch (err) {
+    console.error('Error fetching active analyses:', err)
+    activeAnalyses.value = []
   }
 }
+
+const fetchQueuedAnalyses = async () => {
+  try {
+    const response = await api.get('/analyses/queue')
+    queuedAnalyses.value = response.data.queue || response.data || []
+  } catch (err) {
+    console.error('Error fetching queued analyses:', err)
+    queuedAnalyses.value = []
+  }
+}
+
+const fetchPerformanceMetrics = async () => {
+  try {
+    const response = await api.get('/analyses/metrics')
+    const metrics = response.data.metrics || response.data || {}
+    
+    totalAnalysesToday.value = metrics.totalAnalysesToday || 0
+    averageCompletionTime.value = metrics.averageCompletionTime || 0
+    totalFindingsToday.value = metrics.totalFindingsToday || 0
+    systemLoad.value = metrics.systemLoad || 0
+  } catch (err) {
+    console.error('Error fetching performance metrics:', err)
+  }
+}
+
+const fetchAllData = async () => {
+  loading.value = true
+  error.value = null
+  
+  try {
+    await Promise.all([
+      fetchActiveAnalyses(),
+      fetchQueuedAnalyses(), 
+      fetchPerformanceMetrics()
+    ])
+  } catch (err) {
+    error.value = 'Failed to load real-time data'
+    console.error('Error fetching real-time data:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Removed simulation code - now using real API data only
 
 const toggleMonitoring = () => {
   isMonitoring.value = !isMonitoring.value
@@ -345,7 +279,12 @@ const toggleMonitoring = () => {
 const startMonitoring = () => {
   if (monitoringInterval.value) return
   
-  monitoringInterval.value = setInterval(simulateProgress, 2000)
+  monitoringInterval.value = setInterval(async () => {
+    // Refresh real data from API every few seconds for real-time updates
+    await fetchActiveAnalyses()
+    await fetchQueuedAnalyses()
+    await fetchPerformanceMetrics()
+  }, 5000) // Increased interval to 5 seconds to reduce API load
 }
 
 const stopMonitoring = () => {
@@ -355,7 +294,8 @@ const stopMonitoring = () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await fetchAllData()
   if (isMonitoring.value) {
     startMonitoring()
   }

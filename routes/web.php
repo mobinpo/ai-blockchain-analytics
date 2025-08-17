@@ -48,8 +48,18 @@ Route::get('/pricing', function () {
 })->name('pricing');
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    $projectId = request('project');
+    
+    return Inertia::render('Dashboard', [
+        'projectId' => $projectId,
+        'showingProject' => !is_null($projectId)
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+// Redirect old subscription URL to billing
+Route::get('/subscription', function () {
+    return redirect('/billing');
+})->middleware(['auth', 'verified'])->name('subscription.redirect');
 
 // Verification Badge Routes (with security middleware)
 Route::get('/get-verified', [VerificationController::class, 'index'])->name('verification.index');

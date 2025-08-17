@@ -14,9 +14,9 @@
           <div class="hidden md:flex items-center space-x-8">
             <a href="#features" class="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
             <a href="#how-it-works" class="text-gray-600 hover:text-gray-900 transition-colors">How it Works</a>
-            <a href="#pricing" class="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
-            <Link href="/login" class="text-gray-600 hover:text-gray-900 transition-colors">Login</Link>
-            <Link href="/register" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300">
+            <Link :href="route('pricing')" class="text-gray-600 hover:text-gray-900 transition-colors">Pricing</Link>
+            <Link :href="route('login')" class="text-gray-600 hover:text-gray-900 transition-colors">Login</Link>
+            <Link :href="route('register')" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300">
               Get Started
             </Link>
           </div>
@@ -37,9 +37,9 @@
           <div class="flex flex-col space-y-3 pt-4">
             <a href="#features" class="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
             <a href="#how-it-works" class="text-gray-600 hover:text-gray-900 transition-colors">How it Works</a>
-            <a href="#pricing" class="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
-            <Link href="/login" class="text-gray-600 hover:text-gray-900 transition-colors">Login</Link>
-            <Link href="/register" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg text-center hover:from-blue-700 hover:to-purple-700 transition-all duration-300">
+            <Link :href="route('pricing')" class="text-gray-600 hover:text-gray-900 transition-colors">Pricing</Link>
+            <Link :href="route('login')" class="text-gray-600 hover:text-gray-900 transition-colors">Login</Link>
+            <Link :href="route('register')" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg text-center hover:from-blue-700 hover:to-purple-700 transition-all duration-300">
               Get Started
             </Link>
           </div>
@@ -313,7 +313,7 @@
             Join thousands of developers who trust AI Blockchain Analytics to keep their contracts secure and optimized.
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register" class="bg-white text-blue-600 px-8 py-3 rounded-xl font-semibold hover:bg-ink transition-colors">
+            <Link :href="route('register')" class="bg-white text-blue-600 px-8 py-3 rounded-xl font-semibold hover:bg-ink transition-colors">
               Start Free Trial
             </Link>
             <a href="#features" class="border-2 border-white text-white px-8 py-3 rounded-xl font-semibold hover:bg-white hover:text-blue-600 transition-colors">
@@ -342,29 +342,29 @@
             <h3 class="text-lg font-semibold mb-4">Product</h3>
             <ul class="space-y-2 text-gray-400">
               <li><a href="#features" class="hover:text-white transition-colors">Features</a></li>
-              <li><a href="#pricing" class="hover:text-white transition-colors">Pricing</a></li>
-              <li><a href="#" class="hover:text-white transition-colors">API</a></li>
-              <li><a href="#" class="hover:text-white transition-colors">Documentation</a></li>
+              <li><Link :href="route('pricing')" class="hover:text-white transition-colors">Pricing</Link></li>
+              <li><a href="https://api.sentimentshield.com/docs" target="_blank" rel="noopener" class="hover:text-white transition-colors">API</a></li>
+              <li><a href="https://docs.sentimentshield.com" target="_blank" rel="noopener" class="hover:text-white transition-colors">Documentation</a></li>
             </ul>
           </div>
 
           <div>
             <h3 class="text-lg font-semibold mb-4">Company</h3>
             <ul class="space-y-2 text-gray-400">
-              <li><a href="#" class="hover:text-white transition-colors">About</a></li>
-              <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
-              <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
-              <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+              <li><Link :href="route('dashboard')" class="hover:text-white transition-colors">About</Link></li>
+              <li><a href="https://blog.sentimentshield.com" target="_blank" rel="noopener" class="hover:text-white transition-colors">Blog</a></li>
+              <li><a href="https://careers.sentimentshield.com" target="_blank" rel="noopener" class="hover:text-white transition-colors">Careers</a></li>
+              <li><a href="mailto:support@sentimentshield.com" class="hover:text-white transition-colors">Contact</a></li>
             </ul>
           </div>
 
           <div>
             <h3 class="text-lg font-semibold mb-4">Support</h3>
             <ul class="space-y-2 text-gray-400">
-              <li><a href="#" class="hover:text-white transition-colors">Help Center</a></li>
-              <li><a href="#" class="hover:text-white transition-colors">Community</a></li>
-              <li><a href="#" class="hover:text-white transition-colors">Status</a></li>
-              <li><a href="#" class="hover:text-white transition-colors">Security</a></li>
+              <li><a href="https://help.sentimentshield.com" target="_blank" rel="noopener" class="hover:text-white transition-colors">Help Center</a></li>
+              <li><a href="https://discord.gg/sentimentshield" target="_blank" rel="noopener" class="hover:text-white transition-colors">Community</a></li>
+              <li><a href="https://status.sentimentshield.com" target="_blank" rel="noopener" class="hover:text-white transition-colors">Status</a></li>
+              <li><Link :href="route('security')" class="hover:text-white transition-colors">Security</Link></li>
             </ul>
           </div>
         </div>

@@ -135,6 +135,39 @@ Route::prefix('contracts')->name('contracts.')->group(function () {
     })->name('analyze-demo');
 });
 
+// API Routes for Vue components (refactored from mock data)
+Route::prefix('analytics')->name('api.analytics.')->group(function () {
+    Route::get('/risk-matrix', [App\Http\Controllers\Api\AnalyticsController::class, 'getRiskMatrix'])->name('risk-matrix');
+    Route::get('/security-trend', [App\Http\Controllers\Api\AnalyticsController::class, 'getSecurityTrend'])->name('security-trend');
+});
+
+Route::prefix('analyses')->name('api.analyses.')->group(function () {
+    Route::get('/active', [App\Http\Controllers\Api\AnalysisMonitorController::class, 'getActiveAnalyses'])->name('active');
+    Route::get('/queue', [App\Http\Controllers\Api\AnalysisMonitorController::class, 'getQueuedAnalyses'])->name('queue');
+    Route::get('/metrics', [App\Http\Controllers\Api\AnalysisMonitorController::class, 'getMetrics'])->name('metrics');
+});
+
+Route::prefix('blockchain')->name('api.blockchain.')->group(function () {
+    Route::get('/networks', [App\Http\Controllers\Api\BlockchainController::class, 'getNetworks'])->name('networks');
+    Route::get('/examples', [App\Http\Controllers\Api\BlockchainController::class, 'getExamples'])->name('examples');
+    Route::get('/contract-info', [App\Http\Controllers\Api\BlockchainController::class, 'getContractInfo'])->name('contract-info');
+    Route::post('/security-analysis', [App\Http\Controllers\Api\BlockchainController::class, 'performSecurityAnalysis'])->name('security-analysis');
+    Route::post('/sentiment-analysis', [App\Http\Controllers\Api\BlockchainController::class, 'performSentimentAnalysis'])->name('sentiment-analysis');
+});
+
+Route::prefix('ai')->name('api.ai.')->group(function () {
+    Route::get('/components/status', [App\Http\Controllers\Api\AIEngineController::class, 'getComponentsStatus'])->name('components.status');
+});
+
+// Dashboard API Routes
+Route::prefix('dashboard')->name('api.dashboard.')->group(function () {
+    Route::get('/stats', [App\Http\Controllers\Api\DashboardController::class, 'getStats'])->name('stats');
+    Route::get('/projects', [App\Http\Controllers\Api\DashboardController::class, 'getRecentProjects'])->name('projects');
+    Route::get('/critical-findings', [App\Http\Controllers\Api\DashboardController::class, 'getCriticalFindings'])->name('critical-findings');
+    Route::get('/ai-insights', [App\Http\Controllers\Api\DashboardController::class, 'getAIInsights'])->name('ai-insights');
+    Route::get('/project/{id}', [App\Http\Controllers\Api\DashboardController::class, 'getProjectDetails'])->name('project');
+});
+
 // Verification Badge API Routes (with security middleware)
 Route::prefix('verification')->name('api.verification.')->middleware('verification.security')->group(function () {
     Route::post('/generate', [VerificationController::class, 'generateVerification'])->name('generate');
@@ -265,6 +298,35 @@ Route::middleware(['auth:sanctum'])->prefix('security')->name('owasp-security.')
     
     // Testing utilities
     Route::get('/example-contract', [OWASPSecurityController::class, 'getExampleContract'])->name('example-contract');
+    
+    // Security findings for dashboard (moved outside auth middleware below)
+});
+
+// Public security findings endpoint (mock data)
+Route::get('/security/findings', [App\Http\Controllers\Api\OWASPSecurityController::class, 'getFindings'])->name('security.findings');
+
+// Dashboard API routes (public for mock data)
+Route::prefix('dashboard')->name('dashboard.')->group(function () {
+    // Dashboard statistics
+    Route::get('/stats', [App\Http\Controllers\Api\DashboardController::class, 'getStats'])->name('stats');
+    
+    // Recent projects
+    Route::get('/projects', [App\Http\Controllers\Api\DashboardController::class, 'getRecentProjects'])->name('projects');
+    
+    // Critical security findings
+    Route::get('/critical-findings', [App\Http\Controllers\Api\DashboardController::class, 'getCriticalFindings'])->name('critical-findings');
+    
+    // AI insights
+    Route::get('/ai-insights', [App\Http\Controllers\Api\DashboardController::class, 'getAIInsights'])->name('ai-insights');
+    
+    // Project details
+    Route::get('/project/{projectId}', [App\Http\Controllers\Api\DashboardController::class, 'getProjectDetails'])->name('project-details');
+});
+
+// Network monitoring API routes (public for status information)
+Route::prefix('network')->name('network.')->group(function () {
+    // Network status information
+    Route::get('/status', [App\Http\Controllers\Api\NetworkController::class, 'getStatus'])->name('status');
 });
 
 // Crawler Micro-Service API routes

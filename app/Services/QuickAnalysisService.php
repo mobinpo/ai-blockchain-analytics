@@ -33,31 +33,37 @@ final class QuickAnalysisService
         // Check cache first
         $cachedAnalysis = Cache::get($cacheKey);
         if ($cachedAnalysis) {
+            Log::debug('Returning cached analysis', ['type' => gettype($cachedAnalysis), 'has_id' => isset($cachedAnalysis['id']) ? 'yes' : 'no']);
             return $cachedAnalysis;
         }
 
         // Check database for recent analysis (within 24 hours)
-        $analysis = Analysis::where('contract_address', $contractAddress)
-            ->where('network', $network)
+        // Note: Network filtering is handled via configuration or metadata since 
+        // the analyses table is network-agnostic
+        $analysis = Analysis::where('target_address', $contractAddress)
+            ->where('target_type', 'contract')
             ->where('status', 'completed')
             ->where('created_at', '>=', now()->subDay())
             ->orderBy('created_at', 'desc')
             ->first();
 
         if (!$analysis) {
+            Log::debug('No existing analysis found in database');
             return null;
         }
 
+        Log::debug('Found analysis in database', ['analysis_id' => $analysis->id, 'status' => $analysis->status]);
+
         $analysisData = [
             'id' => $analysis->id,
-            'security_score' => $analysis->security_score ?? 75,
-            'critical_issues' => $analysis->critical_issues_count ?? 0,
-            'high_issues' => $analysis->high_issues_count ?? 0,
-            'medium_issues' => $analysis->medium_issues_count ?? 0,
-            'functions_count' => $analysis->functions_count ?? 0,
-            'lines_of_code' => $analysis->lines_of_code ?? 0,
+            'security_score' => $analysis->risk_score ?? 75,
+            'critical_issues' => $analysis->critical_findings_count ?? 0,
+            'high_issues' => $analysis->high_findings_count ?? 0,
+            'medium_issues' => $analysis->findings_count - ($analysis->critical_findings_count ?? 0) - ($analysis->high_findings_count ?? 0),
+            'functions_count' => 0, // Not tracked in current schema
+            'lines_of_code' => 0, // Not tracked in current schema  
             'verified' => $analysis->verified ?? false,
-            'completed_at' => $analysis->updated_at?->toISOString()
+            'completed_at' => $analysis->completed_at?->toISOString() ?? $analysis->updated_at?->toISOString()
         ];
 
         // Cache for 1 hour
@@ -73,6 +79,22 @@ final class QuickAnalysisService
     {
         $startTime = microtime(true);
 
+        // Check if we have source code BEFORE starting any database transactions
+        try {
+            $sourceData = $this->sourceCodeService->fetchSourceCode($contractAddress, $network);
+        } catch (\Exception $e) {
+            // Check if this might be an EOA rather than a contract
+            if (str_contains($e->getMessage(), 'source code not verified') || 
+                str_contains($e->getMessage(), 'Contract source code not verified')) {
+                throw new \Exception('This address appears to be an EOA (wallet address) or an unverified contract');
+            }
+            throw $e;
+        }
+        
+        if (!$sourceData['is_verified'] || empty($sourceData['source_code'])) {
+            throw new \Exception('Contract exists but source code is not verified on ' . ucfirst($network === 'ethereum' ? 'Etherscan' : $network . 'scan'));
+        }
+
         try {
             DB::beginTransaction();
 
@@ -82,26 +104,16 @@ final class QuickAnalysisService
             // Create default project for quick analyses
             $project = $this->getOrCreateQuickAnalysisProject($user);
 
-            // Check if we have source code
-            $sourceData = $this->sourceCodeService->fetchSourceCode($contractAddress, $network);
-            
-            if (!$sourceData['success']) {
-                throw new \Exception('Could not fetch contract source code');
-            }
-
-            // Create analysis record
+            // Create analysis record (we know source code is verified at this point)
             $analysis = Analysis::create([
-                'user_id' => $user->id,
                 'project_id' => $project->id,
-                'contract_address' => $contractAddress,
-                'network' => $network,
+                'engine' => 'security', // Required field - type of analysis engine
+                'analysis_type' => 'quick',
+                'target_type' => 'contract',
+                'target_address' => $contractAddress,
                 'status' => 'processing',
-                'source_code' => $sourceData['source_code'] ?? '',
-                'abi' => $sourceData['abi'] ?? null,
-                'verified' => $sourceData['verified'] ?? false,
-                'compiler_version' => $sourceData['compiler_version'] ?? null,
-                'optimization' => $sourceData['optimization'] ?? null,
-                'runs' => $sourceData['runs'] ?? null
+                'started_at' => now(),
+                'triggered_by' => 'manual'
             ]);
 
             // Perform quick security analysis
@@ -141,7 +153,7 @@ final class QuickAnalysisService
             Cache::put($cacheKey, $result, 3600);
 
             // Queue full analysis job for better results later
-            AnalyzeContractJob::dispatch($analysis->id)->delay(now()->addMinutes(1));
+            AnalyzeContractJob::dispatch($contractAddress, $network, (string) $analysis->id)->delay(now()->addMinutes(1));
 
             return $result;
 

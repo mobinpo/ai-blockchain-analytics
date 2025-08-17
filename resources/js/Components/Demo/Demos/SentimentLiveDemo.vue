@@ -162,6 +162,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import api from '@/services/api'
 
 // Demo state
 const selectedCrypto = ref('bitcoin')
@@ -169,63 +170,110 @@ const selectedPlatform = ref('all')
 const isPaused = ref(false)
 
 const liveStats = ref({
-    sentimentScore: 0.647,
-    currentPrice: 43250,
-    priceChange: 2.34,
-    mentions: 2847,
-    mentionGrowth: 15,
-    correlation: 0.73
+    sentimentScore: 0,
+    currentPrice: 0,
+    priceChange: 0,
+    mentions: 0,
+    mentionGrowth: 0,
+    correlation: 0
 })
 
-const livePosts = ref([
-    {
-        id: 1,
-        platform: 'twitter',
-        username: 'crypto_trader_99',
-        content: 'Bitcoin looking strong today! 🚀 Breaking resistance levels',
-        sentiment: 0.85,
-        timeAgo: '2m ago',
-        isNew: false
-    },
-    {
-        id: 2,
-        platform: 'reddit',
-        username: 'defi_enthusiast',
-        content: 'Interesting analysis on BTC market dynamics. Bullish long term.',
-        sentiment: 0.62,
-        timeAgo: '5m ago',
-        isNew: false
-    },
-    {
-        id: 3,
-        platform: 'telegram',
-        username: 'moon_boy_2024',
-        content: 'Not sure about this pump, feels like manipulation to me',
-        sentiment: -0.34,
-        timeAgo: '8m ago',
-        isNew: false
-    }
-])
+const livePosts = ref([])
 
-const trendData = ref([
-    { time: '12:00', sentiment: 0.65, priceChange: 1.2 },
-    { time: '12:15', sentiment: 0.72, priceChange: 2.1 },
-    { time: '12:30', sentiment: 0.58, priceChange: 1.8 },
-    { time: '12:45', sentiment: 0.81, priceChange: 2.9 },
-    { time: '13:00', sentiment: 0.69, priceChange: 2.3 }
-])
+const trendData = ref([])
 
 let updateInterval
 
+// API Functions
+const fetchLiveStats = async () => {
+    try {
+        const response = await api.get('/sentiment/current-summary', {
+            params: {
+                coin: selectedCrypto.value,
+                platform: selectedPlatform.value
+            }
+        })
+        
+        if (response.data.success) {
+            const data = response.data.data || {}
+            liveStats.value = {
+                sentimentScore: data.sentiment_score || 0,
+                currentPrice: data.current_price || 0,
+                priceChange: data.price_change_24h || 0,
+                mentions: data.mentions_count || 0,
+                mentionGrowth: data.mention_growth || 0,
+                correlation: data.correlation || 0
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching live stats:', error)
+    }
+}
+
+const fetchLivePosts = async () => {
+    try {
+        const response = await api.get('/social-media/', {
+            params: {
+                coin: selectedCrypto.value,
+                platform: selectedPlatform.value,
+                limit: 10
+            }
+        })
+        
+        if (response.data.success) {
+            const posts = response.data.posts || []
+            livePosts.value = posts.map(post => ({
+                id: post.id,
+                platform: post.platform,
+                username: post.username || 'anonymous',
+                content: post.content,
+                sentiment: post.sentiment_score || 0,
+                timeAgo: post.time_ago || 'recently',
+                isNew: false
+            }))
+        }
+    } catch (error) {
+        console.error('Error fetching live posts:', error)
+        livePosts.value = []
+    }
+}
+
+const fetchTrendData = async () => {
+    try {
+        const response = await api.get('/sentiment-price-timeline/data', {
+            params: {
+                coin: selectedCrypto.value,
+                period: '1h'
+            }
+        })
+        
+        if (response.data.success) {
+            const timeline = response.data.timeline || []
+            trendData.value = timeline.map(point => ({
+                time: new Date(point.timestamp).toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: false 
+                }),
+                sentiment: point.sentiment,
+                priceChange: point.price_change
+            }))
+        }
+    } catch (error) {
+        console.error('Error fetching trend data:', error)
+        trendData.value = []
+    }
+}
+
 // Methods
-const updateLiveData = () => {
-    // Simulate different data for different cryptos/platforms
-    const variance = Math.random() * 0.2 - 0.1 // ±10% variance
-    
-    liveStats.value.sentimentScore = Math.max(0, Math.min(1, liveStats.value.sentimentScore + variance))
-    liveStats.value.priceChange += (Math.random() - 0.5) * 0.5
-    liveStats.value.mentions = Math.floor(Math.random() * 1000) + 2000
-    liveStats.value.correlation = Math.max(-1, Math.min(1, liveStats.value.correlation + (Math.random() - 0.5) * 0.1))
+const updateLiveData = async () => {
+    if (!isPaused.value) {
+        await Promise.all([
+            fetchLiveStats(),
+            fetchLivePosts(),
+            fetchTrendData()
+        ])
+    }
 }
 
 const getPlatformColor = (platform) => {
@@ -261,49 +309,7 @@ const getAIInsight = () => {
     return insights[Math.floor(Date.now() / 10000) % insights.length]
 }
 
-const addNewPost = () => {
-    const newPosts = [
-        {
-            platform: 'twitter',
-            username: 'hodl_master',
-            content: 'This is the way! 💎🙌 Diamond hands forever',
-            sentiment: 0.91
-        },
-        {
-            platform: 'reddit',
-            username: 'technical_analyst',
-            content: 'RSI showing overbought conditions, expecting pullback',
-            sentiment: -0.15
-        },
-        {
-            platform: 'telegram',
-            username: 'whale_watcher',
-            content: 'Large wallet movements detected on-chain',
-            sentiment: 0.45
-        }
-    ]
-    
-    const newPost = newPosts[Math.floor(Math.random() * newPosts.length)]
-    const post = {
-        id: Date.now(),
-        ...newPost,
-        timeAgo: 'Just now',
-        isNew: true
-    }
-    
-    livePosts.value.unshift(post)
-    
-    // Remove the "new" highlight after 3 seconds
-    setTimeout(() => {
-        post.isNew = false
-        post.timeAgo = '1m ago'
-    }, 3000)
-    
-    // Keep only last 10 posts
-    if (livePosts.value.length > 10) {
-        livePosts.value = livePosts.value.slice(0, 10)
-    }
-}
+// Removed addNewPost - now using real API data
 
 const pauseLiveUpdates = () => {
     isPaused.value = !isPaused.value
@@ -337,36 +343,18 @@ const exportLiveData = () => {
 }
 
 const startLiveUpdates = () => {
-    updateInterval = setInterval(() => {
+    updateInterval = setInterval(async () => {
         if (!isPaused.value) {
-            updateLiveData()
-            
-            // Add new post occasionally
-            if (Math.random() < 0.3) {
-                addNewPost()
-            }
-            
-            // Update trend data
-            const newPoint = {
-                time: new Date().toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    hour12: false 
-                }),
-                sentiment: liveStats.value.sentimentScore,
-                priceChange: liveStats.value.priceChange
-            }
-            
-            trendData.value.push(newPoint)
-            if (trendData.value.length > 8) {
-                trendData.value.shift()
-            }
+            await updateLiveData()
         }
-    }, 5000) // Update every 5 seconds
+    }, 10000) // Update every 10 seconds with real API data
 }
 
 // Lifecycle
-onMounted(() => {
+onMounted(async () => {
+    // Load initial data
+    await updateLiveData()
+    // Start live updates
     startLiveUpdates()
 })
 

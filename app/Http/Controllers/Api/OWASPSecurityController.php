@@ -257,4 +257,158 @@ SOLIDITY;
             'suggested_focus_areas' => ['Re-entrancy', 'Access Control', 'Input Validation']
         ]);
     }
+
+    /**
+     * Get security findings for the security dashboard
+     */
+    public function getFindings(): JsonResponse
+    {
+        try {
+            // This would normally fetch from your security findings database
+            // For now, return mock data that matches the expected format
+            $findings = $this->getMockSecurityFindings();
+
+            return response()->json([
+                'success' => true,
+                'findings' => $findings,
+                'count' => count($findings)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to fetch security findings'
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate mock security findings data
+     * This should be replaced with actual database queries
+     */
+    private function getMockSecurityFindings(): array
+    {
+        $vulnerabilityTypes = [
+            'Reentrancy Vulnerability in Transfer Function',
+            'Unchecked Return Value',
+            'Integer Overflow in Calculation', 
+            'Weak Access Control',
+            'Missing Input Validation',
+            'Front-Running Attack Vector',
+            'Price Manipulation Risk',
+            'DoS via Gas Limit'
+        ];
+
+        $projects = ['Uniswap V4', 'Aave V3 Lending', 'Compound Gov', 'OpenSea Protocol', 'Chainlink Oracle'];
+        $files = ['LendingPool.sol', 'TokenVault.sol', 'PriceOracle.sol', 'Governance.sol', 'Bridge.sol', 'Staking.sol'];
+        $severities = ['critical', 'high', 'medium', 'low'];
+        $statuses = ['open', 'investigating', 'resolved'];
+
+        $findings = [];
+        for ($i = 1; $i <= 15; $i++) {
+            $severity = $severities[array_rand($severities)];
+            $status = $statuses[array_rand($statuses)];
+            
+            $findings[] = [
+                'id' => $i,
+                'title' => $vulnerabilityTypes[array_rand($vulnerabilityTypes)],
+                'severity' => $severity,
+                'project' => $projects[array_rand($projects)],
+                'description' => $this->generateDescription($severity),
+                'line' => random_int(50, 500),
+                'file' => $files[array_rand($files)],
+                'impact' => $this->getImpactLevel($severity),
+                'recommendation' => $this->getRecommendation($severity),
+                'detectedAt' => $this->getRandomTimeAgo(),
+                'status' => $status,
+                'codeSnippet' => $this->generateCodeSnippet(),
+                'cvss' => $this->getCvssScore($severity)
+            ];
+        }
+
+        return $findings;
+    }
+
+    private function generateDescription(string $severity): string
+    {
+        $descriptions = [
+            'critical' => 'This vulnerability allows for complete draining of contract funds through reentrancy attacks.',
+            'high' => 'External call return value is not checked, could lead to silent failures and state inconsistency.',
+            'medium' => 'Function lacks proper access control modifiers, allowing unauthorized access.',
+            'low' => 'Input parameters are not properly validated before use, may cause unexpected behavior.'
+        ];
+
+        return $descriptions[$severity] ?? 'Security vulnerability detected that requires attention.';
+    }
+
+    private function getImpactLevel(string $severity): string
+    {
+        return match($severity) {
+            'critical' => 'Critical - Complete loss of funds possible',
+            'high' => 'High - Significant risk to contract security',
+            'medium' => 'Medium - Moderate security risk',
+            'low' => 'Low - Minor security concern',
+            default => 'Unknown impact level'
+        };
+    }
+
+    private function getRecommendation(string $severity): string
+    {
+        $recommendations = [
+            'critical' => 'Implement reentrancy guard or follow checks-effects-interactions pattern immediately.',
+            'high' => 'Always check return values of external calls and handle failures appropriately.',
+            'medium' => 'Add appropriate access control modifiers (onlyOwner, onlyAdmin, etc.).',
+            'low' => 'Add proper input validation and boundary checks for all parameters.'
+        ];
+
+        return $recommendations[$severity] ?? 'Review and address this security concern.';
+    }
+
+    private function getRandomTimeAgo(): string
+    {
+        $times = [
+            '5 minutes ago', '12 minutes ago', '25 minutes ago', '1 hour ago',
+            '2 hours ago', '4 hours ago', '1 day ago', '2 days ago'
+        ];
+        return $times[array_rand($times)];
+    }
+
+    private function generateCodeSnippet(): string
+    {
+        $snippets = [
+            'function transfer(address to, uint256 amount) external {
+    require(balances[msg.sender] >= amount, "Insufficient balance");
+    // VULNERABILITY: External call before state change
+    IERC20(token).transfer(to, amount);
+    balances[msg.sender] -= amount;
+}',
+            'function deposit(uint256 amount) external {
+    // VULNERABILITY: Unchecked return value
+    IERC20(asset).transferFrom(msg.sender, address(this), amount);
+    balances[msg.sender] += amount;
+}',
+            'function updateTokenPrice(address token, uint256 price) external {
+    // VULNERABILITY: No access control
+    tokenPrices[token] = price;
+    emit PriceUpdated(token, price);
+}',
+            'function setDelay(uint256 delay_) external {
+    // VULNERABILITY: No validation on delay_ parameter
+    delay = delay_;
+    emit DelayChanged(delay_);
+}'
+        ];
+
+        return $snippets[array_rand($snippets)];
+    }
+
+    private function getCvssScore(string $severity): float
+    {
+        return match($severity) {
+            'critical' => round(random_int(90, 100) / 10, 1),
+            'high' => round(random_int(70, 89) / 10, 1),
+            'medium' => round(random_int(40, 69) / 10, 1),
+            'low' => round(random_int(10, 39) / 10, 1),
+            default => 5.0
+        };
+    }
 }

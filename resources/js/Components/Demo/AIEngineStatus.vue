@@ -114,7 +114,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import api from '@/services/api'
 
 const props = defineProps({
     processingQueue: {
@@ -124,42 +125,57 @@ const props = defineProps({
     performanceMetrics: {
         type: Object,
         required: true
+    },
+    initialComponents: {
+        type: Array,
+        default: () => []
     }
 })
 
-// AI Engine Components Status
-const aiComponents = ref([
-    {
+// AI Engine Components Status - will be fetched from API
+const aiComponents = ref(props.initialComponents)
+const loading = ref(false)
+const error = ref(null)
+
+// Fetch AI components status from API
+const fetchAIComponents = async () => {
+  if (props.initialComponents.length > 0) return
+  
+  loading.value = true
+  error.value = null
+  
+  try {
+    const response = await api.get('/ai/components/status')
+    const data = response.data
+    
+    aiComponents.value = data.components || data.aiComponents || []
+  } catch (err) {
+    error.value = 'Failed to load AI components status'
+    console.error('Error fetching AI components:', err)
+    
+    // Fallback to basic components list
+    aiComponents.value = [
+      {
         name: 'Vulnerability Scanner',
         description: 'OWASP security analysis',
-        status: 'healthy',
-        load: 67
-    },
-    {
-        name: 'Sentiment Analyzer',
+        status: 'unknown',
+        load: 0
+      },
+      {
+        name: 'Sentiment Analyzer', 
         description: 'Social media processing',
-        status: 'healthy',
-        load: 34
-    },
-    {
-        name: 'Pattern Detector',
-        description: 'Anomaly detection engine',
-        status: 'healthy',
-        load: 89
-    },
-    {
-        name: 'Price Correlator',
-        description: 'Market data integration',
-        status: 'warning',
-        load: 95
-    },
-    {
-        name: 'Blockchain Parser',
-        description: 'Multi-chain data ingestion',
-        status: 'healthy',
-        load: 56
-    }
-])
+        status: 'unknown',
+        load: 0
+      }
+    ]
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchAIComponents()
+})
 
 // Methods
 const getStatusColor = (status) => {

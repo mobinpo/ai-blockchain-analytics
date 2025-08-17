@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
             \App\Http\Middleware\SentryContext::class,
+            \App\Http\Middleware\LegacyRedirects::class,
         ]);
 
         // Configure API middleware without auth by default

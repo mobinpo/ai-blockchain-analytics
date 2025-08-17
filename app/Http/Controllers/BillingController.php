@@ -19,6 +19,29 @@ class BillingController extends Controller
     ) {}
 
     /**
+     * Get current plan name from subscription
+     */
+    private function getCurrentPlanName($subscription): string
+    {
+        if (!$subscription) {
+            return 'starter';
+        }
+
+        $priceId = $subscription->stripe_price;
+        $plans = config('billing.plans');
+
+        // Map price ID to plan name
+        foreach ($plans as $planKey => $plan) {
+            if ($priceId === $plan['stripe_monthly_price_id'] || $priceId === $plan['stripe_yearly_price_id']) {
+                return $planKey;
+            }
+        }
+
+        // Default fallback
+        return 'starter';
+    }
+
+    /**
      * Show billing dashboard
      */
     public function index(): Response
@@ -32,14 +55,17 @@ class BillingController extends Controller
         
         if ($user->subscribed()) {
             $subscription = $user->subscription();
+            $planName = $this->getCurrentPlanName($subscription);
+            
             $currentSubscription = [
-                'name' => $subscription->name,
+                'name' => $planName,
                 'status' => $subscription->stripe_status,
                 'trial_ends_at' => $subscription->trial_ends_at,
                 'ends_at' => $subscription->ends_at,
                 'on_trial' => $subscription->onTrial(),
-                'cancelled' => $subscription->cancelled(),
+                'cancelled' => $subscription->canceled(),
                 'on_grace_period' => $subscription->onGracePeriod(),
+                'stripe_price' => $subscription->stripe_price,
             ];
             
             $billingUsage = $user->getCurrentUsage();
@@ -52,7 +78,7 @@ class BillingController extends Controller
             ];
             
             $usagePercentages = $this->planService->getUsagePercentage(
-                $subscription->name,
+                $planName,
                 $currentUsage
             );
         }
@@ -82,7 +108,7 @@ class BillingController extends Controller
 
         return Inertia::render('Billing/Plans', [
             'plans' => $plans,
-            'currentPlan' => Auth::user()->subscribed() ? Auth::user()->subscription()->name : null,
+            'currentPlan' => Auth::user()->subscribed() ? $this->getCurrentPlanName(Auth::user()->subscription()) : null,
         ]);
     }
 
@@ -109,12 +135,52 @@ class BillingController extends Controller
         }
 
         try {
+            \Log::info('Starting subscription process', [
+                'user_id' => $user->id,
+                'plan' => $plan,
+                'interval' => $interval,
+                'price_id' => $priceId,
+                'payment_method' => $request->payment_method
+            ]);
+
+            // Ensure user is a Stripe customer
+            if (!$user->hasStripeId()) {
+                \Log::info('Creating Stripe customer for user');
+                $user->createAsStripeCustomer([
+                    'email' => $user->email,
+                    'name' => $user->name ?? 'User',
+                ]);
+                \Log::info('Stripe customer created', ['stripe_id' => $user->stripe_id]);
+            } else {
+                \Log::info('User already has Stripe ID', ['stripe_id' => $user->stripe_id]);
+            }
+
             // Add payment method
+            \Log::info('Adding payment method to user');
             $user->addPaymentMethod($request->payment_method);
+            \Log::info('Payment method added successfully');
 
             // Create subscription
-            $subscription = $user->newSubscription($plan, $priceId)
+            \Log::info('Creating subscription with price_id: ' . $priceId);
+            $subscription = $user->newSubscription('default', $priceId)
                 ->create($request->payment_method);
+            
+            // Store the plan name in Stripe metadata for easier access
+            $subscription->updateStripeSubscription(['metadata' => ['plan_name' => $plan]]);
+            \Log::info('Subscription created successfully', [
+                'subscription_id' => $subscription->id ?? 'unknown',
+                'stripe_id' => $subscription->stripe_id ?? 'unknown',
+                'user_id' => $subscription->user_id ?? 'unknown',
+                'type' => $subscription->type ?? 'unknown'
+            ]);
+            
+            // Verify the subscription was saved to database
+            $dbSubscription = \Laravel\Cashier\Subscription::where('user_id', $user->id)->first();
+            if (!$dbSubscription) {
+                \Log::error('Subscription not found in database after creation');
+                throw new \Exception('Subscription was created in Stripe but not saved to database');
+            }
+            \Log::info('Subscription verified in database', ['db_subscription_id' => $dbSubscription->id]);
 
             return response()->json([
                 'success' => true,
@@ -131,15 +197,42 @@ class BillingController extends Controller
             ]);
 
         } catch (CardException $exception) {
+            \Log::error('Card exception during subscription', [
+                'error' => $exception->getMessage(),
+                'user_id' => $user->id,
+                'plan' => $plan,
+            ]);
+            
+            $errorMessage = $exception->getMessage();
+            
+            // Add helpful message for test card usage
+            if (str_contains($errorMessage, 'real card while testing')) {
+                $errorMessage .= ' Please use test card numbers like 4242 4242 4242 4242 for development.';
+            }
+            
             return response()->json([
                 'success' => false,
-                'error' => $exception->getMessage(),
+                'error' => $errorMessage,
+                'type' => 'card_error'
             ], 400);
 
         } catch (\Exception $exception) {
+            \Log::error('Subscription creation failed', [
+                'error' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString(),
+                'user_id' => $user->id,
+                'plan' => $plan,
+                'interval' => $interval,
+            ]);
+            
             return response()->json([
                 'success' => false,
-                'error' => 'An error occurred while processing your subscription.',
+                'error' => 'An error occurred while processing your subscription: ' . $exception->getMessage(),
+                'debug_info' => app()->environment('local') ? [
+                    'message' => $exception->getMessage(),
+                    'file' => $exception->getFile(),
+                    'line' => $exception->getLine(),
+                ] : null
             ], 500);
         }
     }
@@ -372,9 +465,9 @@ class BillingController extends Controller
                 'invoices' => $invoices->map(function ($invoice) {
                     return [
                         'id' => $invoice->id,
-                        'date' => $invoice->created,
+                        'date' => \Carbon\Carbon::createFromTimestamp($invoice->created)->format('M j, Y'),
                         'total' => $invoice->total(),
-                        'status' => $invoice->status,
+                        'status' => ucfirst($invoice->status),
                         'hosted_invoice_url' => $invoice->hosted_invoice_url,
                         'invoice_pdf' => $invoice->invoice_pdf,
                     ];
@@ -397,7 +490,7 @@ class BillingController extends Controller
         $user = Auth::user();
         $billingUsage = $user->getCurrentUsage();
         
-        $planName = $user->subscribed() ? $user->subscription()->name : null;
+        $planName = $user->subscribed() ? $this->getCurrentPlanName($user->subscription()) : null;
         $planLimits = $planName ? 
             $user->getSubscriptionLimits($planName) : 
             $this->planService->getFreeTierLimits();

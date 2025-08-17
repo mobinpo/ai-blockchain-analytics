@@ -69,7 +69,7 @@ onMounted(() => {
               <p class="text-sm text-gray-600">Should be aligned properly</p>
             </div>
           </div>
-          <button class="btn btn-primary">Action Button</button>
+          <button class="btn btn-primary" @click="$router.push({name: 'dashboard'})">Action Button</button>
         </div>
       </div>
 

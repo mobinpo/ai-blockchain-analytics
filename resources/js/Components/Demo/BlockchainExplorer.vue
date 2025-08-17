@@ -187,7 +187,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import api from '@/services/api'
 
 const selectedNetwork = ref('ethereum')
 const searchQuery = ref('')
@@ -195,24 +196,43 @@ const searching = ref(false)
 const analyzing = ref(false)
 const searchResults = ref(null)
 const analysisResults = ref(null)
+const loading = ref(false)
+const error = ref(null)
 
-const networks = [
-  { id: 'ethereum', name: 'Ethereum Mainnet' },
-  { id: 'polygon', name: 'Polygon' },
-  { id: 'bsc', name: 'BSC' },
-  { id: 'arbitrum', name: 'Arbitrum' },
-  { id: 'optimism', name: 'Optimism' }
-]
+// These will be fetched from API
+const networks = ref([])
+const quickExamples = ref([])
 
-const quickExamples = [
-  { name: 'Uniswap V3', address: '0x1F98431c8aD98523631AE4a59f267346ea31F984', verified: true },
-  { name: 'USDC Token', address: '0xA0b86a33E6417c8f38B9D42FC71A1D7e70e09E4a', verified: true },
-  { name: 'Compound', address: '0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B', verified: true },
-  { name: 'AAVE V3', address: '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2', verified: true }
-]
+// Fetch networks from API
+const fetchNetworks = async () => {
+  try {
+    const response = await api.get('/blockchain/networks')
+    networks.value = response.data.networks || response.data || []
+    
+    // Set default network if available
+    if (networks.value.length > 0 && !selectedNetwork.value) {
+      selectedNetwork.value = networks.value[0].id
+    }
+  } catch (err) {
+    console.error('Error fetching networks:', err)
+    networks.value = []
+  }
+}
+
+// Fetch quick examples from API
+const fetchQuickExamples = async () => {
+  try {
+    const response = await api.get('/blockchain/examples')
+    quickExamples.value = response.data.examples || response.data || []
+  } catch (err) {
+    console.error('Error fetching quick examples:', err)
+    // Keep empty array as fallback
+    quickExamples.value = []
+  }
+}
 
 const getNetworkName = (networkId) => {
-  return networks.find(n => n.id === networkId)?.name || networkId
+  return networks.value.find(n => n.id === networkId)?.name || networkId
 }
 
 const getVerificationBadge = (verified) => {
@@ -248,102 +268,101 @@ const performSearch = async () => {
   searching.value = true
   searchResults.value = null
   analysisResults.value = null
+  error.value = null
   
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1500))
-  
-  // Mock search results
-  searchResults.value = {
-    address: searchQuery.value,
-    name: getContractName(searchQuery.value),
-    verified: Math.random() > 0.3,
-    balance: (Math.random() * 100).toFixed(4),
-    transactionCount: Math.floor(Math.random() * 50000) + 1000,
-    creationDate: getRandomDate(),
-    network: selectedNetwork.value
+  try {
+    const response = await api.get('/blockchain/contract-info', {
+      params: {
+        address: searchQuery.value.trim(),
+        network: selectedNetwork.value
+      }
+    })
+    
+    const data = response.data
+    searchResults.value = {
+      address: data.address || searchQuery.value,
+      name: data.name || data.contractName || 'Unknown Contract',
+      verified: data.verified || false,
+      balance: data.balance || '0.0000',
+      transactionCount: data.transactionCount || data.txCount || 0,
+      creationDate: data.creationDate || data.deployedAt || 'Unknown',
+      network: selectedNetwork.value
+    }
+  } catch (err) {
+    error.value = 'Failed to fetch contract information'
+    console.error('Error searching contract:', err)
+    searchResults.value = null
+  } finally {
+    searching.value = false
   }
-  
-  searching.value = false
 }
 
 const startSecurityAnalysis = async () => {
+  if (!searchResults.value?.address) return
+  
   analyzing.value = true
+  error.value = null
   
-  // Simulate analysis delay
-  await new Promise(resolve => setTimeout(resolve, 3000))
-  
-  // Mock analysis results
-  analysisResults.value = {
-    criticalFindings: Math.floor(Math.random() * 5),
-    warningFindings: Math.floor(Math.random() * 15) + 5,
-    securityScore: Math.floor(Math.random() * 40) + 60,
-    keyFindings: [
-      {
-        id: 1,
-        severity: 'critical',
-        title: 'Potential Reentrancy Vulnerability',
-        description: 'External call made before state update in withdrawal function',
-        function: 'withdraw(uint256)',
-        line: 145
-      },
-      {
-        id: 2,
-        severity: 'high',
-        title: 'Access Control Issue',
-        description: 'Owner privileges not properly restricted',
-        function: 'setMintingFee(uint256)',
-        line: 89
-      },
-      {
-        id: 3,
-        severity: 'medium',
-        title: 'Gas Optimization Opportunity',
-        description: 'Loop operations can be optimized to reduce gas costs',
-        function: 'batchTransfer(address[],uint256[])',
-        line: 203
-      },
-      {
-        id: 4,
-        severity: 'low',
-        title: 'Event Emission Missing',
-        description: 'State changes not properly logged',
-        function: 'updateConfig(bytes32,bytes32)',
-        line: 67
-      }
-    ]
+  try {
+    const response = await api.post('/blockchain/security-analysis', {
+      address: searchResults.value.address,
+      network: selectedNetwork.value
+    })
+    
+    const data = response.data
+    analysisResults.value = {
+      criticalFindings: data.criticalFindings || data.critical || 0,
+      warningFindings: data.warningFindings || data.warnings || data.high || 0,
+      securityScore: data.securityScore || data.score || 0,
+      keyFindings: data.keyFindings || data.findings || []
+    }
+  } catch (err) {
+    error.value = 'Failed to perform security analysis'
+    console.error('Error analyzing contract:', err)
+    analysisResults.value = null
+  } finally {
+    analyzing.value = false
   }
-  
-  analyzing.value = false
 }
 
-const startSentimentAnalysis = () => {
-  // Simulate sentiment analysis
-  console.log('Starting sentiment analysis for', searchResults.value?.address)
+const startSentimentAnalysis = async () => {
+  if (!searchResults.value?.address) return
+  
+  try {
+    const response = await api.post('/blockchain/sentiment-analysis', {
+      address: searchResults.value.address,
+      network: selectedNetwork.value
+    })
+    
+    console.log('Sentiment analysis results:', response.data)
+    // Handle sentiment analysis results as needed
+  } catch (err) {
+    console.error('Error starting sentiment analysis:', err)
+  }
 }
 
 const viewSourceCode = () => {
-  // Simulate opening source code viewer
-  console.log('Viewing source code for', searchResults.value?.address)
+  if (!searchResults.value?.address) return
+  
+  // Navigate to source code viewer or open in new tab
+  const url = `/blockchain/source/${searchResults.value.address}?network=${selectedNetwork.value}`
+  window.open(url, '_blank')
 }
 
-const getContractName = (address) => {
-  const names = [
-    'UniswapV3Factory',
-    'USDC Token Contract', 
-    'Compound cDAI',
-    'AAVE LendingPool',
-    'SushiSwap Router',
-    'PancakeSwap Factory',
-    'Yearn Vault V2',
-    'Curve StableSwap'
-  ]
-  return names[Math.floor(Math.random() * names.length)]
-}
-
-const getRandomDate = () => {
-  const start = new Date(2020, 0, 1)
-  const end = new Date()
-  const randomDate = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()))
-  return randomDate.toLocaleDateString()
-}
+// Initialize data when component mounts
+onMounted(async () => {
+  loading.value = true
+  
+  try {
+    await Promise.all([
+      fetchNetworks(),
+      fetchQuickExamples()
+    ])
+  } catch (err) {
+    error.value = 'Failed to initialize blockchain explorer'
+    console.error('Error initializing component:', err)
+  } finally {
+    loading.value = false
+  }
+})
 </script>

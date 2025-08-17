@@ -201,7 +201,7 @@
                         />
                       </td>
                       <td class="px-4 py-3">
-                        <button class="text-blue-600 hover:text-blue-500 text-sm">View Details</button>
+                        <button class="text-blue-600 hover:text-blue-500 text-sm" @click="showBadgeDetails(badge)">View Details</button>
                       </td>
                     </tr>
                   </tbody>

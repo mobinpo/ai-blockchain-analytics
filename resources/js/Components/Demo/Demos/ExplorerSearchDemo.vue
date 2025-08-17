@@ -181,7 +181,7 @@
                                         <p class="text-xs text-gray-500">{{ tx.timeAgo }}</p>
                                     </div>
                                 </div>
-                                <button class="text-sm text-brand-500 hover:text-indigo-800">View</button>
+                                <button class="text-sm text-brand-500 hover:text-indigo-800" @click="() => window.open(`https://etherscan.io/tx/${tx.hash}`, '_blank')">View</button>
                             </div>
                         </div>
                     </div>

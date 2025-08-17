@@ -78,15 +78,15 @@ final class ContractValidationService
             $explorer = $this->explorerManager->getBestExplorer($network);
             
             // Try to get contract source code to verify existence
-            $sourceData = $explorer->fetchSourceCode($contractAddress);
+            $sourceData = $explorer->getContractSource($contractAddress);
             
-            if ($sourceData['success'] && !empty($sourceData['source_code'])) {
+            if ($sourceData['is_verified'] && !empty($sourceData['source_code'])) {
                 return [
                     'exists' => true,
                     'name' => $sourceData['contract_name'] ?? 'Unknown Contract',
                     'verified' => true,
                     'compiler' => $sourceData['compiler_version'] ?? null,
-                    'optimization' => $sourceData['optimization'] ?? null
+                    'optimization' => $sourceData['optimization_used'] ?? null
                 ];
             }
 

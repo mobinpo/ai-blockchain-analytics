@@ -5,8 +5,30 @@
       <div class="flex items-center space-x-2">
         <span class="text-sm text-gray-500">Last updated:</span>
         <span class="text-sm font-medium text-gray-900">{{ lastUpdated }}</span>
+        <button v-if="!loading" @click="fetchRiskMatrix" class="text-xs text-indigo-600 hover:text-indigo-800">
+          Refresh
+        </button>
       </div>
     </div>
+
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+      <span class="ml-2 text-sm text-gray-600">Loading risk matrix...</span>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+      <div class="flex items-center">
+        <span class="text-red-700 text-sm">{{ error }}</span>
+        <button @click="fetchRiskMatrix" class="ml-4 text-red-600 hover:text-red-800 underline text-sm">
+          Try Again
+        </button>
+      </div>
+    </div>
+
+    <!-- Matrix Content -->
+    <div v-else>
     
     <!-- Matrix Grid -->
     <div class="grid grid-cols-6 gap-1 mb-4">
@@ -139,58 +161,50 @@
         </button>
       </div>
     </div>
+
+    </div> <!-- Close Matrix Content div -->
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import api from '@/services/api'
 
 const selectedRisk = ref(null)
-const lastUpdated = ref('2 min ago')
+const lastUpdated = ref('Loading...')
+const loading = ref(false)
+const error = ref(null)
 
-// Demo risk matrix data (impact vs probability)
-const riskMatrix = ref([
-  // Very Low Impact
-  [
-    { count: 15, examples: ['Code style warnings', 'Documentation gaps'] },
-    { count: 8, examples: ['Minor optimization opportunities'] },
-    { count: 3, examples: ['Low-impact performance issues'] },
-    { count: 1, examples: ['Rare edge case handling'] },
-    { count: 0, examples: [] }
-  ],
-  // Low Impact
-  [
-    { count: 12, examples: ['Input validation suggestions'] },
-    { count: 18, examples: ['Gas optimization hints'] },
-    { count: 7, examples: ['Event emission improvements'] },
-    { count: 2, examples: ['Minor access control issues'] },
-    { count: 1, examples: ['Low-impact logic flaws'] }
-  ],
-  // Medium Impact
-  [
-    { count: 5, examples: ['Moderate gas inefficiencies'] },
-    { count: 9, examples: ['State variable optimizations'] },
-    { count: 12, examples: ['Function visibility issues'] },
-    { count: 6, examples: ['Moderate security concerns'] },
-    { count: 3, examples: ['Medium-risk vulnerabilities'] }
-  ],
-  // High Impact
-  [
-    { count: 2, examples: ['Potential front-running'] },
-    { count: 4, examples: ['Access control weaknesses'] },
-    { count: 8, examples: ['State manipulation risks'] },
-    { count: 11, examples: ['High-value vulnerabilities'] },
-    { count: 7, examples: ['Critical security flaws'] }
-  ],
-  // Very High Impact
-  [
-    { count: 0, examples: [] },
-    { count: 1, examples: ['Potential fund locks'] },
-    { count: 2, examples: ['Reentrancy vulnerabilities'] },
-    { count: 5, examples: ['Critical exploit vectors'] },
-    { count: 3, examples: ['Severe security breaches'] }
-  ]
-])
+// Risk matrix data will be fetched from API
+const riskMatrix = ref([])
+
+// Fetch risk matrix data from API
+const fetchRiskMatrix = async () => {
+  loading.value = true
+  error.value = null
+  
+  try {
+    const response = await api.get('/analytics/risk-matrix')
+    const data = response.data
+    
+    // API response structure: { matrix: [...], lastUpdated: "..." }
+    riskMatrix.value = data.matrix || data.riskMatrix || []
+    lastUpdated.value = data.lastUpdated || new Date().toLocaleString()
+  } catch (err) {
+    error.value = 'Failed to load risk matrix data'
+    console.error('Error fetching risk matrix:', err)
+    
+    // Fallback to empty matrix structure
+    riskMatrix.value = Array(5).fill().map(() => Array(5).fill({ count: 0, examples: [] }))
+    lastUpdated.value = 'Error loading'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchRiskMatrix()
+})
 
 const getRiskCellClass = (impact, probability) => {
   const riskLevel = impact + probability

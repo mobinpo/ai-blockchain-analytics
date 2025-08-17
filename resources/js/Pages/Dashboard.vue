@@ -1,7 +1,30 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+
+const props = defineProps({
+  initialStats: {
+    type: Object,
+    default: () => ({})
+  },
+  initialProjects: {
+    type: Array,
+    default: () => []
+  },
+  initialFindings: {
+    type: Array,
+    default: () => []
+  },
+  projectId: {
+    type: [String, Number],
+    default: null
+  },
+  showingProject: {
+    type: Boolean,
+    default: false
+  }
+});
 import { 
   ChartBarIcon, 
   ShieldCheckIcon, 
@@ -22,104 +45,182 @@ import NetworkStatus from '@/Components/Analytics/NetworkStatus.vue';
 import RealTimeMonitor from '@/Components/Demo/RealTimeMonitor.vue';
 import BlockchainExplorer from '@/Components/Demo/BlockchainExplorer.vue';
 
-// Demo data for North-Star booth
-const stats = ref({
-  totalProjects: 47,
-  activeAnalyses: 12,
-  criticalFindings: 3,
-  avgSentiment: 0.72,
-  lastAnalysis: '2 minutes ago',
-  securityScore: 85,
-  riskLevel: 'Medium',
-  trendsImproving: 8
-});
+// Dashboard stats - use props or fetch from API
+const stats = ref(props.initialStats);
+const loading = ref(false);
 
-const recentProjects = ref([
-  {
-    id: 1,
-    name: 'UniswapV4 Core',
-    network: 'Ethereum',
-    status: 'analyzing',
-    riskLevel: 'low',
-    lastAnalyzed: '5 min ago',
-    findings: 2,
-    sentiment: 0.85
-  },
-  {
-    id: 2,
-    name: 'AAVE V3 Lending',
-    network: 'Polygon',
-    status: 'completed',
-    riskLevel: 'medium',
-    lastAnalyzed: '1 hour ago',
-    findings: 7,
-    sentiment: 0.68
-  },
-  {
-    id: 3,
-    name: 'Compound Governor',
-    network: 'Ethereum',
-    status: 'completed',
-    riskLevel: 'high',
-    lastAnalyzed: '3 hours ago',
-    findings: 15,
-    sentiment: 0.45
-  }
-]);
+// Project-specific data
+const projectDetails = ref(null);
+const isProjectView = computed(() => props.showingProject && props.projectId);
 
-const criticalFindings = ref([
-  {
-    id: 1,
-    title: 'Reentrancy Vulnerability',
-    severity: 'critical',
-    contract: 'LendingPool.sol',
-    function: 'withdraw()',
-    impact: 'High',
-    cvss: 9.1
-  },
-  {
-    id: 2,
-    title: 'Integer Overflow Risk',
-    severity: 'high',
-    contract: 'TokenVault.sol',
-    function: 'calculateRewards()',
-    impact: 'Medium',
-    cvss: 7.5
-  },
-  {
-    id: 3,
-    title: 'Access Control Bypass',
-    severity: 'medium',
-    contract: 'Governance.sol',
-    function: 'executeProposal()',
-    impact: 'Low',
-    cvss: 5.3
+// Fetch dashboard stats from API if not provided via props
+const fetchDashboardStats = async () => {
+  if (Object.keys(props.initialStats).length > 0) return;
+  
+  loading.value = true;
+  try {
+    const response = await fetch('/api/dashboard/stats', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        stats.value = data.stats || {};
+      } else {
+        console.error('Failed to fetch dashboard stats:', data.error);
+      }
+    } else {
+      console.error('HTTP error:', response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    // Fallback to empty stats
+    stats.value = {};
+  } finally {
+    loading.value = false;
   }
-]);
+};
 
-const aiInsights = ref([
-  {
-    type: 'security',
-    title: 'Pattern Recognition Alert',
-    message: 'Detected similar vulnerability patterns across 3 contracts. Consider implementing unified security library.',
-    confidence: 94,
-    action: 'Review Pattern'
-  },
-  {
-    type: 'performance',
-    title: 'Gas Optimization Opportunity',
-    message: 'Function batching could reduce gas costs by 35% in high-frequency operations.',
-    confidence: 87,
-    action: 'Optimize Gas'
-  },
-  {
-    type: 'sentiment',
-    title: 'Community Sentiment Shift',
-    message: 'Positive sentiment increased 23% after latest security audit completion.',
-    confidence: 91,
-    action: 'View Trends'
+// Recent projects - use props or fetch from API
+const recentProjects = ref(props.initialProjects);
+
+// Fetch recent projects from API if not provided via props
+const fetchRecentProjects = async () => {
+  if (props.initialProjects.length > 0) return;
+  
+  try {
+    const response = await fetch('/api/dashboard/projects', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        recentProjects.value = data.projects || [];
+      } else {
+        console.error('Failed to fetch recent projects:', data.error);
+      }
+    } else {
+      console.error('HTTP error:', response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error('Error fetching recent projects:', error);
+    recentProjects.value = [];
   }
-]);
+};
+
+// Critical findings - use props or fetch from API
+const criticalFindings = ref(props.initialFindings);
+
+// Fetch critical findings from API if not provided via props
+const fetchCriticalFindings = async () => {
+  if (props.initialFindings.length > 0) return;
+  
+  try {
+    const response = await fetch('/api/dashboard/critical-findings', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        criticalFindings.value = data.findings || [];
+      } else {
+        console.error('Failed to fetch critical findings:', data.error);
+      }
+    } else {
+      console.error('HTTP error:', response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error('Error fetching critical findings:', error);
+    criticalFindings.value = [];
+  }
+};
+
+// AI Insights - use props or fetch from API
+const aiInsights = ref([]);
+
+// Fetch AI insights from API
+const fetchAIInsights = async () => {
+  try {
+    const response = await fetch('/api/dashboard/ai-insights', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        aiInsights.value = data.insights || [];
+      } else {
+        console.error('Failed to fetch AI insights:', data.error);
+      }
+    } else {
+      console.error('HTTP error:', response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error('Error fetching AI insights:', error);
+    aiInsights.value = [];
+  }
+};
+
+// Fetch project details when viewing a specific project
+const fetchProjectDetails = async () => {
+  if (!props.projectId) return;
+  
+  loading.value = true;
+  try {
+    const response = await fetch(`/api/dashboard/project/${props.projectId}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success) {
+        projectDetails.value = data.project;
+        // Override dashboard data with project-specific data
+        stats.value = {
+          totalProjects: data.project.totalProjects,
+          activeAnalyses: data.project.activeAnalyses,
+          criticalFindings: data.project.criticalFindings,
+          avgSentiment: data.project.avgSentiment,
+          lastAnalysis: data.project.lastAnalysis,
+          securityScore: data.project.securityScore
+        };
+        criticalFindings.value = data.project.detailedFindings || [];
+        aiInsights.value = data.project.aiInsights || [];
+      } else {
+        console.error('Failed to fetch project details:', data.error);
+      }
+    } else {
+      console.error('HTTP error:', response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error('Error fetching project details:', error);
+  } finally {
+    loading.value = false;
+  }
+};
 
 const getSeverityColor = (severity) => {
   switch (severity) {
@@ -151,23 +252,98 @@ const getSentimentColor = (sentiment) => {
   if (sentiment < -0.1) return 'text-red-500';
   return 'text-gray-500';
 };
+
+// Navigation and action methods
+const startNewAnalysis = () => {
+  // Navigate to the landing page where users can start analysis
+  window.location.href = '/';
+};
+
+const viewAllProjects = () => {
+  // Navigate to projects page
+  window.location.href = '/projects';
+};
+
+const viewSecurityReport = () => {
+  // Navigate to security page
+  window.location.href = '/security';
+};
+
+const viewAllInsights = () => {
+  // Scroll to insights section or expand view
+  console.log('View all insights');
+};
+
+const viewAllFindings = () => {
+  // Navigate to security page with findings filter
+  window.location.href = '/security?filter=critical';
+};
+
+const showSecurityDetails = (finding) => {
+  // Show modal or navigate to detailed view
+  console.log('Show security details for:', finding);
+  alert(`Security Finding: ${finding.title}\nSeverity: ${finding.severity}\nDescription: ${finding.description}`);
+};
+
+const executeInsightAction = (insight) => {
+  // Handle insight action based on type
+  switch (insight.type) {
+    case 'security':
+      window.location.href = '/security';
+      break;
+    case 'performance':
+      console.log('Navigate to performance optimization');
+      break;
+    case 'sentiment':
+      window.location.href = '/sentiment-analysis';
+      break;
+    default:
+      console.log('Execute action:', insight.action);
+  }
+};
+
+// Initialize data on component mount
+onMounted(() => {
+  if (isProjectView.value) {
+    // If viewing a specific project, fetch project details
+    fetchProjectDetails();
+  } else {
+    // Otherwise, fetch general dashboard data
+    fetchDashboardStats();
+    fetchRecentProjects();
+    fetchCriticalFindings();
+    fetchAIInsights();
+  }
+});
 </script>
 
 <template>
-    <Head title="Sentiment Shield - AI Security Dashboard" />
+    <Head :title="isProjectView ? `${projectDetails?.name || 'Project'} - Security Analysis` : 'Sentiment Shield - AI Security Dashboard'" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-2xl font-bold leading-tight text-gray-900">
-                        🛡️ Sentiment Shield
+                        {{ isProjectView ? `📊 ${projectDetails?.name || 'Project Details'}` : '🛡️ Sentiment Shield' }}
                     </h2>
                     <p class="text-sm text-gray-600 mt-1">
-                        AI-powered blockchain security with dual smart contract & sentiment analysis
+                        {{ isProjectView ? projectDetails?.description || 'Loading project details...' : 'AI-powered blockchain security with dual smart contract & sentiment analysis' }}
                     </p>
+                    <div v-if="isProjectView && projectDetails" class="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                        <span>📍 {{ projectDetails.network }}</span>
+                        <span>📄 {{ projectDetails.contractAddress }}</span>
+                        <span :class="projectDetails.riskLevel === 'high' ? 'text-red-600' : projectDetails.riskLevel === 'medium' ? 'text-yellow-600' : 'text-green-600'">
+                            🛡️ {{ projectDetails.riskLevel?.toUpperCase() }} RISK
+                        </span>
+                    </div>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <div v-if="isProjectView" class="text-right">
+                        <button @click="window.location.href = '/dashboard'" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+                            ← Back to Dashboard
+                        </button>
+                    </div>
                     <div class="flex items-center text-sm text-gray-500">
                         <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
                         Live Monitoring Active
@@ -189,7 +365,10 @@ const getSentimentColor = (sentiment) => {
                                 </div>
                                 <div class="ml-4">
                                     <p class="text-sm font-medium text-gray-500">Total Projects</p>
-                                    <p class="text-2xl font-semibold text-gray-900">{{ stats.totalProjects }}</p>
+                                    <p class="text-2xl font-semibold text-gray-900">
+                                        <span v-if="loading">...</span>
+                                        <span v-else>{{ stats.totalProjects || 0 }}</span>
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -204,7 +383,10 @@ const getSentimentColor = (sentiment) => {
                                 <div class="ml-4">
                                     <p class="text-sm font-medium text-gray-500">Active Analyses</p>
                                     <div class="flex items-center">
-                                        <p class="text-2xl font-semibold text-gray-900">{{ stats.activeAnalyses }}</p>
+                                        <p class="text-2xl font-semibold text-gray-900">
+                                            <span v-if="loading">...</span>
+                                            <span v-else>{{ stats.activeAnalyses || 0 }}</span>
+                                        </p>
                                         <div class="ml-2 flex items-center text-xs text-gray-500">
                                             <div class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
                                         </div>
@@ -222,7 +404,10 @@ const getSentimentColor = (sentiment) => {
                                 </div>
                                 <div class="ml-4">
                                     <p class="text-sm font-medium text-gray-500">Critical Findings</p>
-                                    <p class="text-2xl font-semibold text-red-600">{{ stats.criticalFindings }}</p>
+                                    <p class="text-2xl font-semibold text-red-600">
+                                        <span v-if="loading">...</span>
+                                        <span v-else>{{ stats.criticalFindings || 0 }}</span>
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -237,7 +422,10 @@ const getSentimentColor = (sentiment) => {
                                 <div class="ml-4">
                                     <p class="text-sm font-medium text-gray-500">Avg Sentiment</p>
                                     <div class="flex items-center">
-                                        <p class="text-2xl font-semibold text-green-600">{{ (stats.avgSentiment * 100).toFixed(0) }}%</p>
+                                        <p class="text-2xl font-semibold text-green-600">
+                                            <span v-if="loading">...</span>
+                                            <span v-else>{{ stats.avgSentiment ? (stats.avgSentiment * 100).toFixed(0) : 0 }}%</span>
+                                        </p>
                                         <ArrowTrendingUpIcon class="h-4 w-4 text-green-500 ml-1" />
                                     </div>
                                 </div>
@@ -250,9 +438,10 @@ const getSentimentColor = (sentiment) => {
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                     <SecurityChart />
                     <SentimentGauge 
-                        :sentiment="stats.avgSentiment"
-                        :project-count="stats.totalProjects"
-                        :analysis-count="stats.totalAnalyses || 156"
+                        :sentiment="loading ? 0 : stats.avgSentiment"
+                        :project-count="loading ? null : stats.totalProjects"
+                        :analysis-count="loading ? null : stats.totalAnalyses"
+                        :sentiment-change24h="loading ? 0 : stats.sentimentChange24h"
                     />
                 </div>
 
@@ -336,7 +525,7 @@ const getSentimentColor = (sentiment) => {
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <button class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-100 transition-colors">
+                                        <button @click="executeInsightAction(insight)" class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-100 transition-colors">
                                             {{ insight.action }}
                                         </button>
                                     </div>
@@ -355,7 +544,7 @@ const getSentimentColor = (sentiment) => {
                                     <h3 class="text-lg font-semibold text-gray-900">Critical Security Findings</h3>
                                     <p class="text-sm text-gray-600">High-priority vulnerabilities requiring immediate attention</p>
                                 </div>
-                                <button class="text-sm bg-red-50 text-red-700 px-3 py-1 rounded-md hover:bg-red-100 transition-colors">
+                                <button @click="viewAllFindings" class="text-sm bg-red-50 text-red-700 px-3 py-1 rounded-md hover:bg-red-100 transition-colors">
                                     View All
                                 </button>
                             </div>
@@ -389,7 +578,7 @@ const getSentimentColor = (sentiment) => {
                                         <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ finding.cvss }}</td>
                                         <td class="px-6 py-4 text-sm text-gray-900">{{ finding.impact }}</td>
                                         <td class="px-6 py-4 text-right text-sm">
-                                            <button class="text-brand-500 hover:text-indigo-900 font-medium">View Details</button>
+                                            <button class="text-brand-500 hover:text-indigo-900 font-medium" @click="showSecurityDetails(finding)">View Details</button>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -406,15 +595,15 @@ const getSentimentColor = (sentiment) => {
 
                 <!-- Quick Actions -->
                 <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center">
+                    <button @click="startNewAnalysis" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center">
                         <CpuChipIcon class="h-5 w-5 mr-2" />
                         Start New Analysis
                     </button>
-                    <button class="bg-white hover:bg-panel text-gray-700 px-6 py-3 rounded-lg font-medium border border-gray-300 transition-colors flex items-center justify-center">
+                    <button @click="viewAllProjects" class="bg-white hover:bg-panel text-gray-700 px-6 py-3 rounded-lg font-medium border border-gray-300 transition-colors flex items-center justify-center">
                         <EyeIcon class="h-5 w-5 mr-2" />
                         View All Projects
                     </button>
-                    <button class="bg-white hover:bg-panel text-gray-700 px-6 py-3 rounded-lg font-medium border border-gray-300 transition-colors flex items-center justify-center">
+                    <button @click="viewSecurityReport" class="bg-white hover:bg-panel text-gray-700 px-6 py-3 rounded-lg font-medium border border-gray-300 transition-colors flex items-center justify-center">
                         <ShieldCheckIcon class="h-5 w-5 mr-2" />
                         Security Report
                     </button>

@@ -1,73 +1,11 @@
 <script setup>
 import AppLayout from '../Layouts/AppLayout.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
+import api from '@/services/api';
 
-const projects = ref([
-  {
-    id: 1,
-    name: 'Uniswap V4 Core',
-    description: 'Next-generation AMM with hooks and concentrated liquidity',
-    status: 'analyzing',
-    risk: 'medium',
-    progress: 75,
-    lastAnalysis: '2 minutes ago',
-    criticalIssues: 2,
-    highIssues: 5,
-    mediumIssues: 8,
-    lowIssues: 12,
-    sentiment: 0.73,
-    contractAddress: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-    network: 'Ethereum Mainnet'
-  },
-  {
-    id: 2,
-    name: 'Aave V3 Lending Pool',
-    description: 'Multi-collateral lending protocol with enhanced capital efficiency',
-    status: 'completed',
-    risk: 'low',
-    progress: 100,
-    lastAnalysis: '1 hour ago',
-    criticalIssues: 0,
-    highIssues: 1,
-    mediumIssues: 2,
-    lowIssues: 5,
-    sentiment: 0.85,
-    contractAddress: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
-    network: 'Ethereum Mainnet'
-  },
-  {
-    id: 3,
-    name: 'Compound Governance',
-    description: 'Decentralized governance system for protocol upgrades',
-    status: 'completed',
-    risk: 'high',
-    progress: 100,
-    lastAnalysis: '3 hours ago',
-    criticalIssues: 5,
-    highIssues: 8,
-    mediumIssues: 10,
-    lowIssues: 15,
-    sentiment: 0.42,
-    contractAddress: '0xc00e94Cb662C3520282E6f5717214004A7f26888',
-    network: 'Ethereum Mainnet'
-  },
-  {
-    id: 4,
-    name: 'MakerDAO Multi-Collateral',
-    description: 'Stablecoin generation system with multiple collateral types',
-    status: 'pending',
-    risk: 'medium',
-    progress: 0,
-    lastAnalysis: 'Never',
-    criticalIssues: 0,
-    highIssues: 0,
-    mediumIssues: 0,
-    lowIssues: 0,
-    sentiment: 0.68,
-    contractAddress: '0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2',
-    network: 'Ethereum Mainnet'
-  }
-]);
+const projects = ref([]);
+const loading = ref(false);
+const error = ref(null);
 
 const showNewProjectModal = ref(false);
 const selectedProject = ref(null);
@@ -92,7 +30,25 @@ const getStatusColor = (status) => {
 };
 
 const getTotalIssues = (project) => {
-  return project.criticalIssues + project.highIssues + project.mediumIssues + project.lowIssues;
+  return (project.criticalIssues || 0) + (project.highIssues || 0) + (project.mediumIssues || 0) + (project.lowIssues || 0) || project.findings || 0;
+};
+
+// Fetch projects from API
+const fetchProjects = async () => {
+  loading.value = true;
+  error.value = null;
+  
+  try {
+    const response = await api.get('/dashboard/projects');
+    projects.value = response.data.projects || response.data || [];
+  } catch (err) {
+    error.value = 'Failed to load projects';
+    console.error('Error fetching projects:', err);
+    // Keep empty array as fallback
+    projects.value = [];
+  } finally {
+    loading.value = false;
+  }
 };
 
 // Track running analysis intervals for cleanup
@@ -111,83 +67,70 @@ const startAnalysis = async (project) => {
     project.status = 'analyzing';
     project.progress = 0;
     
-    // Simulate analysis with proper error handling and cleanup
-    const analysisPromise = new Promise((resolve, reject) => {
-      const interval = setInterval(() => {
-        try {
-          if (!isComponentActive.value) {
-            console.log('⏹️ Component inactive, stopping analysis');
-            clearInterval(interval);
-            analysisIntervals.delete(project.id);
-            reject(new Error('Component unmounted during analysis'));
+    try {
+      // Call real API to start analysis
+      const response = await api.post('/analyses', {
+        project_id: project.id,
+        analysis_type: 'full'
+      });
+      
+      if (response.data.success) {
+        const analysisId = response.data.analysis_id;
+        
+        // Poll for analysis status
+        const pollAnalysis = () => {
+          if (!isComponentActive.value || !analysisIntervals.has(project.id)) {
             return;
           }
           
-          // Simulate random progress with potential failures
-          const progressIncrement = Math.random() * 10;
-          project.progress = Math.min(100, project.progress + progressIncrement);
-          
-          // Simulate potential failures (5% chance)
-          if (Math.random() < 0.05 && project.progress > 20) {
-            throw new Error('Analysis service temporarily unavailable');
-          }
-          
-          if (project.progress >= 100) {
-            project.progress = 100;
-            project.status = 'completed';
-            project.lastAnalysis = 'Just now';
-            
-            // Update some findings for demo
-            if (Math.random() > 0.5) {
-              project.criticalIssues += Math.floor(Math.random() * 2);
-              project.highIssues += Math.floor(Math.random() * 3);
-            }
-            
-            clearInterval(interval);
-            analysisIntervals.delete(project.id);
-            console.log(`✅ Analysis completed for project: ${project.name}`);
-            resolve(project);
-          }
-        } catch (error) {
-          console.error(`❌ Analysis error for project ${project.name}:`, error);
-          project.status = 'failed';
-          project.progress = 0;
-          clearInterval(interval);
-          analysisIntervals.delete(project.id);
-          reject(error);
-        }
-      }, 500);
+          api.get(`/analyses/${analysisId}/status`)
+            .then(statusResponse => {
+              if (statusResponse.data.success) {
+                const status = statusResponse.data.data;
+                project.progress = status.progress || 0;
+                project.status = status.status;
+                
+                if (status.status === 'completed') {
+                  project.lastAnalysis = 'Just now';
+                  project.criticalIssues = status.issues_found?.critical || 0;
+                  project.highIssues = status.issues_found?.high || 0;
+                  project.mediumIssues = status.issues_found?.medium || 0;
+                  project.lowIssues = status.issues_found?.low || 0;
+                  analysisIntervals.delete(project.id);
+                  console.log(`✅ Analysis completed for project: ${project.name}`);
+                } else if (status.status === 'failed') {
+                  project.status = 'failed';
+                  project.progress = 0;
+                  analysisIntervals.delete(project.id);
+                  console.error(`❌ Analysis failed for project: ${project.name}`);
+                } else {
+                  // Continue polling
+                  setTimeout(pollAnalysis, 2000);
+                }
+              }
+            })
+            .catch(error => {
+              console.error(`❌ Error polling analysis status:`, error);
+              project.status = 'failed';
+              project.progress = 0;
+              analysisIntervals.delete(project.id);
+            });
+        };
+        
+        // Mark as actively polling
+        analysisIntervals.set(project.id, true);
+        
+        // Start polling
+        setTimeout(pollAnalysis, 1000);
+        
+      } else {
+        throw new Error(response.data.message || 'Failed to start analysis');
+      }
       
-      // Store interval for cleanup
-      analysisIntervals.set(project.id, interval);
-      
-      // Add timeout for the entire analysis
-      setTimeout(() => {
-        if (analysisIntervals.has(project.id)) {
-          console.error(`⏰ Analysis timeout for project: ${project.name}`);
-          project.status = 'failed';
-          project.progress = 0;
-          clearInterval(interval);
-          analysisIntervals.delete(project.id);
-          reject(new Error('Analysis timed out after 60 seconds'));
-        }
-      }, 60000); // 60 second timeout
-    });
-    
-    try {
-      await analysisPromise;
     } catch (error) {
       console.error(`🚨 Analysis failed for project ${project.name}:`, error);
-      
-      // Implement retry logic
-      if (error.message.includes('temporarily unavailable')) {
-        console.log(`🔄 Retrying analysis for ${project.name} in 5 seconds...`);
-        setTimeout(() => {
-          if (isComponentActive.value) {
-            startAnalysis(project);
-          }
-        }, 5000);
-      }
+      project.status = 'failed';
+      project.progress = 0;
     }
     
   } catch (error) {
@@ -207,9 +150,41 @@ const cleanupAnalyses = () => {
   analysisIntervals.clear();
 };
 
-onMounted(() => {
+// Additional project actions
+const viewProjectDetails = (project) => {
+  // Navigate to project detail page or show modal
+  console.log('View details for project:', project.name);
+  // For now, redirect to dashboard with project context
+  window.location.href = `/dashboard?project=${project.id}`;
+};
+
+const exportProject = (project) => {
+  // Export project data as JSON or PDF
+  console.log('Export project:', project.name);
+  
+  const projectData = {
+    ...project,
+    exportedAt: new Date().toISOString(),
+    exportType: 'project_summary'
+  };
+  
+  const blob = new Blob([JSON.stringify(projectData, null, 2)], { 
+    type: 'application/json' 
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${project.name.replace(/\s+/g, '_')}_export.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+onMounted(async () => {
   console.log('📋 Projects component mounted');
   isComponentActive.value = true;
+  await fetchProjects();
 });
 
 onUnmounted(() => {
@@ -237,8 +212,27 @@ onUnmounted(() => {
       </button>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      <span class="ml-2 text-gray-600">Loading projects...</span>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <span class="text-red-700">{{ error }}</span>
+        <button @click="fetchProjects" class="ml-4 text-red-600 hover:text-red-800 underline">
+          Try Again
+        </button>
+      </div>
+    </div>
+
     <!-- Projects Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div v-for="project in projects" :key="project.id" 
            class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
         <!-- Project Header -->
@@ -246,16 +240,17 @@ onUnmounted(() => {
           <div class="flex items-start justify-between mb-4">
             <div class="flex-1">
               <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ project.name }}</h3>
-              <p class="text-sm text-gray-600 mb-3">{{ project.description }}</p>
+              <p class="text-sm text-gray-600 mb-3">{{ project.description || 'Smart contract analysis project' }}</p>
               <div class="flex items-center space-x-4 text-xs text-gray-500">
                 <span>📍 {{ project.network }}</span>
-                <span>📄 {{ project.contractAddress.slice(0, 10) }}...</span>
+                <span v-if="project.contractAddress">📄 {{ project.contractAddress.slice(0, 10) }}...</span>
+                <span v-else>📄 Contract address not available</span>
               </div>
             </div>
             <div class="flex items-center space-x-2">
-              <span :class="getRiskColor(project.risk)" 
+              <span :class="getRiskColor(project.riskLevel)" 
                     class="px-3 py-1 text-xs font-medium rounded-full border">
-                {{ project.risk.toUpperCase() }} RISK
+                {{ project.riskLevel?.toUpperCase() }} RISK
               </span>
               <span :class="getStatusColor(project.status)" 
                     class="px-3 py-1 text-xs font-medium rounded-full border">
@@ -289,28 +284,28 @@ onUnmounted(() => {
                     <div class="w-3 h-3 bg-red-500 rounded-full"></div>
                     <span>Critical</span>
                   </div>
-                  <span class="font-medium">{{ project.criticalIssues }}</span>
+                  <span class="font-medium">{{ project.criticalIssues || 0 }}</span>
                 </div>
                 <div class="flex items-center justify-between text-sm">
                   <div class="flex items-center space-x-2">
                     <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
                     <span>High</span>
                   </div>
-                  <span class="font-medium">{{ project.highIssues }}</span>
+                  <span class="font-medium">{{ project.highIssues || 0 }}</span>
                 </div>
                 <div class="flex items-center justify-between text-sm">
                   <div class="flex items-center space-x-2">
                     <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
                     <span>Medium</span>
                   </div>
-                  <span class="font-medium">{{ project.mediumIssues }}</span>
+                  <span class="font-medium">{{ project.mediumIssues || 0 }}</span>
                 </div>
                 <div class="flex items-center justify-between text-sm">
                   <div class="flex items-center space-x-2">
                     <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
                     <span>Low</span>
                   </div>
-                  <span class="font-medium">{{ project.lowIssues }}</span>
+                  <span class="font-medium">{{ project.lowIssues || 0 }}</span>
                 </div>
               </div>
             </div>
@@ -331,7 +326,7 @@ onUnmounted(() => {
                 </div>
                 <div class="text-sm">
                   <span class="text-gray-600">Last Analysis:</span>
-                  <span class="font-medium ml-1">{{ project.lastAnalysis }}</span>
+                  <span class="font-medium ml-1">{{ project.lastAnalyzed || project.lastAnalysis || 'Never' }}</span>
                 </div>
                 <div class="text-sm">
                   <span class="text-gray-600">Total Issues:</span>
@@ -343,7 +338,7 @@ onUnmounted(() => {
 
           <!-- Action Buttons -->
           <div class="flex items-center space-x-3">
-            <button class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-medium">
+            <button @click="viewProjectDetails(project)" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-medium">
               View Details
             </button>
             <button v-if="project.status !== 'analyzing'" 
@@ -351,7 +346,7 @@ onUnmounted(() => {
                     class="px-4 py-2 bg-ink text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium">
               {{ project.status === 'pending' ? 'Start Analysis' : 'Re-analyze' }}
             </button>
-            <button class="px-4 py-2 bg-ink text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium">
+            <button @click="exportProject(project)" class="px-4 py-2 bg-ink text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium">
               Export
             </button>
           </div>
