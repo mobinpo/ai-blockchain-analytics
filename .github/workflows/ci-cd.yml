@@ -53,7 +53,7 @@ jobs:
           coverage: none
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.composer/cache/files
           key: composer-${{ hashFiles('composer.lock') }}
@@ -139,7 +139,7 @@ jobs:
           tools: psalm
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.composer/cache/files
           key: composer-${{ hashFiles('composer.lock') }}
