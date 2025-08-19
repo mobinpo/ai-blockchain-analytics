@@ -97,7 +97,7 @@ RUN npm run build
 # ================================
 # Stage 3: RoadRunner binary
 # ================================
-FROM alpine:3.19 AS roadrunner
+FROM alpine:3.22 AS roadrunner
 
 # Install RoadRunner
 RUN wget -O rr.tar.gz https://github.com/roadrunner-server/roadrunner/releases/latest/download/roadrunner-linux-amd64.tar.gz \
