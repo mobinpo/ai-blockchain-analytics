@@ -112,3 +112,4 @@ logs/
 
 # Large binary files  
 rr
+.history/
