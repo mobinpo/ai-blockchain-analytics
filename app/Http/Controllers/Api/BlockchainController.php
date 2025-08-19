@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Contracts\ContractExamplesRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -12,6 +13,10 @@ use Carbon\Carbon;
 
 final class BlockchainController extends Controller
 {
+    public function __construct(
+        private readonly ContractExamplesRepositoryInterface $contractExamples
+    ) {}
+
     /**
      * Get supported blockchain networks
      */
@@ -87,53 +92,12 @@ final class BlockchainController extends Controller
     }
 
     /**
-     * Get quick example contracts for demonstration
+     * Get popular contract examples from database
      */
     public function getExamples(Request $request): JsonResponse
     {
         try {
-            $examples = [
-                [
-                    'name' => 'Uniswap V3 Factory',
-                    'address' => '0x1F98431c8aD98523631AE4a59f267346ea31F984',
-                    'network' => 'ethereum',
-                    'verified' => true,
-                    'description' => 'Decentralized exchange factory contract',
-                    'category' => 'defi'
-                ],
-                [
-                    'name' => 'USDC Token',
-                    'address' => '0xA0b86a33E6417c8f38B9D42FC71A1D7e70e09E4a',
-                    'network' => 'ethereum',
-                    'verified' => true,
-                    'description' => 'USD Coin stablecoin contract',
-                    'category' => 'token'
-                ],
-                [
-                    'name' => 'Compound cETH',
-                    'address' => '0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5',
-                    'network' => 'ethereum',
-                    'verified' => true,
-                    'description' => 'Compound Ethereum lending market',
-                    'category' => 'lending'
-                ],
-                [
-                    'name' => 'AAVE V3 Pool',
-                    'address' => '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2',
-                    'network' => 'ethereum',
-                    'verified' => true,
-                    'description' => 'AAVE V3 lending pool contract',
-                    'category' => 'lending'
-                ],
-                [
-                    'name' => 'PancakeSwap Router',
-                    'address' => '0x10ED43C718714eb63d5aA57B78B54704E256024E',
-                    'network' => 'bsc',
-                    'verified' => true,
-                    'description' => 'PancakeSwap AMM router on BSC',
-                    'category' => 'defi'
-                ]
-            ];
+            $examples = $this->contractExamples->getPopularContracts(10);
 
             return response()->json([
                 'success' => true,
@@ -152,6 +116,7 @@ final class BlockchainController extends Controller
 
     /**
      * Get contract information for a given address
+     * TODO: Integrate with BlockchainExplorerService
      */
     public function getContractInfo(Request $request): JsonResponse
     {
@@ -161,19 +126,12 @@ final class BlockchainController extends Controller
                 'network' => 'required|string|in:ethereum,polygon,bsc,arbitrum,optimism'
             ]);
 
-            $address = $request->input('address');
-            $network = $request->input('network');
-
-            // In production, fetch real contract data from blockchain explorer APIs
-            $contractInfo = $this->generateContractInfo($address, $network);
-
+            // TODO: Integrate with BlockchainExplorerService to fetch real contract data
             return response()->json([
-                'success' => true,
-                'address' => $address,
-                'network' => $network,
-                ...$contractInfo,
-                'timestamp' => Carbon::now()->toISOString()
-            ]);
+                'success' => false,
+                'message' => 'Contract info endpoint requires blockchain explorer integration',
+                'note' => 'This endpoint should be connected to Etherscan/Polygonscan APIs'
+            ], 501);
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -190,7 +148,8 @@ final class BlockchainController extends Controller
     }
 
     /**
-     * Perform security analysis on a contract
+     * Perform security analysis on a smart contract
+     * TODO: Integrate with OWASPSecurityAnalyzer
      */
     public function performSecurityAnalysis(Request $request): JsonResponse
     {
@@ -200,20 +159,12 @@ final class BlockchainController extends Controller
                 'network' => 'required|string|in:ethereum,polygon,bsc,arbitrum,optimism'
             ]);
 
-            $address = $request->input('address');
-            $network = $request->input('network');
-
-            // In production, trigger actual security analysis
-            $analysisResults = $this->generateSecurityAnalysis($address, $network);
-
+            // TODO: Integrate with OWASPSecurityAnalyzer for real analysis
             return response()->json([
-                'success' => true,
-                'address' => $address,
-                'network' => $network,
-                'analysisId' => 'sec_' . uniqid(),
-                ...$analysisResults,
-                'timestamp' => Carbon::now()->toISOString()
-            ]);
+                'success' => false,
+                'message' => 'Security analysis endpoint requires OWASPSecurityAnalyzer integration',
+                'note' => 'This endpoint should trigger actual smart contract analysis'
+            ], 501);
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -230,7 +181,8 @@ final class BlockchainController extends Controller
     }
 
     /**
-     * Perform sentiment analysis on a contract
+     * Perform sentiment analysis on a smart contract
+     * TODO: Integrate with SentimentAnalyzer
      */
     public function performSentimentAnalysis(Request $request): JsonResponse
     {
@@ -240,20 +192,12 @@ final class BlockchainController extends Controller
                 'network' => 'required|string|in:ethereum,polygon,bsc,arbitrum,optimism'
             ]);
 
-            $address = $request->input('address');
-            $network = $request->input('network');
-
-            // In production, trigger actual sentiment analysis
-            $sentimentResults = $this->generateSentimentAnalysis($address, $network);
-
+            // TODO: Integrate with SentimentAnalyzer for real analysis
             return response()->json([
-                'success' => true,
-                'address' => $address,
-                'network' => $network,
-                'analysisId' => 'sent_' . uniqid(),
-                ...$sentimentResults,
-                'timestamp' => Carbon::now()->toISOString()
-            ]);
+                'success' => false,
+                'message' => 'Sentiment analysis endpoint requires SentimentAnalyzer integration',
+                'note' => 'This endpoint should trigger actual sentiment analysis'
+            ], 501);
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -267,133 +211,5 @@ final class BlockchainController extends Controller
                 'error' => app()->environment('local') ? $e->getMessage() : 'Internal server error'
             ], 500);
         }
-    }
-
-    /**
-     * Generate realistic contract information
-     */
-    private function generateContractInfo(string $address, string $network): array
-    {
-        // Known contracts with specific data
-        $knownContracts = [
-            '0x1F98431c8aD98523631AE4a59f267346ea31F984' => [
-                'name' => 'Uniswap V3 Factory',
-                'verified' => true,
-                'balance' => '0.0000',
-                'transactionCount' => 1234567,
-                'creationDate' => '2021-05-05'
-            ],
-            '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2' => [
-                'name' => 'AAVE V3 Pool',
-                'verified' => true,
-                'balance' => '142.5678',
-                'transactionCount' => 567890,
-                'creationDate' => '2022-03-15'
-            ]
-        ];
-
-        if (isset($knownContracts[$address])) {
-            return $knownContracts[$address];
-        }
-
-        // Generate data for unknown contracts
-        return [
-            'name' => 'Contract ' . substr($address, 0, 10) . '...',
-            'contractName' => 'Smart Contract',
-            'verified' => rand(0, 1) === 1,
-            'balance' => number_format(rand(0, 100000) / 1000, 4),
-            'transactionCount' => rand(1000, 100000),
-            'txCount' => rand(1000, 100000),
-            'creationDate' => Carbon::now()->subDays(rand(30, 1000))->format('Y-m-d'),
-            'deployedAt' => Carbon::now()->subDays(rand(30, 1000))->format('Y-m-d H:i:s')
-        ];
-    }
-
-    /**
-     * Generate security analysis results
-     */
-    private function generateSecurityAnalysis(string $address, string $network): array
-    {
-        $severities = ['critical', 'high', 'medium', 'low'];
-        $criticalCount = rand(0, 3);
-        $highCount = rand(1, 8);
-        $warningCount = $highCount + rand(2, 10);
-        
-        $findings = [];
-        $findingTemplates = [
-            ['title' => 'Reentrancy Vulnerability', 'severity' => 'critical', 'description' => 'External call made before state update'],
-            ['title' => 'Access Control Issue', 'severity' => 'high', 'description' => 'Owner privileges not properly restricted'],
-            ['title' => 'Gas Optimization', 'severity' => 'medium', 'description' => 'Loop operations can be optimized'],
-            ['title' => 'Event Emission Missing', 'severity' => 'low', 'description' => 'State changes not properly logged']
-        ];
-
-        foreach ($findingTemplates as $i => $template) {
-            $findings[] = [
-                'id' => $i + 1,
-                'severity' => $template['severity'],
-                'title' => $template['title'],
-                'description' => $template['description'],
-                'function' => $this->generateFunctionName(),
-                'line' => rand(50, 300)
-            ];
-        }
-
-        return [
-            'criticalFindings' => $criticalCount,
-            'critical' => $criticalCount,
-            'warningFindings' => $warningCount,
-            'warnings' => $warningCount,
-            'high' => $highCount,
-            'securityScore' => max(20, 100 - ($criticalCount * 25) - ($highCount * 10)),
-            'score' => max(20, 100 - ($criticalCount * 25) - ($highCount * 10)),
-            'keyFindings' => $findings,
-            'findings' => $findings,
-            'estimatedTime' => rand(30, 180),
-            'analysisTime' => round(rand(1000, 5000) / 1000, 2)
-        ];
-    }
-
-    /**
-     * Generate sentiment analysis results
-     */
-    private function generateSentimentAnalysis(string $address, string $network): array
-    {
-        return [
-            'overallSentiment' => rand(30, 85) / 100,
-            'sentimentScore' => rand(30, 85),
-            'mentionsCount' => rand(50, 500),
-            'positivePercentage' => rand(40, 70),
-            'neutralPercentage' => rand(15, 30),
-            'negativePercentage' => rand(10, 25),
-            'trendingTopics' => [
-                'security', 'audit', 'defi', 'yield farming'
-            ],
-            'platforms' => [
-                'twitter' => rand(100, 300),
-                'reddit' => rand(50, 150),
-                'discord' => rand(20, 80)
-            ]
-        ];
-    }
-
-    /**
-     * Generate realistic function name
-     */
-    private function generateFunctionName(): string
-    {
-        $functions = [
-            'transfer(address,uint256)',
-            'withdraw(uint256)',
-            'deposit()',
-            'setOwner(address)',
-            'approve(address,uint256)',
-            'mint(address,uint256)',
-            'burn(uint256)',
-            'swap(uint256,uint256,address)',
-            'addLiquidity(uint256,uint256)',
-            'removeLiquidity(uint256)'
-        ];
-
-        return $functions[array_rand($functions)];
     }
 }

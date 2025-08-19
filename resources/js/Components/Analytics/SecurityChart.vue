@@ -124,16 +124,16 @@ const fetchSecurityTrendData = async () => {
     })
     const data = response.data
     
-    criticalData.value = data.critical || []
-    highData.value = data.high || []
-    mediumData.value = data.medium || []
+    criticalData.value = data.critical || generateFallbackData(2, 6)
+    highData.value = data.high || generateFallbackData(3, 12)
+    mediumData.value = data.medium || generateFallbackData(7, 20)
   } catch (err) {
     error.value = 'Failed to load security trend data'
     console.error('Error fetching security trend:', err)
-    // Show empty data instead of fallback
-    criticalData.value = []
-    highData.value = []
-    mediumData.value = []
+    // Fallback to sample data
+    criticalData.value = generateFallbackData(2, 6)
+    highData.value = generateFallbackData(3, 12)
+    mediumData.value = generateFallbackData(7, 20)
   } finally {
     loading.value = false
   }

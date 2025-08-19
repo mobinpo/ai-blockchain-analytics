@@ -117,6 +117,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cryptocurrency Data APIs
+    |--------------------------------------------------------------------------
+    */
+    
+    'cryptocurrency' => [
+        'coingecko' => [
+            'base_url' => env('COINGECKO_BASE_URL', 'https://api.coingecko.com/api/v3'),
+            'api_key' => env('COINGECKO_API_KEY'), // Pro version
+            'rate_limit' => env('COINGECKO_RATE_LIMIT', 50), // requests per minute
+        ],
+        'coincap' => [
+            'base_url' => env('COINCAP_BASE_URL', 'https://api.coincap.io/v2'),
+            'api_key' => env('COINCAP_API_KEY'),
+            'rate_limit' => env('COINCAP_RATE_LIMIT', 200),
+        ],
+        'cryptocompare' => [
+            'base_url' => env('CRYPTOCOMPARE_BASE_URL', 'https://min-api.cryptocompare.com/data'),
+            'api_key' => env('CRYPTOCOMPARE_API_KEY'),
+            'rate_limit' => env('CRYPTOCOMPARE_RATE_LIMIT', 100),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Social Media APIs
     |--------------------------------------------------------------------------
     */
@@ -176,6 +200,27 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
         ]
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Microservices Configuration
+    |--------------------------------------------------------------------------
+    */
+    
+    'microservices' => [
+        'base_url' => env('MICROSERVICES_BASE_URL', 'http://localhost:8080'),
+        'timeout' => env('MICROSERVICES_TIMEOUT', 5),
+        'retry_attempts' => env('MICROSERVICES_RETRY_ATTEMPTS', 3),
+        'circuit_breaker' => [
+            'failure_threshold' => env('CIRCUIT_BREAKER_FAILURE_THRESHOLD', 5),
+            'recovery_timeout' => env('CIRCUIT_BREAKER_RECOVERY_TIMEOUT', 30),
+        ],
+        'health_endpoints' => [
+            'vulnerability_scanner' => '/health/vulnerability-scanner',
+            'sentiment_analyzer' => '/health/sentiment-analyzer',
+            'blockchain_parser' => '/health/blockchain-parser',
+        ],
     ],
 
     /*

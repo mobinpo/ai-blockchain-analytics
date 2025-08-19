@@ -97,6 +97,19 @@ Route::get('/projects', function () {
     return Inertia::render('Projects');
 })->name('projects');
 
+Route::get('/projects/{id}', function ($id) {
+    return Inertia::render('ProjectDetails', [
+        'projectId' => $id
+    ]);
+})->middleware(['auth', 'verified'])->name('projects.show');
+
+// Project API Routes (moved from api.php for session compatibility)
+Route::middleware(['auth'])->prefix('api/projects')->name('api.projects.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\ProjectController::class, 'index'])->name('index');
+    Route::post('/', [\App\Http\Controllers\Api\ProjectController::class, 'store'])->name('store');
+    Route::get('/{id}', [\App\Http\Controllers\Api\ProjectController::class, 'show'])->name('show');
+});
+
 Route::get('/security', function () {
     return Inertia::render('Security');
 })->name('security');

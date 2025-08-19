@@ -25,7 +25,7 @@
                             </div>
                         </div>
                         
-                        <!-- Live indicator for recent activities -->
+                        <!-- Live indicator only for truly recent activities (within 1 minute) -->
                         <div v-if="isRecent(activity.timestamp)" class="flex items-center ml-2">
                             <div class="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
                         </div>
@@ -163,6 +163,6 @@ const formatTimestamp = (timestamp) => {
 
 const isRecent = (timestamp) => {
     const diff = Date.now() - new Date(timestamp).getTime()
-    return diff < 300000 // Less than 5 minutes old
+    return diff < 60000 // Less than 1 minute old - only truly recent activity
 }
 </script>

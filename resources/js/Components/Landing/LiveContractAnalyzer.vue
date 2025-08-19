@@ -272,24 +272,24 @@ export default {
     const analysisProgress = ref([])
     const quickResults = ref(null)
 
-    // Contract examples for quick testing
-    const contractExamples = ref([
-      {
-        name: 'Uniswap V2',
-        address: '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f',
-        network: 'ethereum'
-      },
-      {
-        name: 'USDC',
-        address: '0xA0b86a33E6417c7e4E6b42b0Db8FC0a41F34a3B4',
-        network: 'ethereum'
-      },
-      {
-        name: 'PancakeSwap',
-        address: '0x73feaa1eE314F8c655E354234017bE2193C9E24E',
-        network: 'bsc'
-      }
-    ])
+    // Contract examples - fetched from API
+    const contractExamples = ref([])
+    
+    // Fetch examples from API
+    const fetchExamples = async () => {
+        try {
+            const response = await fetch('/api/blockchain/examples')
+            if (response.ok) {
+                const data = await response.json()
+                if (data.success) {
+                    contractExamples.value = data.examples.slice(0, 3) || []
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching examples:', err)
+            contractExamples.value = []
+        }
+    }
 
     // Networks configuration
     const networks = {
@@ -475,6 +475,11 @@ export default {
       }
     }
 
+    // Initialize examples on mount
+    onMounted(() => {
+      fetchExamples()
+    })
+
     return {
       contractAddress,
       isValidating,
@@ -486,6 +491,7 @@ export default {
       analysisProgress,
       quickResults,
       contractExamples,
+      fetchExamples,
       validateAddress,
       loadExample,
       analyzeContract,

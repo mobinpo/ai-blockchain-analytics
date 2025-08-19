@@ -10,6 +10,17 @@ const error = ref(null);
 const showNewProjectModal = ref(false);
 const selectedProject = ref(null);
 
+// New project form data
+const newProject = ref({
+  name: '',
+  description: '',
+  blockchain_network: 'ethereum',
+  main_contract_address: '',
+  project_type: 'smart_contract',
+});
+
+const isCreatingProject = ref(false);
+
 const getRiskColor = (risk) => {
   const colors = {
     low: 'text-green-600 bg-green-50 border-green-200',
@@ -39,7 +50,7 @@ const fetchProjects = async () => {
   error.value = null;
   
   try {
-    const response = await api.get('/dashboard/projects');
+    const response = await api.get('/projects');
     projects.value = response.data.projects || response.data || [];
   } catch (err) {
     error.value = 'Failed to load projects';
@@ -68,11 +79,31 @@ const startAnalysis = async (project) => {
     project.progress = 0;
     
     try {
-      // Call real API to start analysis
-      const response = await api.post('/analyses', {
+      // Get contract address and network
+      const contractAddress = project.contractAddress || project.main_contract_address;
+      const network = project.network || project.blockchain_network || 'ethereum';
+      
+      // Validate required fields
+      if (!contractAddress) {
+        throw new Error('Contract address is missing. Please edit the project to add a valid contract address.');
+      }
+      
+      if (!/^0x[a-fA-F0-9]{40}$/.test(contractAddress)) {
+        throw new Error('Invalid contract address format. Please ensure the contract address is a valid Ethereum address.');
+      }
+      
+      // Prepare analysis data
+      const analysisData = {
+        contract_address: contractAddress,
+        network: network,
         project_id: project.id,
         analysis_type: 'full'
-      });
+      };
+      
+      console.log('🔍 Analysis data being sent:', analysisData);
+      
+      // Call real API to start analysis
+      const response = await api.post('/analyses', analysisData);
       
       if (response.data.success) {
         const analysisId = response.data.analysis_id;
@@ -129,6 +160,14 @@ const startAnalysis = async (project) => {
       
     } catch (error) {
       console.error(`🚨 Analysis failed for project ${project.name}:`, error);
+      if (error.response?.data) {
+        console.error('🚨 Detailed error:', error.response.data);
+      }
+      
+      // Show user-friendly error message
+      const errorMessage = error.message || error.response?.data?.message || 'Failed to start analysis';
+      alert(`Analysis failed: ${errorMessage}`);
+      
       project.status = 'failed';
       project.progress = 0;
     }
@@ -152,10 +191,9 @@ const cleanupAnalyses = () => {
 
 // Additional project actions
 const viewProjectDetails = (project) => {
-  // Navigate to project detail page or show modal
+  // Navigate to project detail page
   console.log('View details for project:', project.name);
-  // For now, redirect to dashboard with project context
-  window.location.href = `/dashboard?project=${project.id}`;
+  window.location.href = `/projects/${project.id}`;
 };
 
 const exportProject = (project) => {
@@ -179,6 +217,65 @@ const exportProject = (project) => {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+};
+
+const createProject = async () => {
+  if (!newProject.value.name.trim()) {
+    alert('Project name is required');
+    return;
+  }
+  
+  if (!newProject.value.main_contract_address.trim()) {
+    alert('Contract address is required');
+    return;
+  }
+  
+  if (!/^0x[a-fA-F0-9]{40}$/.test(newProject.value.main_contract_address)) {
+    alert('Please enter a valid contract address');
+    return;
+  }
+  
+  isCreatingProject.value = true;
+  
+  try {
+    // First create the project
+    const projectResponse = await api.post('/projects', newProject.value);
+    
+    if (projectResponse.data.success) {
+      // Close modal and reset form
+      showNewProjectModal.value = false;
+      newProject.value = {
+        name: '',
+        description: '',
+        blockchain_network: 'ethereum',
+        main_contract_address: '',
+        project_type: 'smart_contract',
+      };
+      
+      // Refresh projects list
+      await fetchProjects();
+      
+      alert('Project created successfully!');
+    } else {
+      throw new Error(projectResponse.data.message || 'Failed to create project');
+    }
+  } catch (err) {
+    console.error('Error creating project:', err);
+    alert(err.response?.data?.message || err.message || 'Failed to create project');
+  } finally {
+    isCreatingProject.value = false;
+  }
+};
+
+const cancelCreateProject = () => {
+  showNewProjectModal.value = false;
+  newProject.value = {
+    name: '',
+    description: '',
+    blockchain_network: 'ethereum',
+    main_contract_address: '',
+    project_type: 'smart_contract',
+  };
 };
 
 onMounted(async () => {
@@ -377,6 +474,130 @@ onUnmounted(() => {
             <li>• Automated smart contract auditing with detailed reports</li>
             <li>• Multi-chain support for Ethereum, Polygon, and other networks</li>
           </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Project Modal -->
+    <div v-if="showNewProjectModal" class="fixed inset-0 z-50 overflow-y-auto">
+      <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="cancelCreateProject"></div>
+
+        <!-- Modal panel -->
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+              <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                  Create New Project
+                </h3>
+                
+                <!-- Project Form -->
+                <form @submit.prevent="createProject" class="space-y-4">
+                  <!-- Project Name -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Project Name *
+                    </label>
+                    <input 
+                      v-model="newProject.name"
+                      type="text" 
+                      required
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900 placeholder-gray-500"
+                      placeholder="Enter project name"
+                    />
+                  </div>
+
+                  <!-- Description -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <textarea 
+                      v-model="newProject.description"
+                      rows="3"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900 placeholder-gray-500"
+                      placeholder="Enter project description (optional)"
+                    ></textarea>
+                  </div>
+
+                  <!-- Network Selection -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Blockchain Network *
+                    </label>
+                    <select 
+                      v-model="newProject.blockchain_network"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
+                    >
+                      <option value="ethereum">Ethereum</option>
+                      <option value="bsc">BSC (Binance Smart Chain)</option>
+                      <option value="polygon">Polygon</option>
+                      <option value="arbitrum">Arbitrum</option>
+                      <option value="optimism">Optimism</option>
+                      <option value="avalanche">Avalanche</option>
+                      <option value="fantom">Fantom</option>
+                    </select>
+                  </div>
+
+                  <!-- Contract Address -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Main Contract Address *
+                    </label>
+                    <input 
+                      v-model="newProject.main_contract_address"
+                      type="text" 
+                      required
+                      pattern="^0x[a-fA-F0-9]{40}$"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900 placeholder-gray-500"
+                      placeholder="0x..."
+                    />
+                    <p class="text-xs text-gray-500 mt-1">Enter the main smart contract address to analyze</p>
+                  </div>
+
+                  <!-- Project Type -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Project Type
+                    </label>
+                    <select 
+                      v-model="newProject.project_type"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
+                    >
+                      <option value="smart_contract">Smart Contract</option>
+                      <option value="defi">DeFi Protocol</option>
+                      <option value="nft">NFT Collection</option>
+                      <option value="dao">DAO</option>
+                      <option value="bridge">Bridge</option>
+                      <option value="dex">DEX</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button
+              @click="createProject"
+              :disabled="isCreatingProject"
+              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              <span v-if="isCreatingProject">Creating...</span>
+              <span v-else>Create Project</span>
+            </button>
+            <button
+              @click="cancelCreateProject"
+              :disabled="isCreatingProject"
+              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
     </div>

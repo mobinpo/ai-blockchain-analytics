@@ -520,8 +520,8 @@ const exportWithOptions = async () => {
                 recentExports.value = recentExports.value.slice(0, 10)
             }
             
-            // Save to localStorage
-            localStorage.setItem('pdf_exports', JSON.stringify(recentExports.value))
+            // Save to sessionStorage (avoid localStorage for temporary data)
+            sessionStorage.setItem('pdf_exports', JSON.stringify(recentExports.value))
             
             emit('export-completed', exportResult)
             
@@ -595,8 +595,8 @@ const handleClickOutside = (event) => {
 onMounted(() => {
     document.addEventListener('click', handleClickOutside)
     
-    // Load recent exports from localStorage
-    const savedExports = localStorage.getItem('pdf_exports')
+    // Load recent exports from sessionStorage
+    const savedExports = sessionStorage.getItem('pdf_exports')
     if (savedExports) {
         try {
             recentExports.value = JSON.parse(savedExports)

@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
+import path from 'path';
 
 export default defineConfig({
     plugins: [
@@ -20,15 +21,16 @@ export default defineConfig({
     ],
     server: {
         host: '0.0.0.0',
-        port: 5174,
+        port: 5173,
         // Disable HTTPS for Vite to avoid SSL issues
         https: false,
-        hmr: {
-            host: '192.168.1.114',
-            port: 5174,
-        },
+        hmr: false,
         watch: {
             usePolling: true,
+        },
+        cors: {
+            origin: ['http://localhost:8003', 'http://127.0.0.1:8003'],
+            credentials: true,
         },
         proxy: {
             '/api': {
@@ -41,6 +43,7 @@ export default defineConfig({
     resolve: {
         alias: {
             vue: 'vue/dist/vue.esm-bundler.js',
+            '@': path.resolve(__dirname, 'resources/js'),
         },
     },
     ssr: {

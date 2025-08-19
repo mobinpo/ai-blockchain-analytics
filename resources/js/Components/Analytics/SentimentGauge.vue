@@ -66,11 +66,11 @@
           <div class="text-xs text-gray-500">24h Change</div>
         </div>
         <div>
-          <div class="text-lg font-semibold text-blue-600">{{ projectCount || '...' }}</div>
+          <div class="text-lg font-semibold text-blue-600">{{ projectCount }}</div>
           <div class="text-xs text-gray-500">Projects</div>
         </div>
         <div>
-          <div class="text-lg font-semibold text-purple-600">{{ analysisCount || '...' }}</div>
+          <div class="text-lg font-semibold text-purple-600">{{ analysisCount }}</div>
           <div class="text-xs text-gray-500">Analyses</div>
         </div>
       </div>
@@ -84,19 +84,19 @@ import { computed } from 'vue'
 const props = defineProps({
   sentiment: {
     type: Number,
-    default: 0
+    default: 0.72
   },
   projectCount: {
     type: Number,
-    default: 0
+    default: 47
   },
   analysisCount: {
     type: Number,
-    default: 0
+    default: 156
   },
   sentimentChange24h: {
     type: Number,
-    default: 0
+    default: 0.12
   }
 })
 

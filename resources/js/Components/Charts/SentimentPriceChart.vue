@@ -350,52 +350,18 @@ export default {
                 renderChart()
                 
             } catch (err) {
-                console.warn('API failed, generating demo data:', err.message)
+                console.error('Failed to fetch sentiment data:', err.message)
+                error.value = 'Failed to load sentiment data. Please try again later.'
                 
-                // Generate demo data as fallback
-                const days = Math.ceil((new Date(endDate.value) - new Date(startDate.value)) / (1000 * 60 * 60 * 24))
-                const demoSentimentData = []
-                const demoPriceData = []
-                
-                let basePrice = 50000 // Bitcoin base price
-                
-                for (let i = 0; i <= days; i++) {
-                    const date = new Date(startDate.value)
-                    date.setDate(date.getDate() + i)
-                    
-                    // Generate correlated sentiment and price data
-                    const sentiment = Math.sin(i * 0.1) * 0.3 + ((Math.random() - 0.5) * 0.4)
-                    const clampedSentiment = Math.max(-1, Math.min(1, sentiment))
-                    
-                    const priceChange = clampedSentiment * 0.02 + ((Math.random() - 0.5) * 0.01)
-                    basePrice = basePrice * (1 + priceChange)
-                    
-                    demoSentimentData.push({
-                        date: date.toISOString().split('T')[0],
-                        sentiment: Math.round(clampedSentiment * 1000) / 1000,
-                        volume: Math.floor(Math.random() * 500) + 50
-                    })
-                    
-                    demoPriceData.push({
-                        date: date.toISOString().split('T')[0],
-                        price: Math.round(basePrice * 100) / 100,
-                        volume: Math.floor(Math.random() * 9000000) + 1000000
-                    })
-                }
-                
+                // Clear chart data on error
                 chartData.value = {
-                    sentiment_timeline: demoSentimentData,
-                    price_timeline: demoPriceData
+                    sentiment_timeline: [],
+                    price_timeline: []
                 }
-                
-                // Calculate demo correlation
-                const sentimentValues = demoSentimentData.map(d => d.sentiment)
-                const priceValues = demoPriceData.map(d => d.price)
-                const correlation = calculateCorrelation(sentimentValues, priceValues)
                 
                 statistics.value = {
-                    correlation_coefficient: correlation,
-                    data_points: demoSentimentData.length,
+                    correlation_coefficient: 0,
+                    data_points: 0,
                     period: {
                         start: startDate.value,
                         end: endDate.value,

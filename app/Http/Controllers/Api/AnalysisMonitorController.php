@@ -5,56 +5,54 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Analysis;
+use App\Models\ContractAnalysis;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 final class AnalysisMonitorController extends Controller
 {
     /**
-     * Get currently active analyses
+     * Get currently active analyses from database
      */
     public function getActiveAnalyses(Request $request): JsonResponse
     {
         try {
-            // Fetch real active analyses from database
-            $activeAnalyses = DB::table('analyses')
-                ->join('projects', 'analyses.project_id', '=', 'projects.id')
-                ->leftJoin('findings', 'analyses.id', '=', 'findings.analysis_id')
-                ->where('analyses.status', 'running')
-                ->select([
-                    'analyses.id',
-                    'analyses.engine as type',
-                    'analyses.status',
-                    'analyses.created_at',
-                    'analyses.updated_at',
-                    'projects.name as contractName',
-                    'projects.blockchain_network as network',
-                    DB::raw('COUNT(findings.id) as findingsCount')
-                ])
-                ->groupBy('analyses.id', 'analyses.engine', 'analyses.status', 'analyses.created_at', 'analyses.updated_at', 'projects.name', 'projects.blockchain_network')
-                ->get()
-                ->map(function ($analysis) {
-                    $duration = Carbon::parse($analysis->created_at)->diffInSeconds(Carbon::now());
-                    $progress = min(95, ($duration / 60) * 10); // Estimate progress based on time
-                    
-                    return [
-                        'id' => 'analysis_' . $analysis->id,
-                        'contractName' => $analysis->contractName,
-                        'network' => $analysis->network ?: 'ethereum',
-                        'type' => ucfirst($analysis->type) . ' Analysis',
-                        'status' => 'analyzing',
-                        'progress' => round($progress, 1),
-                        'currentStep' => $this->getCurrentStep($progress),
-                        'eta' => $this->calculateETA($progress),
-                        'duration' => $duration,
-                        'findingsCount' => $analysis->findingsCount,
-                        'gasAnalyzed' => rand(50000, 500000), // This would come from actual analysis data
-                        'recentFindings' => $this->getRecentFindings($analysis->id)
-                    ];
-                })
-                ->toArray();
+            $activeAnalyses = Cache::remember('active_analyses', 20, function () {
+                return Analysis::whereIn('status', ['processing', 'streaming'])
+                    ->orderBy('started_at', 'desc')
+                    ->select([
+                        'id',
+                        'analysis_type',
+                        'target_address', 
+                        'status',
+                        'started_at',
+                        'tokens_streamed',
+                        'token_limit',
+                        'findings_count',
+                        'gas_analyzed',
+                        'metadata'
+                    ])
+                    ->get()
+                    ->map(function ($analysis) {
+                        return [
+                            'id' => $analysis->id,
+                            'contractName' => $analysis->metadata['contract_name'] ?? 'Unknown Contract',
+                            'contractAddress' => $analysis->target_address,
+                            'type' => $analysis->analysis_type ?? 'Security Analysis',
+                            'status' => $analysis->status,
+                            'progress' => $analysis->getStreamingProgress() ?? 0,
+                            'startedAt' => $analysis->started_at?->toISOString(),
+                            'duration' => $analysis->started_at ? $analysis->started_at->diffInSeconds(now()) : 0,
+                            'findingsCount' => $analysis->findings_count ?? 0,
+                            'gasAnalyzed' => $analysis->gas_analyzed ?? 0,
+                        ];
+                    })
+                    ->toArray();
+            });
             
             return response()->json([
                 'success' => true,
@@ -72,37 +70,35 @@ final class AnalysisMonitorController extends Controller
     }
 
     /**
-     * Get queued analyses waiting to be processed
+     * Get queued analyses waiting to be processed from database
      */
     public function getQueuedAnalyses(Request $request): JsonResponse
     {
         try {
-            // Fetch real queued analyses from database
-            $queuedAnalyses = DB::table('analyses')
-                ->join('projects', 'analyses.project_id', '=', 'projects.id')
-                ->where('analyses.status', 'pending')
-                ->select([
-                    'analyses.id',
-                    'analyses.engine as type',
-                    'analyses.created_at',
-                    'projects.name as contractName',
-                    'projects.blockchain_network as network'
-                ])
-                ->orderBy('analyses.created_at', 'asc')
-                ->get()
-                ->map(function ($analysis, $index) {
-                    $estimatedStartMinutes = ($index + 1) * 5; // Estimate 5 minutes per queue position
-                    
-                    return [
-                        'id' => 'queued_' . $analysis->id,
-                        'contractName' => $analysis->contractName,
-                        'network' => $analysis->network ?: 'ethereum',
-                        'type' => ucfirst($analysis->type) . ' Analysis',
-                        'estimatedStart' => Carbon::now()->addMinutes($estimatedStartMinutes)->format('H:i'),
-                        'priority' => 'medium' // Could be determined by actual priority field
-                    ];
-                })
-                ->toArray();
+            $queuedAnalyses = Cache::remember('queued_analyses', 20, function () {
+                return Analysis::where('status', 'pending')
+                    ->orderBy('created_at', 'asc')
+                    ->select([
+                        'id',
+                        'analysis_type',
+                        'target_address',
+                        'priority',
+                        'created_at',
+                        'metadata'
+                    ])
+                    ->get()
+                    ->map(function ($analysis) {
+                        return [
+                            'id' => $analysis->id,
+                            'contractName' => $analysis->metadata['contract_name'] ?? 'Unknown Contract',
+                            'contractAddress' => $analysis->target_address,
+                            'type' => $analysis->analysis_type ?? 'Security Analysis',
+                            'priority' => $analysis->priority ?? 'medium',
+                            'queuedAt' => $analysis->created_at?->toISOString(),
+                        ];
+                    })
+                    ->toArray();
+            });
             
             return response()->json([
                 'success' => true,
@@ -120,55 +116,27 @@ final class AnalysisMonitorController extends Controller
     }
 
     /**
-     * Get performance metrics for the analysis system
+     * Get real performance metrics from database
      */
     public function getMetrics(Request $request): JsonResponse
     {
         try {
-            // Fetch real performance metrics from database
-            $today = Carbon::today();
-            
-            $totalAnalysesToday = DB::table('analyses')
-                ->whereDate('created_at', $today)
-                ->count();
-            
-            $completedAnalysesToday = DB::table('analyses')
-                ->whereDate('created_at', $today)
-                ->where('status', 'completed')
-                ->get();
-            
-            $averageCompletionTime = $completedAnalysesToday->count() > 0 
-                ? $completedAnalysesToday->avg(function ($analysis) {
-                    return Carbon::parse($analysis->updated_at)->diffInSeconds(Carbon::parse($analysis->created_at));
-                })
-                : 0;
-            
-            $totalFindingsToday = DB::table('findings')
-                ->join('analyses', 'findings.analysis_id', '=', 'analyses.id')
-                ->whereDate('analyses.created_at', $today)
-                ->count();
-            
-            $activeAnalysesCount = DB::table('analyses')
-                ->where('status', 'running')
-                ->count();
-            
-            $queueSize = DB::table('analyses')
-                ->where('status', 'pending')
-                ->count();
-            
-            // Calculate system load based on active processes
-            $systemLoad = min(100, ($activeAnalysesCount * 10) + ($queueSize * 2));
-            
-            $metrics = [
-                'totalAnalysesToday' => $totalAnalysesToday,
-                'averageCompletionTime' => round($averageCompletionTime),
-                'totalFindingsToday' => $totalFindingsToday,
-                'systemLoad' => $systemLoad,
-                'successRate' => $this->calculateSuccessRate(),
-                'activeWorkers' => $activeAnalysesCount,
-                'queueSize' => $queueSize,
-                'averageProcessingTime' => round($averageCompletionTime)
-            ];
+            $metrics = Cache::remember('analysis_metrics', 20, function () {
+                $today = Carbon::today();
+                
+                return [
+                    'totalAnalysesToday' => Analysis::whereDate('created_at', $today)->count(),
+                    'completedToday' => Analysis::whereDate('completed_at', $today)->count(),
+                    'averageCompletionTime' => Analysis::whereNotNull('duration_seconds')
+                        ->whereDate('completed_at', '>=', $today->subDays(7))
+                        ->avg('duration_seconds') ?? 0,
+                    'successRate' => $this->calculateSuccessRate(),
+                    'totalFindingsToday' => Analysis::whereDate('created_at', $today)
+                        ->sum('findings_count') ?? 0,
+                    'activeWorkers' => Analysis::whereIn('status', ['processing', 'streaming'])->count(),
+                    'queueSize' => Analysis::where('status', 'pending')->count(),
+                ];
+            });
             
             return response()->json([
                 'success' => true,
@@ -185,65 +153,152 @@ final class AnalysisMonitorController extends Controller
     }
 
     /**
-     * Get recent findings for a specific analysis
+     * Get overall analysis status - single source of truth for all UI activity indicators
      */
-    private function getRecentFindings(int $analysisId): array
+    public function getAnalysisStatus(Request $request): JsonResponse
     {
-        return DB::table('findings')
-            ->where('analysis_id', $analysisId)
-            ->orderBy('created_at', 'desc')
-            ->limit(3)
-            ->get(['id', 'title', 'severity', 'created_at'])
-            ->map(function ($finding) {
+        try {
+            // Get real counts from database with caching
+            $status = Cache::remember('analysis_status', 20, function () {
+                $activeCount = $this->getRealActiveCount();
+                $queueCount = $this->getRealQueueCount();
+                
+                // Get latest activity
+                $latestActivity = Analysis::whereIn('status', ['processing', 'streaming', 'completed'])
+                    ->orderBy('updated_at', 'desc')
+                    ->first();
+                
+                // Determine system state based on real data
+                $state = $this->determineSystemState($activeCount, $queueCount);
+                
                 return [
-                    'id' => $finding->id,
-                    'title' => $finding->title,
-                    'severity' => $finding->severity,
-                    'timestamp' => Carbon::parse($finding->created_at)->diffForHumans()
+                    'state' => $state,
+                    'hasActiveAnalyses' => $activeCount > 0,
+                    'hasQueuedAnalyses' => $queueCount > 0,
+                    'activeCount' => $activeCount,
+                    'queueCount' => $queueCount,
+                    'isHealthy' => true,
+                    'lastActivity' => $latestActivity?->updated_at?->toISOString(),
+                    'summary' => $this->generateStatusSummary($activeCount, $queueCount)
                 ];
-            })
-            ->toArray();
+            });
+            
+            return response()->json([
+                'success' => true,
+                'status' => $status,
+                'timestamp' => Carbon::now()->toISOString()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch analysis status',
+                'error' => app()->environment('local') ? $e->getMessage() : 'Internal server error',
+                'status' => [
+                    'state' => 'error',
+                    'hasActiveAnalyses' => false,
+                    'hasQueuedAnalyses' => false,
+                    'activeCount' => 0,
+                    'queueCount' => 0,
+                    'isHealthy' => false,
+                    'lastActivity' => null,
+                    'summary' => 'System error - unable to determine status'
+                ]
+            ], 500);
+        }
     }
 
     /**
-     * Get current step based on progress percentage
-     */
-    private function getCurrentStep(float $progress): string
-    {
-        if ($progress > 90) return 'Report Generation';
-        if ($progress > 70) return 'Vulnerability Assessment';
-        if ($progress > 40) return 'Code Pattern Analysis';
-        if ($progress > 20) return 'Function Mapping';
-        return 'Contract Parsing';
-    }
-
-    /**
-     * Calculate success rate from recent analyses
+     * Calculate success rate from database
      */
     private function calculateSuccessRate(): float
     {
-        $recentAnalyses = DB::table('analyses')
-            ->whereDate('created_at', '>=', Carbon::now()->subDays(7))
-            ->whereIn('status', ['completed', 'failed'])
-            ->get();
-
-        if ($recentAnalyses->count() === 0) {
-            return 0.0;
+        $total = Analysis::whereDate('completed_at', '>=', Carbon::today()->subDays(7))->count();
+        
+        if ($total === 0) {
+            return 100.0;
         }
-
-        $successful = $recentAnalyses->where('status', 'completed')->count();
-        return round(($successful / $recentAnalyses->count()) * 100, 1);
+        
+        $successful = Analysis::whereDate('completed_at', '>=', Carbon::today()->subDays(7))
+            ->where('status', 'completed')
+            ->count();
+            
+        return round(($successful / $total) * 100, 1);
     }
 
     /**
-     * Calculate estimated time of completion
+     * Determine overall system state based on current workload
      */
-    private function calculateETA(int $progress): string
+    private function determineSystemState(int $activeCount, int $queueCount): string
     {
-        if ($progress > 90) return '30s remaining';
-        if ($progress > 70) return '2 min remaining';
-        if ($progress > 40) return '5 min remaining';
-        if ($progress > 20) return '8 min remaining';
-        return 'Calculating...';
+        if ($activeCount === 0 && $queueCount === 0) {
+            return 'idle';
+        }
+        
+        if ($activeCount >= 5 || $queueCount >= 8) {
+            return 'busy';
+        }
+        
+        if ($activeCount > 0) {
+            return 'active';
+        }
+        
+        return 'idle';
+    }
+
+    /**
+     * Generate a human-readable status summary
+     */
+    private function generateStatusSummary(int $activeCount, int $queueCount): string
+    {
+        if ($activeCount === 0 && $queueCount === 0) {
+            return 'System is idle - no active analyses';
+        }
+        
+        if ($activeCount === 1 && $queueCount === 0) {
+            return '1 analysis running';
+        }
+        
+        if ($activeCount > 1 && $queueCount === 0) {
+            return "{$activeCount} analyses running";
+        }
+        
+        if ($activeCount === 0 && $queueCount > 0) {
+            return "{$queueCount} analyses queued";
+        }
+        
+        return "{$activeCount} active, {$queueCount} queued";
+    }
+
+    /**
+     * Clear all analysis-related caches
+     */
+    public static function clearAnalysisCaches(): void
+    {
+        Cache::forget('active_analyses');
+        Cache::forget('queued_analyses');
+        Cache::forget('analysis_metrics');
+        Cache::forget('analysis_status');
+    }
+
+    /**
+     * Get real active count from both Analysis and ContractAnalysis models
+     */
+    private function getRealActiveCount(): int
+    {
+        $analysisCount = Analysis::whereIn('status', ['processing', 'streaming'])->count();
+        $contractAnalysisCount = ContractAnalysis::whereIn('status', ['processing', 'analyzing'])->count();
+        
+        return $analysisCount + $contractAnalysisCount;
+    }
+
+    /**
+     * Get real queue count from both models
+     */
+    private function getRealQueueCount(): int
+    {
+        $analysisCount = Analysis::where('status', 'pending')->count();
+        $contractAnalysisCount = ContractAnalysis::where('status', 'pending')->count();
+        
+        return $analysisCount + $contractAnalysisCount;
     }
 }

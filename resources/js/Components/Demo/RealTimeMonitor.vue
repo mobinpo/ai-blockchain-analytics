@@ -7,8 +7,9 @@
       </div>
       <div class="flex items-center space-x-3">
         <div class="flex items-center">
-          <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
-          <span class="text-sm text-gray-600">{{ activeAnalyses.length }} active</span>
+          <div v-if="analysisStatus.activeCount > 0" class="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
+          <div v-else class="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
+          <span class="text-sm text-gray-600">{{ analysisStatus.activeCount }} active</span>
         </div>
         <button 
           @click="toggleMonitoring"
@@ -147,19 +148,19 @@
     <div class="mt-6 pt-4 border-t border-gray-200">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="text-center">
-          <div class="text-lg font-semibold text-blue-600">{{ totalAnalysesToday }}</div>
+          <div class="text-lg font-semibold text-blue-600">{{ dashboardData?.realtime?.analysesToday || 0 }}</div>
           <div class="text-xs text-gray-500">Analyses Today</div>
         </div>
         <div class="text-center">
-          <div class="text-lg font-semibold text-green-600">{{ averageCompletionTime }}s</div>
+          <div class="text-lg font-semibold text-green-600">{{ dashboardData?.realtime?.avgTimeSec || 0 }}s</div>
           <div class="text-xs text-gray-500">Avg Time</div>
         </div>
         <div class="text-center">
-          <div class="text-lg font-semibold text-purple-600">{{ totalFindingsToday }}</div>
+          <div class="text-lg font-semibold text-purple-600">{{ dashboardData?.realtime?.findingsToday || 0 }}</div>
           <div class="text-xs text-gray-500">Findings Today</div>
         </div>
         <div class="text-center">
-          <div class="text-lg font-semibold text-orange-600">{{ systemLoad }}%</div>
+          <div class="text-lg font-semibold text-orange-600">{{ dashboardData?.realtime?.systemLoadPct || 0 }}%</div>
           <div class="text-xs text-gray-500">System Load</div>
         </div>
       </div>
@@ -169,7 +170,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import api from '@/services/api'
+import { getDashboardSummary } from '@/composables/useDashboard'
 
 const isMonitoring = ref(true)
 const monitoringInterval = ref(null)
@@ -180,11 +181,8 @@ const activeAnalyses = ref([])
 
 const queuedAnalyses = ref([])
 
-// Performance metrics - will be fetched from API
-const totalAnalysesToday = ref(0)
-const averageCompletionTime = ref(0)
-const totalFindingsToday = ref(0)
-const systemLoad = ref(0)
+// Real dashboard data
+const dashboardData = ref(null)
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -211,51 +209,41 @@ const formatDuration = (seconds) => {
   return minutes > 0 ? `${minutes}m ${remainingSeconds}s` : `${remainingSeconds}s`
 }
 
-// API Functions
-const fetchActiveAnalyses = async () => {
-  try {
-    const response = await api.get('/analyses/active')
-    activeAnalyses.value = response.data.analyses || response.data || []
-  } catch (err) {
-    console.error('Error fetching active analyses:', err)
-    activeAnalyses.value = []
+// Analysis status from real dashboard data
+const analysisStatus = computed(() => {
+  if (!dashboardData.value) return { state: 'idle', activeCount: 0, queueCount: 0 }
+  return {
+    state: dashboardData.value.totals.activeAnalyses > 0 ? 'active' : 'idle',
+    activeCount: dashboardData.value.totals.activeAnalyses,
+    queueCount: 0, // TODO: Implement queue count if needed
+    summary: dashboardData.value.totals.activeAnalyses > 0 ? `${dashboardData.value.totals.activeAnalyses} analyses running` : 'System idle'
   }
-}
+})
 
-const fetchQueuedAnalyses = async () => {
+// Load real dashboard data
+const loadDashboardData = async () => {
   try {
-    const response = await api.get('/analyses/queue')
-    queuedAnalyses.value = response.data.queue || response.data || []
+    dashboardData.value = await getDashboardSummary()
+    
+    // Clear demo arrays since we're using real data
+    activeAnalyses.value = []
+    queuedAnalyses.value = []
   } catch (err) {
-    console.error('Error fetching queued analyses:', err)
+    console.error('Error fetching dashboard data:', err)
+    dashboardData.value = null
+    activeAnalyses.value = []
     queuedAnalyses.value = []
   }
 }
 
-const fetchPerformanceMetrics = async () => {
-  try {
-    const response = await api.get('/analyses/metrics')
-    const metrics = response.data.metrics || response.data || {}
-    
-    totalAnalysesToday.value = metrics.totalAnalysesToday || 0
-    averageCompletionTime.value = metrics.averageCompletionTime || 0
-    totalFindingsToday.value = metrics.totalFindingsToday || 0
-    systemLoad.value = metrics.systemLoad || 0
-  } catch (err) {
-    console.error('Error fetching performance metrics:', err)
-  }
-}
+// Only fetch details when we know there are active analyses
 
 const fetchAllData = async () => {
   loading.value = true
   error.value = null
   
   try {
-    await Promise.all([
-      fetchActiveAnalyses(),
-      fetchQueuedAnalyses(), 
-      fetchPerformanceMetrics()
-    ])
+    await loadDashboardData()
   } catch (err) {
     error.value = 'Failed to load real-time data'
     console.error('Error fetching real-time data:', err)
@@ -276,15 +264,25 @@ const toggleMonitoring = () => {
   }
 }
 
+let idleCheckCounter = 0
+
 const startMonitoring = () => {
   if (monitoringInterval.value) return
   
   monitoringInterval.value = setInterval(async () => {
-    // Refresh real data from API every few seconds for real-time updates
-    await fetchActiveAnalyses()
-    await fetchQueuedAnalyses()
-    await fetchPerformanceMetrics()
-  }, 5000) // Increased interval to 5 seconds to reduce API load
+    if (analysisStatus.value.activeCount > 0) {
+      // When active, check frequently (every 5 seconds)
+      await loadDashboardData()
+      idleCheckCounter = 0
+    } else {
+      // When idle, check status less frequently (every 25 seconds)
+      idleCheckCounter++
+      if (idleCheckCounter >= 5) {
+        await loadDashboardData()
+        idleCheckCounter = 0
+      }
+    }
+  }, 5000)
 }
 
 const stopMonitoring = () => {

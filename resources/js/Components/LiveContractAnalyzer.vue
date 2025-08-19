@@ -25,19 +25,19 @@
                         <span>No Registration Required</span>
                     </span>
                 </div>
-                <!-- Live Stats -->
+                <!-- Live Stats - from real backend data -->
                 <div class="grid grid-cols-3 gap-4 text-center text-white text-xs mb-2">
                     <div class="bg-white/10 rounded-lg py-2 px-3 backdrop-blur-sm">
-                        <div class="font-bold text-lg">{{ liveStats.analyzed }}</div>
-                        <div class="opacity-80">Contracts Analyzed</div>
+                        <div class="font-bold text-lg">{{ analysisStatus?.summary || '0' }}</div>
+                        <div class="opacity-80">Current Status</div>
                     </div>
                     <div class="bg-white/10 rounded-lg py-2 px-3 backdrop-blur-sm">
-                        <div class="font-bold text-lg">{{ liveStats.vulnerabilities }}</div>
-                        <div class="opacity-80">Vulnerabilities Found</div>
+                        <div class="font-bold text-lg">{{ analysisStatus?.activeCount || 0 }}</div>
+                        <div class="opacity-80">Active Analyses</div>
                     </div>
                     <div class="bg-white/10 rounded-lg py-2 px-3 backdrop-blur-sm">
-                        <div class="font-bold text-lg">{{ liveStats.accuracy }}%</div>
-                        <div class="opacity-80">Detection Accuracy</div>
+                        <div class="font-bold text-lg">{{ analysisStatus?.queueCount || 0 }}</div>
+                        <div class="opacity-80">Queued</div>
                     </div>
                 </div>
             </div>
@@ -49,7 +49,7 @@
                             <input
                                 v-model="contractAddress"
                                 type="text"
-                                placeholder="🚀 Paste any contract address (0x...) or Solidity code • Instant AI analysis • Try: 0xE592427A0AEce92De3Edee1F18E0157C05861564"
+                                placeholder="🚀 Paste any contract address (0x...) or Solidity code • Instant AI analysis • Check examples below"
                                 class="w-full px-6 py-4 text-lg rounded-l-xl border-0 bg-white/95 backdrop-blur-sm focus:bg-white focus:ring-4 focus:ring-blue-300 focus:outline-none transition-all duration-200 placeholder-gray-500 shadow-lg hover:bg-white/98 hover:shadow-xl"
                                 :disabled="isAnalyzing"
                                 @input="detectInputType"
@@ -317,7 +317,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 
 const contractAddress = ref('')
@@ -332,69 +332,83 @@ const contractInput = ref(null)
 const showKeyboardShortcuts = ref(false)
 const showSuccessAnimation = ref(false)
 
-// Live stats that update
-const liveStats = reactive({
-    analyzed: '15.2K',
-    vulnerabilities: '1,847',
-    accuracy: 95
-})
+// Analysis status from backend API
+const analysisStatus = ref({ state: 'idle', activeCount: 0, queueCount: 0, summary: 'Idle' })
 
-// Recent contracts for quick access
-const recentContracts = ref([
-    { address: '0xA0b86991c431e5F5c098F4B5dC3E6A5c9D2b45F', name: 'USDC Token' },
-    { address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', name: 'USDT Token' },
-    { address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', name: 'DAI Token' }
-])
+// Recent contracts - will be populated from API examples
+const recentContracts = ref([])
 
-const networks = [
-    { id: 'ethereum', name: 'Ethereum', emoji: '🔵' },
-    { id: 'polygon', name: 'Polygon', emoji: '🟣' },
-    { id: 'bsc', name: 'BSC', emoji: '🟡' },
-    { id: 'arbitrum', name: 'Arbitrum', emoji: '🔷' }
-]
+const networks = ref([])
+const loading = ref(false)
+// Using the error ref declared above for network errors too
 
-const quickExamples = [
-    { 
-        name: 'Uniswap V3 Router', 
-        address: '0xE592427A0AEce92De3Edee1F18E0157C05861564',
-        description: 'Leading DEX with concentrated liquidity - $3.2B TVL',
-        category: '✅ Low Risk',
-        riskLevel: 'low',
-        network: 'ethereum'
-    },
-    { 
-        name: 'Aave V3 Pool', 
-        address: '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2',
-        description: 'Premier lending protocol - $7.8B TVL',
-        category: '✅ Low Risk',
-        riskLevel: 'low',
-        network: 'ethereum'
-    },
-    { 
-        name: 'Lido stETH', 
-        address: '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84',
-        description: 'Largest liquid staking - $14.5B TVL',
-        category: '⚠️ Medium',
-        riskLevel: 'medium',
-        network: 'ethereum'
-    },
-    { 
-        name: 'Curve 3Pool', 
-        address: '0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7',
-        description: 'Stablecoin DEX - $1.8B TVL',
-        category: '✅ Low Risk',
-        riskLevel: 'low',
-        network: 'ethereum'
-    },
-    { 
-        name: 'Multichain (Exploited)', 
-        address: '0x6b7a87899490EcE95443e979cA9485CBE7E71522',
-        description: 'EXPLOITED $126M - Private Key Compromise',
-        category: '🚨 Exploited',
-        riskLevel: 'critical',
-        network: 'ethereum'
+const quickExamples = ref([])
+
+// Fetch networks from API
+const fetchNetworks = async () => {
+    try {
+        const response = await fetch('/api/blockchain/networks', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        
+        if (response.ok) {
+            const data = await response.json()
+            if (data.success) {
+                networks.value = data.networks.map(n => ({
+                    id: n.id,
+                    name: n.name,
+                    emoji: n.id === 'ethereum' ? '🔵' : 
+                          n.id === 'polygon' ? '🟣' : 
+                          n.id === 'bsc' ? '🟡' : 
+                          n.id === 'arbitrum' ? '🔷' : '🔗'
+                })) || []
+            }
+        } else {
+            console.error('Failed to fetch networks:', response.status)
+        }
+    } catch (err) {
+        console.error('Error fetching networks:', err)
+        // Minimal fallback
+        networks.value = [
+            { id: 'ethereum', name: 'Ethereum', emoji: '🔵' }
+        ]
     }
-]
+}
+
+// Fetch quick examples from API
+const fetchExamples = async () => {
+    try {
+        const response = await fetch('/api/blockchain/examples', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        
+        if (response.ok) {
+            const data = await response.json()
+            if (data.success) {
+                quickExamples.value = data.examples || []
+                // Also populate recent contracts from examples
+                recentContracts.value = data.examples.slice(0, 3).map(example => ({
+                    address: example.address,
+                    name: example.name
+                })) || []
+            }
+        } else {
+            console.error('Failed to fetch examples:', response.status)
+        }
+    } catch (err) {
+        console.error('Error fetching examples:', err)
+        // Keep empty array as fallback
+        quickExamples.value = []
+    }
+}
 
 function detectInputType() {
     const input = contractAddress.value.trim()
@@ -615,6 +629,32 @@ function scrollToAnalyzer() {
         contractInput.value?.focus()
     }, 500)
 }
+
+// Fetch analysis status for live indicators
+const fetchAnalysisStatus = async () => {
+    try {
+        const response = await fetch('/api/analysis/status')
+        if (response.ok) {
+            const data = await response.json()
+            if (data.success) {
+                analysisStatus.value = data.status || { state: 'idle', activeCount: 0, queueCount: 0, summary: 'Idle' }
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching analysis status:', error)
+        analysisStatus.value = { state: 'error', activeCount: 0, queueCount: 0, summary: 'Error' }
+    }
+}
+
+// Initialize data on component mount
+onMounted(() => {
+    fetchNetworks()
+    fetchExamples()
+    fetchAnalysisStatus()
+    
+    // Refresh analysis status every 10 seconds
+    setInterval(fetchAnalysisStatus, 10000)
+})
 
 // Global keyboard shortcuts
 window.addEventListener('keydown', (event) => {

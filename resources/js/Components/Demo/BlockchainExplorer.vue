@@ -215,7 +215,12 @@ const fetchNetworks = async () => {
     }
   } catch (err) {
     console.error('Error fetching networks:', err)
-    networks.value = []
+    // Fallback to basic networks
+    networks.value = [
+      { id: 'ethereum', name: 'Ethereum Mainnet' },
+      { id: 'polygon', name: 'Polygon' },
+      { id: 'bsc', name: 'BSC' }
+    ]
   }
 }
 

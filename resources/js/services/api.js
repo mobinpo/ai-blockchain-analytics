@@ -7,11 +7,12 @@ const api = axios.create({
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-    'X-Requested-With': 'XMLHttpRequest'
+    'X-Requested-With': 'XMLHttpRequest',
+    'Cache-Control': 'no-store, no-cache, must-revalidate'
   }
 });
 
-// Request interceptor to add CSRF token
+// Request interceptor to add CSRF token and cache busting
 api.interceptors.request.use(
   (config) => {
     // Add CSRF token from meta tag
@@ -20,10 +21,17 @@ api.interceptors.request.use(
       config.headers['X-CSRF-TOKEN'] = token;
     }
     
-    // Add auth header if available
-    const authToken = localStorage.getItem('auth_token');
+    // Add auth header if available from meta tag or sessionStorage
+    const authToken = document.querySelector('meta[name="auth-token"]')?.getAttribute('content') || 
+                     sessionStorage.getItem('auth_token');
     if (authToken) {
       config.headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    
+    // Add timestamp-based cache busting for analysis status endpoints
+    if (config.url && config.url.includes('analysis')) {
+      config.params = config.params || {};
+      config.params.ts = Date.now();
     }
     
     return config;

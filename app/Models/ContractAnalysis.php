@@ -13,12 +13,27 @@ final class ContractAnalysis extends Model
 
     protected $fillable = [
         'contract_id',
+        'contract_address',
+        'network',
+        'model',
+        'analysis_options',
+        'triggered_by',
+        'user_id',
         'analysis_type',
         'status',
+        'progress',
+        'current_step',
         'risk_score',
         'findings',
+        'findings_count',
         'recommendations',
+        'raw_response',
+        'tokens_used',
+        'processing_time_ms',
         'analysis_date',
+        'started_at',
+        'completed_at',
+        'error_message',
         'analyzer_version',
         'execution_time_ms',
         'confidence_score',
@@ -29,11 +44,137 @@ final class ContractAnalysis extends Model
         'risk_score' => 'integer',
         'findings' => 'array',
         'recommendations' => 'array',
+        'analysis_options' => 'array',
         'analysis_date' => 'datetime',
+        'started_at' => 'datetime',
+        'completed_at' => 'datetime',
         'execution_time_ms' => 'integer',
+        'processing_time_ms' => 'integer',
         'confidence_score' => 'decimal:2',
         'metadata' => 'array',
+        'progress' => 'integer',
+        'findings_count' => 'integer',
+        'tokens_used' => 'integer',
     ];
+
+    /**
+     * Scope for filtering by contract address and network
+     */
+    public function scopeForContract($query, string $contractAddress, string $network)
+    {
+        return $query->where('contract_address', strtolower($contractAddress))
+                    ->where('network', strtolower($network));
+    }
+
+    /**
+     * Get analysis summary data for API responses
+     */
+    public function getAnalysisSummary(): array
+    {
+        return [
+            'id' => $this->id,
+            'contract_address' => $this->contract_address,
+            'network' => $this->network,
+            'status' => $this->status,
+            'progress' => $this->progress,
+            'current_step' => $this->current_step,
+            'findings_count' => $this->findings_count,
+            'risk_score' => $this->risk_score,
+            'created_at' => $this->created_at,
+            'started_at' => $this->started_at,
+            'completed_at' => $this->completed_at,
+        ];
+    }
+
+    /**
+     * Get severity counts from findings
+     */
+    public function getSeverityCounts(): array
+    {
+        $counts = [
+            'critical' => 0,
+            'high' => 0,
+            'medium' => 0,
+            'low' => 0,
+            'info' => 0
+        ];
+
+        if (is_array($this->findings)) {
+            foreach ($this->findings as $finding) {
+                $severity = strtolower($finding['severity'] ?? 'info');
+                if (isset($counts[$severity])) {
+                    $counts[$severity]++;
+                }
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Get risk score (alias for existing risk_score)
+     */
+    public function getRiskScore(): int
+    {
+        return $this->risk_score ?? 0;
+    }
+
+    /**
+     * Get unique categories from findings
+     */
+    public function getUniqueCategories(): array
+    {
+        $categories = [];
+        
+        if (is_array($this->findings)) {
+            foreach ($this->findings as $finding) {
+                $category = $finding['category'] ?? 'Other';
+                if (!in_array($category, $categories)) {
+                    $categories[] = $category;
+                }
+            }
+        }
+
+        return $categories;
+    }
+
+    /**
+     * Get duration in seconds
+     */
+    public function getDuration(): ?int
+    {
+        if ($this->started_at && $this->completed_at) {
+            return $this->started_at->diffInSeconds($this->completed_at);
+        }
+        return null;
+    }
+
+    /**
+     * Get analytics data for statistics
+     */
+    public static function getAnalyticsData(int $days = 30): array
+    {
+        $since = now()->subDays($days);
+        
+        return [
+            'total_analyses' => self::where('created_at', '>=', $since)->count(),
+            'completed_analyses' => self::where('created_at', '>=', $since)->where('status', 'completed')->count(),
+            'failed_analyses' => self::where('created_at', '>=', $since)->where('status', 'failed')->count(),
+            'pending_analyses' => self::where('status', 'pending')->count(),
+            'processing_analyses' => self::where('status', 'processing')->count(),
+            'avg_processing_time' => self::where('created_at', '>=', $since)
+                ->where('status', 'completed')
+                ->whereNotNull('processing_time_ms')
+                ->avg('processing_time_ms'),
+            'total_findings' => self::where('created_at', '>=', $since)->sum('findings_count'),
+            'networks' => self::where('created_at', '>=', $since)
+                ->whereNotNull('network')
+                ->groupBy('network')
+                ->selectRaw('network, count(*) as count')
+                ->pluck('count', 'network')
+                ->toArray(),
+        ];
+    }
 
     /**
      * Get the contract this analysis belongs to
@@ -41,6 +182,14 @@ final class ContractAnalysis extends Model
     public function contract(): BelongsTo
     {
         return $this->belongsTo(FamousContract::class, 'contract_id');
+    }
+
+    /**
+     * Get the user who triggered this analysis
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
     /**

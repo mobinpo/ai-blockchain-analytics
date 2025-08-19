@@ -218,7 +218,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 // Demo state
 const searchQuery = ref('')
@@ -227,62 +227,68 @@ const isSearching = ref(false)
 const hasSearched = ref(false)
 const searchResults = ref(null)
 
-const quickExamples = [
-    { 
-        label: 'Sample Transaction', 
-        query: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-        chain: 'ethereum',
-        type: 'transaction'
-    },
-    { 
-        label: 'Whale Address', 
-        query: '0xabcdef1234567890abcdef1234567890abcdef12',
-        chain: 'ethereum',
-        type: 'address'
-    },
-    { 
-        label: 'DeFi Contract', 
-        query: '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9',
-        chain: 'ethereum',
-        type: 'address'
-    }
-]
+const quickExamples = ref([])
 
-// Mock data generators
-const generateTransactionResult = () => ({
-    type: 'transaction',
-    searchTime: Math.floor(Math.random() * 200) + 100,
-    data: {
-        hash: searchQuery.value,
-        blockNumber: Math.floor(Math.random() * 1000000) + 17000000,
-        from: '0x' + Math.random().toString(16).substr(2, 40),
-        to: '0x' + Math.random().toString(16).substr(2, 40),
-        value: (Math.random() * 10).toFixed(4),
-        gasUsed: Math.floor(Math.random() * 100000) + 21000,
-        status: Math.random() > 0.1 ? 'success' : 'failed',
-        riskScore: Math.floor(Math.random() * 100),
-        legitimacyScore: Math.floor(Math.random() * 100),
-        patterns: ['normal_transfer', 'high_value', 'frequent_interaction']
+// Fetch examples from API
+const fetchExamples = async () => {
+    try {
+        const response = await fetch('/api/blockchain/examples', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        
+        if (response.ok) {
+            const data = await response.json()
+            if (data.success) {
+                quickExamples.value = data.examples.slice(0, 3).map(example => ({
+                    label: example.name,
+                    query: example.address,
+                    chain: example.network || 'ethereum',
+                    type: 'address'
+                })) || []
+            }
+        } else {
+            console.error('Failed to fetch examples:', response.status)
+        }
+    } catch (err) {
+        console.error('Error fetching examples:', err)
+        quickExamples.value = []
     }
-})
+}
 
-const generateAddressResult = () => ({
-    type: 'address',
-    searchTime: Math.floor(Math.random() * 150) + 80,
-    data: {
-        address: searchQuery.value,
-        balance: (Math.random() * 1000).toFixed(2),
-        txCount: Math.floor(Math.random() * 10000) + 100,
-        firstSeen: Math.floor(Math.random() * 365) + 30 + 'd ago',
-        riskLevel: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
-        recentTxs: Array.from({ length: 5 }, (_, i) => ({
-            hash: '0x' + Math.random().toString(16).substr(2, 8) + '...',
-            type: Math.random() > 0.5 ? 'in' : 'out',
-            value: (Math.random() * 5).toFixed(3),
-            timeAgo: `${Math.floor(Math.random() * 24)}h ago`
-        }))
+// API call to analyze blockchain data
+const analyzeBlockchainData = async (query, chain) => {
+    try {
+        const response = await fetch('/api/blockchain/analyze', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                query: query,
+                network: chain
+            })
+        })
+        
+        if (response.ok) {
+            const data = await response.json()
+            if (data.success) {
+                return data.result
+            } else {
+                throw new Error(data.message || 'Analysis failed')
+            }
+        } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+    } catch (error) {
+        console.error('Error analyzing blockchain data:', error)
+        throw error
     }
-})
+}
 
 // Methods
 const performSearch = async () => {
@@ -292,17 +298,24 @@ const performSearch = async () => {
     hasSearched.value = true
     searchResults.value = null
     
-    // Simulate search delay
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Determine result type based on query pattern
-    const resultType = searchQuery.value.length === 66 ? 'transaction' : 'address'
-    
-    searchResults.value = resultType === 'transaction' 
-        ? generateTransactionResult() 
-        : generateAddressResult()
-    
-    isSearching.value = false
+    try {
+        const startTime = Date.now()
+        const result = await analyzeBlockchainData(searchQuery.value, selectedChain.value)
+        const searchTime = Date.now() - startTime
+        
+        searchResults.value = {
+            ...result,
+            searchTime: searchTime
+        }
+    } catch (error) {
+        searchResults.value = {
+            type: 'error',
+            searchTime: 0,
+            error: error.message || 'Failed to analyze blockchain data'
+        }
+    } finally {
+        isSearching.value = false
+    }
 }
 
 const useExample = (example) => {
@@ -387,4 +400,9 @@ const analyzeWithAI = () => {
     console.log('Starting deep AI analysis for:', searchQuery.value)
     // This would trigger additional AI analysis in a real implementation
 }
+
+// Initialize component
+onMounted(() => {
+    fetchExamples()
+})
 </script>

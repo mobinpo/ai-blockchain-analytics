@@ -15,7 +15,54 @@ final class Project extends Model
         'name',
         'description',
         'user_id',
+        'blockchain_network',
+        'project_type',
+        'contract_addresses',
+        'main_contract_address',
+        'token_address',
+        'token_symbol',
+        'metadata',
+        'website_url',
+        'github_url',
+        'social_links',
+        'analyses_count',
+        'critical_findings_count',
+        'average_sentiment_score',
+        'last_analyzed_at',
+        'status',
+        'is_public',
+        'monitoring_enabled',
+        'alert_settings',
+        'risk_level',
+        'risk_score',
+        'risk_updated_at',
+        'tags',
+        'category',
     ];
+
+    protected $casts = [
+        'contract_addresses' => 'array',
+        'metadata' => 'array',
+        'social_links' => 'array',
+        'alert_settings' => 'array',
+        'tags' => 'array',
+        'last_analyzed_at' => 'datetime',
+        'risk_updated_at' => 'datetime',
+        'is_public' => 'boolean',
+        'monitoring_enabled' => 'boolean',
+        'average_sentiment_score' => 'decimal:2',
+        'risk_score' => 'decimal:2',
+    ];
+
+    public function getNetworkAttribute(): ?string
+    {
+        return $this->blockchain_network;
+    }
+
+    public function getContractAddressAttribute(): ?string
+    {
+        return $this->main_contract_address;
+    }
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

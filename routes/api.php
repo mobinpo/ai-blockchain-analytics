@@ -26,6 +26,7 @@ use App\Http\Controllers\StreamingAnalysisController;
 use App\Http\Controllers\Api\CacheController;
 use App\Http\Controllers\PdfController;
 use App\Http\Controllers\VerificationController;
+use App\Http\Controllers\DashboardSummaryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
@@ -147,6 +148,11 @@ Route::prefix('analyses')->name('api.analyses.')->group(function () {
     Route::get('/metrics', [App\Http\Controllers\Api\AnalysisMonitorController::class, 'getMetrics'])->name('metrics');
 });
 
+Route::prefix('analysis')->name('api.analysis.')->group(function () {
+    Route::get('/status', [App\Http\Controllers\Api\AnalysisStatusController::class, 'show'])->name('status');
+    Route::post('/status/clear', [App\Http\Controllers\Api\AnalysisStatusController::class, 'clearCache'])->name('status.clear');
+});
+
 Route::prefix('blockchain')->name('api.blockchain.')->group(function () {
     Route::get('/networks', [App\Http\Controllers\Api\BlockchainController::class, 'getNetworks'])->name('networks');
     Route::get('/examples', [App\Http\Controllers\Api\BlockchainController::class, 'getExamples'])->name('examples');
@@ -159,6 +165,13 @@ Route::prefix('ai')->name('api.ai.')->group(function () {
     Route::get('/components/status', [App\Http\Controllers\Api\AIEngineController::class, 'getComponentsStatus'])->name('components.status');
 });
 
+// Sentiment API Routes
+Route::prefix('sentiment')->name('api.sentiment.')->group(function () {
+    Route::get('/live-trends', [App\Http\Controllers\Api\SentimentController::class, 'getLiveTrends'])->name('live-trends');
+    Route::get('/{symbol}/timeline', [App\Http\Controllers\Api\SentimentController::class, 'getTimeline'])->name('timeline');
+    Route::get('/{symbol}/current', [App\Http\Controllers\Api\SentimentController::class, 'getCurrent'])->name('current');
+});
+
 // Dashboard API Routes
 Route::prefix('dashboard')->name('api.dashboard.')->group(function () {
     Route::get('/stats', [App\Http\Controllers\Api\DashboardController::class, 'getStats'])->name('stats');
@@ -169,7 +182,7 @@ Route::prefix('dashboard')->name('api.dashboard.')->group(function () {
 });
 
 // Verification Badge API Routes (with security middleware)
-Route::prefix('verification')->name('api.verification.')->middleware('verification.security')->group(function () {
+Route::prefix('verification-api')->name('api.verification.secure.')->middleware('verification.security')->group(function () {
     Route::post('/generate', [VerificationController::class, 'generateVerification'])->name('generate');
     Route::post('/batch', [VerificationController::class, 'batchGenerate'])->name('batch');
     Route::post('/badge', [VerificationController::class, 'generateBadge'])->name('badge');
@@ -230,6 +243,8 @@ Route::prefix('webhooks/mailgun')->name('webhooks.mailgun.')->group(function () 
     Route::post('/complained', [MailgunWebhookController::class, 'handleWebhook'])->name('complained');
     Route::post('/bounced', [MailgunWebhookController::class, 'handleWebhook'])->name('bounced');
 });
+
+// Project Management API Routes moved to web.php for session compatibility
 
 // Contract Analysis API Routes
 Route::prefix('analyses')->group(function () {
@@ -305,23 +320,7 @@ Route::middleware(['auth:sanctum'])->prefix('security')->name('owasp-security.')
 // Public security findings endpoint (mock data)
 Route::get('/security/findings', [App\Http\Controllers\Api\OWASPSecurityController::class, 'getFindings'])->name('security.findings');
 
-// Dashboard API routes (public for mock data)
-Route::prefix('dashboard')->name('dashboard.')->group(function () {
-    // Dashboard statistics
-    Route::get('/stats', [App\Http\Controllers\Api\DashboardController::class, 'getStats'])->name('stats');
-    
-    // Recent projects
-    Route::get('/projects', [App\Http\Controllers\Api\DashboardController::class, 'getRecentProjects'])->name('projects');
-    
-    // Critical security findings
-    Route::get('/critical-findings', [App\Http\Controllers\Api\DashboardController::class, 'getCriticalFindings'])->name('critical-findings');
-    
-    // AI insights
-    Route::get('/ai-insights', [App\Http\Controllers\Api\DashboardController::class, 'getAIInsights'])->name('ai-insights');
-    
-    // Project details
-    Route::get('/project/{projectId}', [App\Http\Controllers\Api\DashboardController::class, 'getProjectDetails'])->name('project-details');
-});
+
 
 // Network monitoring API routes (public for status information)
 Route::prefix('network')->name('network.')->group(function () {
@@ -412,6 +411,9 @@ Route::middleware(['auth:sanctum'])->prefix('openai-streaming')->name('openai-st
     Route::get('/stats', [OpenAiStreamingController::class, 'getStreamingStats'])->name('stats');
 });
 
+// Dashboard Summary API route  
+Route::get('/dashboard/summary', [DashboardSummaryController::class, 'show']);
+
 // OpenAI Horizon Job Monitoring API routes (Laravel Horizon integration)
 Route::middleware(['auth:sanctum'])->prefix('openai-horizon')->name('openai-horizon.')->group(function () {
     // Main monitoring dashboard
@@ -500,7 +502,7 @@ Route::prefix('verification')->name('api.verification.public.')->group(function 
     Route::get('/status', [VerificationController::class, 'getStatus'])->name('status');
     
     // Get verification badge HTML/CSS/JSON (public)
-    Route::get('/badge', [VerificationController::class, 'getBadge'])->name('badge');
+    Route::get('/badge', [VerificationController::class, 'getBadge'])->name('public.badge');
 });
 
 // Authenticated verification endpoints (using web auth with session middleware for Inertia.js)

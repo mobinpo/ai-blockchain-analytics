@@ -29,10 +29,14 @@
                 <span class="text-sm text-gray-500 ml-2">vs last period</span>
             </div>
             
-            <!-- Live indicator for real-time stats -->
-            <div v-if="isLive" class="mt-3 flex items-center">
+            <!-- Live indicator only shows when there's actual activity from backend -->
+            <div v-if="analysisStatus?.state === 'active' || analysisStatus?.state === 'busy'" class="mt-3 flex items-center">
                 <div class="h-2 w-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
-                <span class="text-xs text-green-600 font-medium">Live</span>
+                <span class="text-xs text-green-600 font-medium">{{ analysisStatus.summary || 'Active' }}</span>
+            </div>
+            <div v-else-if="analysisStatus?.state === 'idle'" class="mt-3 flex items-center">
+                <div class="h-2 w-2 bg-gray-400 rounded-full mr-2"></div>
+                <span class="text-xs text-gray-500 font-medium">Idle</span>
             </div>
         </div>
     </div>
@@ -83,9 +87,9 @@ const props = defineProps({
         type: Number,
         default: 0
     },
-    isLive: {
-        type: Boolean,
-        default: false
+    analysisStatus: {
+        type: Object,
+        default: () => ({ state: 'idle' })
     }
 })
 
