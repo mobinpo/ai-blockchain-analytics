@@ -44,7 +44,7 @@
         "@vue/server-renderer": "^3.4.0",
         "artillery": "^1.7.9",
         "artillery-plugin-metrics-by-endpoint": "^1.18.0",
-        "artillery-plugin-publish-metrics": "^1.4.0",
+        "artillery-plugin-publish-metrics": "^2.29.0",
         "autoprefixer": "^10.4.12",
         "axios": "^1.8.2",
         "concurrently": "^9.2.1",
